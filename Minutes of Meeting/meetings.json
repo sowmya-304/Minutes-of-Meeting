@@ -1,0 +1,70 @@
+[
+  {
+    "Id": 1,
+    "Title": "Project Kickoff",
+    "Attendees": [
+      {
+        "Name": "John Doe",
+        "Email": "john.doe@example.com"
+      },
+      {
+        "Name": "Jane Smith",
+        "Email": "jane.smith@example.com"
+      },
+      {
+        "Name": "Alice Johnson",
+        "Email": "alice.johnson@example.com"
+      }
+    ],
+    "Date": "2024-05-15",
+    "Time": "09:00",
+    "Duration": "1 ",
+    "Minutes": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.",
+    "DrawboardImages": [ "drawboard_image1.png", "drawboard_image2.png" ],
+    "AdminEmail": "admin@example.com"
+  },
+  {
+    "Id": 2,
+    "Title": "Budget Review",
+    "Attendees": [
+      {
+        "Name": "Bob Brown",
+        "Email": "ramasanidheerajreddy@gmail.com"
+      },
+      {
+        "Name": "Mary Lee",
+        "Email": "19n81a0427@gmail.com"
+      }
+    ],
+    "Date": "2024-05-17",
+    "Time": "14:00",
+    "Duration": "45 ",
+    "Minutes": "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.",
+    "DrawboardImages": [],
+    "AdminEmail": "ramasaninarayanareddy@gmail.com"
+  },
+  {
+    "Id": 3,
+    "Title": "Weekly Status Meeting",
+    "Attendees": [
+      {
+        "Name": "David Williams",
+        "Email": "david.williams@example.com"
+      },
+      {
+        "Name": "Emily Davis",
+        "Email": "emily.davis@example.com"
+      },
+      {
+        "Name": "Michael Wilson",
+        "Email": "michael.wilson@example.com"
+      }
+    ],
+    "Date": "2024-05-18",
+    "Time": "10:30",
+    "Duration": "30 ",
+    "Minutes": "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi.",
+    "DrawboardImages": [ "drawboard_image3.png" ],
+    "AdminEmail": "admin@example.com"
+  }
+]
