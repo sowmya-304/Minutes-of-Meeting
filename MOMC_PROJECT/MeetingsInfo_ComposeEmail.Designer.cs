@@ -31,12 +31,21 @@
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MeetingsInfo_ComposeEmail));
             panel1 = new Panel();
+            button4 = new Button();
+            label12 = new Label();
             panel3 = new Panel();
             panel10 = new Panel();
+            panel12 = new Panel();
             panel9 = new Panel();
             richTextBox3 = new RichTextBox();
             panel7 = new Panel();
             btn_redo = new Button();
+            panel8 = new Panel();
+            panel11 = new Panel();
+            button2 = new Button();
+            button1 = new Button();
+            button16 = new Button();
+            button15 = new Button();
             btn_undo = new Button();
             comboBox2 = new ComboBox();
             btn_m_align_linespacing = new Button();
@@ -63,13 +72,6 @@
             label9 = new Label();
             label8 = new Label();
             panel2 = new Panel();
-            panel11 = new Panel();
-            panel12 = new Panel();
-            button2 = new Button();
-            button1 = new Button();
-            panel8 = new Panel();
-            button16 = new Button();
-            button15 = new Button();
             clb_attendees = new CheckedListBox();
             label7 = new Label();
             textBox4 = new TextBox();
@@ -95,17 +97,21 @@
             insertLeftToolStripMenuItem = new ToolStripMenuItem();
             panel1.SuspendLayout();
             panel3.SuspendLayout();
+            panel10.SuspendLayout();
             panel7.SuspendLayout();
+            panel8.SuspendLayout();
+            panel11.SuspendLayout();
             panel6.SuspendLayout();
             panel2.SuspendLayout();
-            panel11.SuspendLayout();
-            panel8.SuspendLayout();
             contextMenuStrip1.SuspendLayout();
             contextMenuStrip2.SuspendLayout();
             SuspendLayout();
             // 
             // panel1
             // 
+            panel1.BackColor = SystemColors.Control;
+            panel1.Controls.Add(button4);
+            panel1.Controls.Add(label12);
             panel1.Controls.Add(panel3);
             panel1.Controls.Add(panel2);
             panel1.Controls.Add(cb_emailmeetings);
@@ -115,6 +121,28 @@
             panel1.Name = "panel1";
             panel1.Size = new Size(1366, 741);
             panel1.TabIndex = 0;
+            // 
+            // button4
+            // 
+            button4.BackColor = Color.SteelBlue;
+            button4.Font = new Font("Segoe UI Semibold", 9.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            button4.ForeColor = Color.White;
+            button4.Location = new Point(1284, 5);
+            button4.Name = "button4";
+            button4.Size = new Size(79, 30);
+            button4.TabIndex = 5;
+            button4.Text = "Logout";
+            button4.UseVisualStyleBackColor = false;
+            button4.Click += button4_Click;
+            // 
+            // label12
+            // 
+            label12.AutoSize = true;
+            label12.Location = new Point(8, 44);
+            label12.Name = "label12";
+            label12.Size = new Size(415, 15);
+            label12.TabIndex = 4;
+            label12.Text = "Below dropdown contains meetings created by using logged in email address";
             // 
             // panel3
             // 
@@ -134,40 +162,50 @@
             panel3.Controls.Add(label10);
             panel3.Controls.Add(label9);
             panel3.Controls.Add(label8);
-            panel3.Location = new Point(8, 358);
+            panel3.Location = new Point(0, 329);
             panel3.Name = "panel3";
-            panel3.Size = new Size(1344, 338);
+            panel3.Size = new Size(1366, 367);
             panel3.TabIndex = 3;
             // 
             // panel10
             // 
             panel10.BackColor = Color.White;
-            panel10.Location = new Point(536, 182);
+            panel10.Controls.Add(panel12);
+            panel10.Location = new Point(532, 104);
             panel10.Name = "panel10";
-            panel10.Size = new Size(802, 96);
+            panel10.Size = new Size(802, 143);
             panel10.TabIndex = 26;
             panel10.Paint += jd;
             // 
+            // panel12
+            // 
+            panel12.Location = new Point(281, 7);
+            panel12.Name = "panel12";
+            panel12.Size = new Size(200, 97);
+            panel12.TabIndex = 19;
+            // 
             // panel9
             // 
-            panel9.Location = new Point(653, 80);
+            panel9.Location = new Point(650, 102);
             panel9.Name = "panel9";
             panel9.Size = new Size(212, 167);
             panel9.TabIndex = 25;
             // 
             // richTextBox3
             // 
-            richTextBox3.Location = new Point(532, 86);
+            richTextBox3.Location = new Point(529, 102);
             richTextBox3.Name = "richTextBox3";
-            richTextBox3.Size = new Size(809, 210);
+            richTextBox3.Size = new Size(834, 249);
             richTextBox3.TabIndex = 24;
             richTextBox3.Text = "";
             richTextBox3.TextChanged += richTextBox3_TextChanged;
+            richTextBox3.KeyDown += richTextBox3_KeyDown;
             richTextBox3.KeyPress += richTextBox3_KeyPress;
             // 
             // panel7
             // 
             panel7.Controls.Add(btn_redo);
+            panel7.Controls.Add(panel8);
             panel7.Controls.Add(btn_undo);
             panel7.Controls.Add(comboBox2);
             panel7.Controls.Add(btn_m_align_linespacing);
@@ -177,9 +215,9 @@
             panel7.Controls.Add(btn_mail_underline);
             panel7.Controls.Add(btn_mail_italic);
             panel7.Controls.Add(btn_mail_bold);
-            panel7.Location = new Point(533, 44);
+            panel7.Location = new Point(525, 58);
             panel7.Name = "panel7";
-            panel7.Size = new Size(808, 37);
+            panel7.Size = new Size(830, 37);
             panel7.TabIndex = 23;
             // 
             // btn_redo
@@ -195,6 +233,86 @@
             btn_redo.TextAlign = ContentAlignment.MiddleLeft;
             btn_redo.UseVisualStyleBackColor = true;
             btn_redo.Click += btn_redo_Click;
+            // 
+            // panel8
+            // 
+            panel8.Controls.Add(panel11);
+            panel8.Controls.Add(button16);
+            panel8.Controls.Add(button15);
+            panel8.Location = new Point(7, 0);
+            panel8.Name = "panel8";
+            panel8.Size = new Size(838, 37);
+            panel8.TabIndex = 11;
+            // 
+            // panel11
+            // 
+            panel11.BorderStyle = BorderStyle.FixedSingle;
+            panel11.Controls.Add(button2);
+            panel11.Controls.Add(button1);
+            panel11.Location = new Point(207, 3);
+            panel11.Name = "panel11";
+            panel11.Size = new Size(287, 34);
+            panel11.TabIndex = 18;
+            // 
+            // button2
+            // 
+            button2.BackColor = Color.SteelBlue;
+            button2.Font = new Font("Arial", 11.25F, FontStyle.Bold);
+            button2.Image = (Image)resources.GetObject("button2.Image");
+            button2.ImageAlign = ContentAlignment.MiddleLeft;
+            button2.Location = new Point(134, 3);
+            button2.Name = "button2";
+            button2.Size = new Size(91, 32);
+            button2.TabIndex = 18;
+            button2.Text = "Insert";
+            button2.TextAlign = ContentAlignment.MiddleRight;
+            button2.UseVisualStyleBackColor = false;
+            button2.Click += button2_Click;
+            // 
+            // button1
+            // 
+            button1.BackColor = Color.SteelBlue;
+            button1.Font = new Font("Arial", 11.25F, FontStyle.Bold);
+            button1.Image = (Image)resources.GetObject("button1.Image");
+            button1.ImageAlign = ContentAlignment.MiddleLeft;
+            button1.Location = new Point(3, 3);
+            button1.Name = "button1";
+            button1.Size = new Size(93, 32);
+            button1.TabIndex = 17;
+            button1.Text = "Delete";
+            button1.TextAlign = ContentAlignment.MiddleRight;
+            button1.UseVisualStyleBackColor = false;
+            button1.Click += button1_Click;
+            // 
+            // button16
+            // 
+            button16.BackColor = Color.SteelBlue;
+            button16.Font = new Font("Arial", 11.25F, FontStyle.Bold);
+            button16.Image = (Image)resources.GetObject("button16.Image");
+            button16.ImageAlign = ContentAlignment.MiddleLeft;
+            button16.Location = new Point(98, 3);
+            button16.Name = "button16";
+            button16.Size = new Size(93, 31);
+            button16.TabIndex = 16;
+            button16.Text = "Table";
+            button16.TextAlign = ContentAlignment.MiddleRight;
+            button16.UseVisualStyleBackColor = false;
+            button16.Click += button16_Click;
+            // 
+            // button15
+            // 
+            button15.BackColor = Color.SteelBlue;
+            button15.Font = new Font("Arial", 11.25F, FontStyle.Bold);
+            button15.Image = (Image)resources.GetObject("button15.Image");
+            button15.ImageAlign = ContentAlignment.MiddleLeft;
+            button15.Location = new Point(7, 3);
+            button15.Name = "button15";
+            button15.Size = new Size(85, 31);
+            button15.TabIndex = 15;
+            button15.Text = "Files";
+            button15.TextAlign = ContentAlignment.MiddleRight;
+            button15.UseVisualStyleBackColor = false;
+            button15.Click += button15_Click;
             // 
             // btn_undo
             // 
@@ -237,7 +355,6 @@
             btn_mail_numberings.Size = new Size(34, 31);
             btn_mail_numberings.TabIndex = 10;
             btn_mail_numberings.UseVisualStyleBackColor = true;
-           // btn_mail_numberings.Click += btn_mail_numberings_Click;
             // 
             // btn_mail_bullets
             // 
@@ -300,62 +417,68 @@
             panel6.Controls.Add(btn_sendmail);
             panel6.Controls.Add(btn_mail_insert);
             panel6.Controls.Add(btn_mail_format);
-            panel6.Location = new Point(532, 8);
+            panel6.Location = new Point(525, 21);
             panel6.Name = "panel6";
-            panel6.Size = new Size(809, 34);
+            panel6.Size = new Size(838, 34);
             panel6.TabIndex = 22;
             // 
             // button3
             // 
+            button3.BackColor = Color.SteelBlue;
             button3.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            button3.Location = new Point(646, 1);
+            button3.Location = new Point(675, 3);
             button3.Name = "button3";
             button3.Size = new Size(75, 31);
             button3.TabIndex = 5;
             button3.Text = "Preview ";
-            button3.UseVisualStyleBackColor = true;
+            button3.UseVisualStyleBackColor = false;
+            button3.Click += button3_Click;
             // 
             // btn_sendmail
             // 
+            btn_sendmail.BackColor = Color.SteelBlue;
             btn_sendmail.Font = new Font("Arial", 11.25F, FontStyle.Bold);
             btn_sendmail.Image = (Image)resources.GetObject("btn_sendmail.Image");
             btn_sendmail.ImageAlign = ContentAlignment.MiddleLeft;
-            btn_sendmail.Location = new Point(727, 1);
+            btn_sendmail.Location = new Point(756, 0);
             btn_sendmail.Name = "btn_sendmail";
             btn_sendmail.Size = new Size(79, 31);
             btn_sendmail.TabIndex = 4;
             btn_sendmail.Text = "Send";
             btn_sendmail.TextAlign = ContentAlignment.MiddleRight;
-            btn_sendmail.UseVisualStyleBackColor = true;
+            btn_sendmail.UseVisualStyleBackColor = false;
             btn_sendmail.Click += btn_sendmail_Click;
             // 
             // btn_mail_insert
             // 
+            btn_mail_insert.BackColor = Color.SteelBlue;
             btn_mail_insert.Font = new Font("Arial", 11.25F, FontStyle.Bold);
             btn_mail_insert.Location = new Point(84, 1);
             btn_mail_insert.Name = "btn_mail_insert";
             btn_mail_insert.Size = new Size(75, 31);
             btn_mail_insert.TabIndex = 1;
             btn_mail_insert.Text = "Insert";
-            btn_mail_insert.UseVisualStyleBackColor = true;
+            btn_mail_insert.UseVisualStyleBackColor = false;
             btn_mail_insert.Click += btn_mail_insert_Click;
             // 
             // btn_mail_format
             // 
+            btn_mail_format.BackColor = Color.SteelBlue;
             btn_mail_format.Font = new Font("Arial", 11.25F, FontStyle.Bold);
             btn_mail_format.Location = new Point(3, 1);
             btn_mail_format.Name = "btn_mail_format";
             btn_mail_format.Size = new Size(75, 31);
             btn_mail_format.TabIndex = 0;
             btn_mail_format.Text = "Format";
-            btn_mail_format.UseVisualStyleBackColor = true;
+            btn_mail_format.UseVisualStyleBackColor = false;
             btn_mail_format.Click += btn_mail_format_Click;
             // 
             // panel5
             // 
             panel5.AutoScroll = true;
             panel5.BackColor = Color.White;
-            panel5.Location = new Point(202, 253);
+            panel5.BorderStyle = BorderStyle.Fixed3D;
+            panel5.Location = new Point(201, 291);
             panel5.Name = "panel5";
             panel5.Size = new Size(276, 60);
             panel5.TabIndex = 20;
@@ -364,14 +487,15 @@
             // 
             panel4.AutoScroll = true;
             panel4.BackColor = Color.White;
-            panel4.Location = new Point(201, 187);
+            panel4.BorderStyle = BorderStyle.Fixed3D;
+            panel4.Location = new Point(201, 212);
             panel4.Name = "panel4";
             panel4.Size = new Size(276, 60);
             panel4.TabIndex = 19;
             // 
             // richTextBox2
             // 
-            richTextBox2.Location = new Point(201, 127);
+            richTextBox2.Location = new Point(201, 152);
             richTextBox2.MaxLength = 341;
             richTextBox2.Name = "richTextBox2";
             richTextBox2.Size = new Size(276, 54);
@@ -380,8 +504,9 @@
             // 
             // richTextBox1
             // 
-            richTextBox1.Location = new Point(201, 67);
+            richTextBox1.Location = new Point(201, 86);
             richTextBox1.Name = "richTextBox1";
+            richTextBox1.ReadOnly = true;
             richTextBox1.Size = new Size(276, 54);
             richTextBox1.TabIndex = 17;
             richTextBox1.Text = "";
@@ -389,8 +514,9 @@
             // textBox5
             // 
             textBox5.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            textBox5.Location = new Point(201, 36);
+            textBox5.Location = new Point(201, 44);
             textBox5.Name = "textBox5";
+            textBox5.ReadOnly = true;
             textBox5.Size = new Size(276, 25);
             textBox5.TabIndex = 11;
             // 
@@ -398,7 +524,7 @@
             // 
             linkLabel2.AutoSize = true;
             linkLabel2.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            linkLabel2.Location = new Point(15, 278);
+            linkLabel2.Location = new Point(3, 317);
             linkLabel2.Name = "linkLabel2";
             linkLabel2.Size = new Size(181, 18);
             linkLabel2.TabIndex = 16;
@@ -410,7 +536,7 @@
             // 
             linkLabel1.AutoSize = true;
             linkLabel1.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            linkLabel1.Location = new Point(15, 212);
+            linkLabel1.Location = new Point(8, 229);
             linkLabel1.Name = "linkLabel1";
             linkLabel1.Size = new Size(82, 18);
             linkLabel1.TabIndex = 15;
@@ -422,7 +548,7 @@
             // 
             label11.AutoSize = true;
             label11.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            label11.Location = new Point(15, 144);
+            label11.Location = new Point(8, 162);
             label11.Name = "label11";
             label11.Size = new Size(62, 18);
             label11.TabIndex = 14;
@@ -432,7 +558,7 @@
             // 
             label10.AutoSize = true;
             label10.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            label10.Location = new Point(15, 86);
+            label10.Location = new Point(15, 87);
             label10.Name = "label10";
             label10.Size = new Size(26, 18);
             label10.TabIndex = 13;
@@ -442,7 +568,7 @@
             // 
             label9.AutoSize = true;
             label9.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            label9.Location = new Point(15, 43);
+            label9.Location = new Point(15, 39);
             label9.Name = "label9";
             label9.Size = new Size(44, 18);
             label9.TabIndex = 12;
@@ -450,18 +576,17 @@
             // 
             // label8
             // 
-            label8.AutoSize = true;
+            label8.BackColor = Color.SteelBlue;
             label8.Font = new Font("Arial", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label8.Location = new Point(3, 11);
+            label8.ForeColor = Color.White;
+            label8.Location = new Point(0, 0);
             label8.Name = "label8";
-            label8.Size = new Size(158, 22);
+            label8.Size = new Size(1366, 22);
             label8.TabIndex = 11;
             label8.Text = "Compose a Mail";
             // 
             // panel2
             // 
-            panel2.Controls.Add(panel11);
-            panel2.Controls.Add(panel8);
             panel2.Controls.Add(clb_attendees);
             panel2.Controls.Add(label7);
             panel2.Controls.Add(textBox4);
@@ -473,102 +598,18 @@
             panel2.Controls.Add(textBox1);
             panel2.Controls.Add(label3);
             panel2.Controls.Add(label2);
-            panel2.Location = new Point(8, 45);
+            panel2.Location = new Point(0, 97);
             panel2.Name = "panel2";
-            panel2.Size = new Size(1344, 307);
+            panel2.Size = new Size(1366, 226);
             panel2.TabIndex = 2;
-            //panel2.Paint += panel2_Paint;
-            // 
-            // panel11
-            // 
-            panel11.BorderStyle = BorderStyle.FixedSingle;
-            panel11.Controls.Add(panel12);
-            panel11.Controls.Add(button2);
-            panel11.Controls.Add(button1);
-            panel11.Location = new Point(726, 270);
-            panel11.Name = "panel11";
-            panel11.Size = new Size(287, 31);
-            panel11.TabIndex = 18;
-            // 
-            // panel12
-            // 
-            panel12.Location = new Point(56, 23);
-            panel12.Name = "panel12";
-            panel12.Size = new Size(200, 100);
-            panel12.TabIndex = 19;
-            // 
-            // button2
-            // 
-            button2.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            button2.Image = (Image)resources.GetObject("button2.Image");
-            button2.ImageAlign = ContentAlignment.MiddleLeft;
-            button2.Location = new Point(134, 3);
-            button2.Name = "button2";
-            button2.Size = new Size(91, 23);
-            button2.TabIndex = 18;
-            button2.Text = "Insert";
-            button2.TextAlign = ContentAlignment.MiddleRight;
-            button2.UseVisualStyleBackColor = true;
-            button2.Click += button2_Click;
-            // 
-            // button1
-            // 
-            button1.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            button1.Image = (Image)resources.GetObject("button1.Image");
-            button1.ImageAlign = ContentAlignment.MiddleLeft;
-            button1.Location = new Point(3, 3);
-            button1.Name = "button1";
-            button1.Size = new Size(93, 23);
-            button1.TabIndex = 17;
-            button1.Text = "Delete";
-            button1.TextAlign = ContentAlignment.MiddleRight;
-            button1.UseVisualStyleBackColor = true;
-            button1.Click += button1_Click;
-            // 
-            // panel8
-            // 
-            panel8.Controls.Add(button16);
-            panel8.Controls.Add(button15);
-            panel8.Location = new Point(529, 267);
-            panel8.Name = "panel8";
-            panel8.Size = new Size(809, 37);
-            panel8.TabIndex = 11;
-            // 
-            // button16
-            // 
-            button16.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            button16.Image = (Image)resources.GetObject("button16.Image");
-            button16.ImageAlign = ContentAlignment.MiddleLeft;
-            button16.Location = new Point(98, 3);
-            button16.Name = "button16";
-            button16.Size = new Size(93, 31);
-            button16.TabIndex = 16;
-            button16.Text = "Table";
-            button16.TextAlign = ContentAlignment.MiddleRight;
-            button16.UseVisualStyleBackColor = true;
-            button16.Click += button16_Click;
-            // 
-            // button15
-            // 
-            button15.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            button15.Image = (Image)resources.GetObject("button15.Image");
-            button15.ImageAlign = ContentAlignment.MiddleLeft;
-            button15.Location = new Point(7, 3);
-            button15.Name = "button15";
-            button15.Size = new Size(85, 31);
-            button15.TabIndex = 15;
-            button15.Text = "Files";
-            button15.TextAlign = ContentAlignment.MiddleRight;
-            button15.UseVisualStyleBackColor = true;
-            button15.Click += button15_Click;
             // 
             // clb_attendees
             // 
             clb_attendees.Font = new Font("Arial", 11.25F, FontStyle.Bold);
             clb_attendees.FormattingEnabled = true;
-            clb_attendees.Location = new Point(829, 59);
+            clb_attendees.Location = new Point(679, 112);
             clb_attendees.Name = "clb_attendees";
-            clb_attendees.Size = new Size(263, 144);
+            clb_attendees.Size = new Size(276, 84);
             clb_attendees.TabIndex = 10;
             clb_attendees.SelectedIndexChanged += clb_attendees_SelectedIndexChanged;
             // 
@@ -576,7 +617,7 @@
             // 
             label7.AutoSize = true;
             label7.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            label7.Location = new Point(711, 59);
+            label7.Location = new Point(544, 112);
             label7.Name = "label7";
             label7.Size = new Size(80, 18);
             label7.TabIndex = 9;
@@ -585,7 +626,7 @@
             // textBox4
             // 
             textBox4.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            textBox4.Location = new Point(151, 238);
+            textBox4.Location = new Point(679, 52);
             textBox4.Name = "textBox4";
             textBox4.Size = new Size(276, 25);
             textBox4.TabIndex = 8;
@@ -610,7 +651,7 @@
             // 
             label6.AutoSize = true;
             label6.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            label6.Location = new Point(3, 241);
+            label6.Location = new Point(543, 55);
             label6.Name = "label6";
             label6.Size = new Size(69, 18);
             label6.TabIndex = 5;
@@ -656,18 +697,19 @@
             // 
             // label2
             // 
-            label2.AutoSize = true;
+            label2.BackColor = Color.SteelBlue;
             label2.Font = new Font("Arial", 14.25F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label2.Location = new Point(3, 10);
+            label2.ForeColor = Color.White;
+            label2.Location = new Point(0, 0);
             label2.Name = "label2";
-            label2.Size = new Size(271, 22);
+            label2.Size = new Size(1366, 22);
             label2.TabIndex = 0;
             label2.Text = "Minutes of Selected Meeting";
             // 
             // cb_emailmeetings
             // 
             cb_emailmeetings.FormattingEnabled = true;
-            cb_emailmeetings.Location = new Point(192, 13);
+            cb_emailmeetings.Location = new Point(8, 62);
             cb_emailmeetings.Name = "cb_emailmeetings";
             cb_emailmeetings.Size = new Size(190, 23);
             cb_emailmeetings.TabIndex = 1;
@@ -677,7 +719,7 @@
             // 
             label1.AutoSize = true;
             label1.Font = new Font("Arial", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
-            label1.Location = new Point(11, 13);
+            label1.Location = new Point(8, 11);
             label1.Name = "label1";
             label1.Size = new Size(175, 24);
             label1.TabIndex = 0;
@@ -766,12 +808,13 @@
             panel1.PerformLayout();
             panel3.ResumeLayout(false);
             panel3.PerformLayout();
+            panel10.ResumeLayout(false);
             panel7.ResumeLayout(false);
+            panel8.ResumeLayout(false);
+            panel11.ResumeLayout(false);
             panel6.ResumeLayout(false);
             panel2.ResumeLayout(false);
             panel2.PerformLayout();
-            panel11.ResumeLayout(false);
-            panel8.ResumeLayout(false);
             contextMenuStrip1.ResumeLayout(false);
             contextMenuStrip2.ResumeLayout(false);
             ResumeLayout(false);
@@ -842,5 +885,7 @@
         private ToolStripMenuItem insertRightToolStripMenuItem;
         private ToolStripMenuItem insertLeftToolStripMenuItem;
         private Panel panel12;
+        private Label label12;
+        private Button button4;
     }
 }

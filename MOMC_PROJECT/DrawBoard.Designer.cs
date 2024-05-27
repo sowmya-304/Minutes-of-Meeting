@@ -144,7 +144,7 @@
             lstSlides.Font = new Font("Segoe UI", 11.25F, FontStyle.Regular, GraphicsUnit.Point, 0);
             lstSlides.FormattingEnabled = true;
             lstSlides.ItemHeight = 20;
-            lstSlides.Location = new Point(3, 90);
+            lstSlides.Location = new Point(3, 89);
             lstSlides.Name = "lstSlides";
             lstSlides.Size = new Size(205, 562);
             lstSlides.TabIndex = 23;
@@ -386,6 +386,7 @@
             btn_redo.Text = "Redo";
             btn_redo.TextAlign = ContentAlignment.BottomCenter;
             btn_redo.UseVisualStyleBackColor = false;
+            btn_redo.Click += btn_redo_Click;
             // 
             // btn_SaveClose
             // 
@@ -414,6 +415,7 @@
             btn_undo.Text = "Undo";
             btn_undo.TextAlign = ContentAlignment.BottomCenter;
             btn_undo.UseVisualStyleBackColor = false;
+            btn_undo.Click += btn_undo_Click;
             // 
             // btn_image
             // 
@@ -515,11 +517,13 @@
             // 
             pic.BackColor = Color.White;
             pic.BorderStyle = BorderStyle.FixedSingle;
-            pic.Location = new Point(208, 91);
+            pic.Location = new Point(208, 90);
             pic.Name = "pic";
             pic.Size = new Size(1152, 561);
             pic.TabIndex = 2;
             pic.TabStop = false;
+            pic.Click += pic_Click;
+            pic.PaddingChanged += pic_PaddingChanged;
             pic.Paint += pic_Paint;
             pic.MouseClick += pic_MouseClick;
             pic.MouseDown += pic_MouseDown;
@@ -594,5 +598,7 @@
         private Panel panel5;
         private Label label2;
         private Label label3;
+
+        
     }
 }

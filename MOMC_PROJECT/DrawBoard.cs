@@ -3,6 +3,7 @@ using System.Windows.Shapes;
 using static MOMC_PROJECT.MOM_Prop;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
+using System.Drawing;
 namespace MOMC_PROJECT
 {
     public partial class DrawBoard : UserControl
@@ -40,8 +41,14 @@ namespace MOMC_PROJECT
         private List<Slide> slides;
         private int currentSlideIndex;
         //undo redo
+        // private Stack<List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>> undoStack = new Stack<List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>>();
+        // private Stack<List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>> redoStack = new Stack<List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>>();
+
         private Stack<List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>> undoStack = new Stack<List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>>();
         private Stack<List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>> redoStack = new Stack<List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>>();
+        private List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>> currentDrawing = new List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>();
+        private Panel drawingPanel = new Panel();
+
         //Saved picturebox path
         public static List<System.Drawing.Image> picimages = new List<System.Drawing.Image>(); // Initialize the list
         //
@@ -49,11 +56,18 @@ namespace MOMC_PROJECT
         private bool isEraserSelected = false;
         private bool isImageSelected = false;
         private bool isIconselected = false;
+        private Bitmap currentBitmap;
+        private PointF rect;
+
         public DrawBoard()
         {
             InitializeComponent();
             ScreenLoad();
+            btn_undo.Click += btn_undo_Click;
+            btn_redo.Click += btn_redo_Click;
+
         }
+
         private void ScreenLoad()
         {
             pic.Visible = false;
@@ -73,6 +87,8 @@ namespace MOMC_PROJECT
             label1.Text = "";
             AttachMouseDownEventHandler(this);
             this.lstSlides.DoubleClick += new System.EventHandler(this.lstSlides_DoubleClick);
+            currentBitmap = new Bitmap(pic.Width, pic.Height);
+            pic.Image = currentBitmap;
             //this.btn_rename.Click += new System.EventHandler(this.btn_rename_Click);
         }
         private void pic_MouseDown(object sender, MouseEventArgs e)
@@ -205,6 +221,16 @@ namespace MOMC_PROJECT
                 pic.Invalidate(); // Refresh to show the final selection rectangle
             }
             Cursor cursor = Cursors.Default;
+            if (isImageDrawing && selectedImage != null)
+            {
+                isImageDrawing = false;
+                // Add the drawn image to the currentDrawing list
+                AddDrawingAction(selectedImage, currentImageRect);
+                // Reset selected image and cursor
+                selectedImage = null;
+                Cursor = Cursors.Default;
+                pic.Invalidate();
+            }
         }
         private System.Drawing.Rectangle GetShapeBounds(Point p1, Point p2)
         {
@@ -281,6 +307,7 @@ namespace MOMC_PROJECT
                 e.Graphics.DrawImage(selectedIconImage, currentShapeRect);
             }
             Cursor cursor = Cursors.Default;
+            SaveStateToUndoStack();
         }
 
         private void btn_clear_Click(object sender, EventArgs e)
@@ -634,8 +661,8 @@ namespace MOMC_PROJECT
             }
             panel1.Controls.Clear();
             panel1.BackColor = SystemColors.Control;
-            MeetingsInfo_ComposeEmail m=new MeetingsInfo_ComposeEmail();
-            panel1.Dock= DockStyle.Fill;    
+            MeetingsInfo_ComposeEmail m = new MeetingsInfo_ComposeEmail();
+            panel1.Dock = DockStyle.Fill;
             panel1.Controls.Add(m);
         }
         private void btn_SaveClose_Click(object sender, EventArgs e)
@@ -754,7 +781,6 @@ namespace MOMC_PROJECT
                 lstSlides.Invalidate();
             }
         }
-
         private void btnPreviousSlide_Click(object sender, EventArgs e)
         {
             if (currentSlideIndex > 0)
@@ -896,7 +922,7 @@ namespace MOMC_PROJECT
                                     if (i < slides.Count - 1)
                                     {
                                         document.NewPage();
-                                    }
+                                    }   
                                 }
                             }
 
@@ -912,10 +938,10 @@ namespace MOMC_PROJECT
         }
         private iTextSharp.text.Image ConvertSlideToImage(Slide slide)
         {
-            int slideWidth = 800;  
-            int slideHeight = 600; 
+            int slideWidth = 800;
+            int slideHeight = 600;
             using (Bitmap bitmap = new Bitmap(slideWidth, slideHeight))
-            { 
+            {
                 using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
                 {
                     bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
@@ -1003,6 +1029,7 @@ namespace MOMC_PROJECT
         }
 
         private void trackBar1_MouseUp(object sender, MouseEventArgs e)
+
         {
             trackBar1.Visible = false;
         }
@@ -1010,6 +1037,91 @@ namespace MOMC_PROJECT
         private void trackBar2_MouseUp(object sender, MouseEventArgs e)
         {
             trackBar2.Visible = false;
+        }
+
+        private void PerformDrawing(System.Drawing.Image image, System.Drawing.Rectangle rectangle)
+        {
+            // Save current state before drawing
+            SaveStateToUndoStack();
+
+            // Draw the image onto the PictureBox
+            using (Graphics g = Graphics.FromImage(pic.Image))
+            {
+                g.DrawImage(image, rect);
+            }
+
+            pic.Invalidate(); // Trigger repaint
+        }
+
+        private void SaveStateToUndoStack()
+        {
+            // Create a clone of the current drawing state
+            var clone = new List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>();
+            foreach (var item in currentDrawing)
+            {
+                clone.Add(new Tuple<System.Drawing.Image, System.Drawing.Rectangle>(item.Item1, item.Item2));
+            }
+
+            // Push the clone to the undoStack
+            undoStack.Push(clone);
+        }
+        public void btn_undo_Click(object sender, EventArgs e)
+        {
+            if (undoStack.Count > 0)
+            {
+                // Push the current state to redoStack
+                redoStack.Push(new List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>(currentDrawing));
+
+                // Retrieve the previous state from undoStack
+                currentDrawing = undoStack.Pop();
+
+                // Clear the drawing area
+                g.Clear(Color.White);
+                //pic.Image = bm;
+
+                for (int i = 0; i < currentDrawing.Count - 1; i++)
+                {
+                    var item = currentDrawing[i];
+                    g.DrawImage(item.Item1, item.Item2);
+                }
+
+                pic.Invalidate(); // Trigger repaint
+            }
+        }
+        private void AddDrawingAction(System.Drawing.Image image, System.Drawing.Rectangle location)
+        {
+            currentDrawing.Add(new Tuple<System.Drawing.Image, System.Drawing.Rectangle>(image, location));
+            // Save the current state to the undo stack after each drawing action
+            SaveStateToUndoStack();
+        }
+        private void pic_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void pic_PaddingChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void btn_redo_Click(object sender, EventArgs e)
+        {
+            if (redoStack.Count > 0)
+            {
+                // Push the current state to undoStack
+                undoStack.Push(new List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>(currentDrawing));
+
+                // Retrieve the next state from redoStack
+                currentDrawing = redoStack.Pop();
+
+                // Redraw the currentDrawing
+                foreach (var item in currentDrawing)
+                {
+                    g.DrawImage(item.Item1, item.Item2);
+                }
+
+                pic.Invalidate(); // Trigger repaint
+            }
         }
     }
 }

@@ -30,6 +30,8 @@ namespace MOMC_PROJECT
         private Stack<string> redoStack = new Stack<string>();
         private string currentText = "";
         private DataGridView dataGridView1;
+        private bool isTableVisible = false; // Flag to track table visibility
+
         public MeetingsInfo_ComposeEmail()
         {
             InitializeComponent();
@@ -38,7 +40,7 @@ namespace MOMC_PROJECT
             OnLoad();
             PopulateMeetingsComboBox();
             AttachMouseDownEventHandler(this);
-            InitializeDataGridView();
+            //InitializeDataGridView();
             InitializeComponent1();
 
         }
@@ -76,94 +78,7 @@ namespace MOMC_PROJECT
             panel9.Controls.Add(button);
         }
 
-        /*      private string previousBullet = "";
-              private void ApplyBulletToSelectedLine(string bulletChar)
-              {
-                  int selectionStart = richTextBox3.SelectionStart;
-                  int lineIndex = richTextBox3.GetLineFromCharIndex(selectionStart);
 
-                  // Check if the line index is valid
-                  if (lineIndex >= 0 && lineIndex < richTextBox3.Lines.Length)
-                  {
-                      int lineStart = richTextBox3.GetFirstCharIndexFromLine(lineIndex);
-                      int lineLength = richTextBox3.Lines[lineIndex].Length;
-
-                      // Get the current line text
-                      string lineText = richTextBox3.Lines[lineIndex];
-
-                      // Check if the current line already has a bullet point
-                      if (lineText.StartsWith(previousBullet))
-                      {
-                          // Replace the existing bullet point with the new one
-                          richTextBox3.Select(lineStart, previousBullet.Length);
-                          richTextBox3.SelectedText = bulletChar;
-                      }
-                      else
-                      {
-                          // Insert the new bullet point at the beginning of the line
-                          richTextBox3.Select(lineStart, 0);
-                          richTextBox3.SelectedText = bulletChar + " ";
-                      }
-                      // Store the current bullet character as the previous bullet character
-                      previousBullet = bulletChar;
-                      // Restore selection to original position
-                      richTextBox3.Select(selectionStart + bulletChar.Length + 1, 0);
-                      richTextBox3.Focus();
-                  }
-              }
-      */
-        /* private string previousBullet = "";
-         private void ApplyBulletToSelectedLine(string bulletChar)
-         {
-             int selectionStart = richTextBox3.SelectionStart;
-             int lineIndex = richTextBox3.GetLineFromCharIndex(selectionStart);
-
-             // Check if the line index is valid
-             if (lineIndex >= 0 && lineIndex < richTextBox3.Lines.Length)
-             {
-                 int lineStart = richTextBox3.GetFirstCharIndexFromLine(lineIndex);
-                 int lineLength = richTextBox3.Lines[lineIndex].Length;
-
-                 // Get the current line text
-                 string lineText = richTextBox3.Lines[lineIndex];
-
-                 // Check if the current line already has a bullet point
-                 if (lineText.StartsWith(previousBullet))
-                 {
-                     // Replace the existing bullet point with the new one
-                     richTextBox3.Select(lineStart, previousBullet.Length);
-                     richTextBox3.SelectedText = bulletChar;
-                 }
-                 else
-                 {
-                     // Insert the new bullet point at the beginning of the line
-                     richTextBox3.Select(lineStart, 0);
-                     richTextBox3.SelectedText = bulletChar + " ";
-                 }
-                 // Store the current bullet character as the previous bullet character
-                 previousBullet = bulletChar;
-
-                 // Apply bullet points to subsequent lines with the same bullet point until an empty line or different bullet point
-                 for (int i = lineIndex + 1; i < richTextBox3.Lines.Length; i++)
-                 {
-                     int nextLineStart = richTextBox3.GetFirstCharIndexFromLine(i);
-                     string nextLineText = richTextBox3.Lines[i];
-                     if (nextLineText.TrimStart().StartsWith(previousBullet) || nextLineText.Trim() == "")
-                     {
-                         richTextBox3.Select(nextLineStart, 0);
-                         richTextBox3.SelectedText = bulletChar + " ";
-                     }
-                     else
-                     {
-                         break; // Stop applying bullet points if the next line doesn't match
-                     }
-                 }
-
-                 // Restore selection to original position
-                 richTextBox3.Select(selectionStart + bulletChar.Length + 1, 0);
-                 richTextBox3.Focus();
-             }
-         }*/
         private string previousBullet = "";
         private void ApplyBulletToSelectedLine(string bulletChar)
         {
@@ -223,6 +138,54 @@ namespace MOMC_PROJECT
                 richTextBox3.Focus();
             }
         }
+        /*  private void ApplyBulletToSelectedText(string bulletChar)
+          {
+              int selectionStart = richTextBox3.SelectionStart;
+              int selectionEnd = selectionStart + richTextBox3.SelectionLength;
+
+              int startLineIndex = richTextBox3.GetLineFromCharIndex(selectionStart);
+              int endLineIndex = richTextBox3.GetLineFromCharIndex(selectionEnd);
+
+              for (int lineIndex = startLineIndex; lineIndex <= endLineIndex; lineIndex++)
+              {
+                  // Check if the line index is valid
+                  if (lineIndex >= 0 && lineIndex < richTextBox3.Lines.Length)
+                  {
+                      int lineStart = richTextBox3.GetFirstCharIndexFromLine(lineIndex);
+                      string lineText = richTextBox3.Lines[lineIndex];
+
+                      // Check if the current line already has a bullet point
+                      if (lineText.StartsWith(previousBullet))
+                      {
+                          // Replace the existing bullet point with the new one
+                          richTextBox3.Select(lineStart, previousBullet.Length);
+                          richTextBox3.SelectedText = bulletChar;
+                      }
+                      else if (lineText.StartsWith(previousBullet + " "))
+                      {
+                          // Replace the existing sub-bullet point with the new one
+                          richTextBox3.Select(lineStart, previousBullet.Length + 1);
+                          richTextBox3.SelectedText = bulletChar + " ";
+                      }
+                      else
+                      {
+                          // Insert the new bullet point at the beginning of the line as sub-bullet
+                          richTextBox3.Select(lineStart, 0);
+                          richTextBox3.SelectedText = bulletChar + " ";
+                      }
+                  }
+              }
+
+              // Store the current bullet character as the previous bullet character
+              previousBullet = bulletChar;
+
+              // Restore selection to original position
+              richTextBox3.Select(selectionStart, selectionEnd - selectionStart);
+              richTextBox3.Focus();
+          }
+  */
+
+
 
         private void InitializeDataGridView()
         {
@@ -255,8 +218,14 @@ namespace MOMC_PROJECT
         }
         private void OnLoad()
         {
+            textBox1.Enabled = false;
+            textBox2.Enabled = false;
+            textBox3.Enabled = false;
+            textBox4.Enabled = false;
+            textBox5.Enabled = false;
+            richTextBox1.Enabled = false;
             // Define the path to the JSON file
-            string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "data.json");
+            string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"D:\UI\Minutes of Meeting\MOMC_PROJECT\Data.json");
 
             // Read the JSON file
             string jsonData = File.ReadAllText(filePath);
@@ -294,6 +263,7 @@ namespace MOMC_PROJECT
                     textBox3.Text = selectedMeeting.EndDateTime.ToString();
                     textBox4.Text = (selectedMeeting.EndDateTime - selectedMeeting.StartDateTime).ToString();
                     textBox5.Text = MOMC.toEmail;
+                    richTextBox1.Text = null;
                     foreach (var attendeeEmail in selectedMeeting.AttendeeEmail)
                     {
                         richTextBox1.Text += attendeeEmail + Environment.NewLine;
@@ -306,180 +276,23 @@ namespace MOMC_PROJECT
                     }
 
                     panel4.Controls.Clear();
-                    /* foreach (var document in selectedMeeting.Documents)
-                     {
-                         AddAttachmentPanel(document);
-                     }*/
+
                 }
             }
         }
-        /*   private void AddAttachmentPanel(string filePath)
-           {
-               Panel outerPanel = new Panel
-               {
-                   AutoSize = true,
-                   Height = 30
-               };
 
-               Panel innerPanel = new Panel
-               {
-                   Size = new Size(panel4.Width - 20, 30),
-                   Location = new Point(0, 0),
-                   Tag = filePath
-               };
-
-               PictureBox pictureBox = new PictureBox
-               {
-                   Size = new Size(24, 24),
-                   Location = new Point(0, 3),
-                   SizeMode = PictureBoxSizeMode.StretchImage,
-                   ImageLocation = GetIconPathForFileType(filePath)
-               };
-
-               Label attachmentLabel = new Label
-               {
-                   Text = Path.GetFileName(filePath),
-                   AutoSize = true,
-                   Location = new Point(30, 0),
-                   Cursor = Cursors.Hand,
-                   MaximumSize = new Size(panel4.Width - 100, 24),
-                   Tag = filePath
-               };
-               attachmentLabel.Click += AttachmentLabel_Click;
-
-               Button removeButton = new Button
-               {
-                   Text = "X",
-                   Size = new Size(24, 24),
-                   Location = new Point(innerPanel.Width - 30, 3),
-                   Tag = outerPanel
-               };
-               removeButton.Click += RemoveButton_Click;
-
-               innerPanel.Controls.Add(pictureBox);
-               innerPanel.Controls.Add(attachmentLabel);
-               innerPanel.Controls.Add(removeButton);
-
-               outerPanel.Controls.Add(innerPanel);
-
-               panel4.Controls.Add(outerPanel);
-
-               UpdateAttachmentPanelsLayout();
-           }*/
         private void RemoveButton_Click(object sender, EventArgs e)
         {
-            /*  try
-              {
-                  if (sender is Button button)
-                  {
-                      Panel? attachmentPanel = button.Tag as Panel;
-                      if (attachmentPanel != null)
-                      {
-                          string filePath = attachmentPanel.Tag as string;
-                          attachments.Remove(filePath);
 
-                          string selectedMeetingName = cb_emailmeetings.SelectedItem.ToString();
-                          var selectedMeeting = meetingDataList?
-                              .SelectMany(md => md.Meetings)
-                              .FirstOrDefault(m => m.Name == selectedMeetingName);
-
-                          if (selectedMeeting != null)
-                          {
-                              selectedMeeting.Documents.Remove(filePath);
-                          }
-
-                          panel4.Controls.Remove(attachmentPanel);
-                          UpdateAttachmentPanelsLayout();
-                      }
-                  }
-              }
-              catch (Exception ex)
-              {
-                  Console.WriteLine(ex.StackTrace);
-              }*/
         }
         private void AttachmentLabel_Click(object sender, EventArgs e)
         {
-            /* if (sender is Label label)
-             {
-                 string? filePath = label.Tag as string;
-                 if (File.Exists(filePath))
-                 {
-                     Process.Start(new ProcessStartInfo
-                     {
-                         FileName = filePath,
-                         UseShellExecute = true
-                     });
-                 }
-                 else
-                 {
-                     MessageBox.Show("File not found: " + filePath, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                 }
-             }*/
         }
-        /*  private string GetIconPathForFileType(string filePath)
-          {
-              string extension = Path.GetExtension(filePath).ToLower();
-              switch (extension)
-              {
-                  case ".pdf":
-                      return @"D:\UI\Minutes of Meeting\MOMC_PROJECT\Images\pdf.png"; // Provide the path to your PDF icon
-                  case ".doc":
-                  case ".docx":
-                      return @"D:\UI\Minutes of Meeting\MOMC_PROJECT\Images\word.png"; // Provide the path to your Word icon
-                  case ".xls":
-                  case ".xlsx":
-                      return @"D:\UI\Minutes of Meeting\MOMC_PROJECT\Images\excel.png"; // Provide the path to your Excel icon
-                  case ".png":
-                  case ".jpg":
-                  case ".jpeg":
-                      return @"D:\UI\Minutes of Meeting\MOMC_PROJECT\Images\image.png"; // Provide the path to your Image icon
-                  default:
-                      return @"D:\UI\Minutes of Meeting\MOMC_PROJECT\Images\document.png"; // Provide the path to your default icon for other file types
-              }
-          }
-          private void UpdateAttachmentPanelsLayout()
-          {
-              int y = 0;
-              foreach (Control control in panel4.Controls)
-              {
-                  if (control is Panel panel)
-                  {
-                      panel.Location = new Point(0, y);
-                      y += panel.Height + 5;
-                  }
-              }
-          }*/
+
 
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            /*    OpenFileDialog openFileDialog = new OpenFileDialog
-                {
-                    Multiselect = true,
-                    Filter = "All Files (*.*)|*.*"
-                };
 
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
-                {
-                    foreach (string fileName in openFileDialog.FileNames)
-                    {
-                        if (!attachments.Contains(fileName))
-                        {
-                            attachments.Add(fileName);
-                            AddAttachmentPanel(fileName);
-
-                            string? selectedMeetingName = cb_emailmeetings.SelectedItem?.ToString();
-                            var selectedMeeting = meetingDataList?
-                                .SelectMany(md => md.Meetings)
-                                .FirstOrDefault(m => m.Name == selectedMeetingName);
-
-                            if (selectedMeeting != null)
-                            {
-                                selectedMeeting.Documents.Add(fileName);
-                            }
-                        }
-                    }
-                }*/
         }
 
         private void clb_attendees_SelectedIndexChanged(object sender, EventArgs e)
@@ -525,7 +338,25 @@ namespace MOMC_PROJECT
                     }
                 }
                 message.Subject = richTextBox2.Text;
-                message.Body = richTextBox3.Text;
+                //message.Body = richTextBox3.Text;
+                StringBuilder body = new StringBuilder();
+
+                // Append the content of richTextBox3 to the body
+                body.AppendLine(richTextBox3.Text);
+
+                // Append the content of dataGridView1 to the body
+                body.AppendLine("Data from Table:");
+                foreach (DataGridViewRow row in dataGridView1.Rows)
+                {
+                    foreach (DataGridViewCell cell in row.Cells)
+                    {
+                        body.Append(cell.Value.ToString());
+                        body.Append("\t");
+                    }
+                    body.AppendLine();
+                }
+
+                message.Body = body.ToString();
                 // Attach files
                 foreach (string filePath in attachments)
                 {
@@ -560,6 +391,7 @@ namespace MOMC_PROJECT
         private void btn_mail_insert_Click(object sender, EventArgs e)
         {
             panel7.Visible = false;
+            panel11.Visible = false;
             panel8.Visible = true;
         }
 
@@ -704,7 +536,6 @@ namespace MOMC_PROJECT
         private void btn_mail_ff_Click(object sender, EventArgs e)
         {
             // Make panel9 visible
-            panel9.Controls.Clear();
             panel9.Visible = true;
 
             // Set the size of panel9
@@ -928,113 +759,14 @@ namespace MOMC_PROJECT
 
         private void btn_mail_bullets_Click(object sender, EventArgs e)
         {
-
+            panel9.Controls.Clear();
+            InitializeComponent1();
             Button button = (Button)sender;
             string bulletChar = button.Text;
+            //  ApplyBulletToSelectedText(bulletChar);
             ApplyBulletToSelectedLine(bulletChar);
             panel9.Visible = true;
-            /* panel9.Controls.Clear();
-             panel9.Visible = true;
-             panel9.Size = new Size(212, 167);
 
-             // Create a new TableLayoutPanel
-             TableLayoutPanel tableLayoutPanel = new TableLayoutPanel
-             {
-                 ColumnCount = 1,
-                 RowCount = 3, // Adjusted to 3 rows
-                 Dock = DockStyle.Fill,
-                 AutoSize = false
-             };
-
-             // Add rows to the TableLayoutPanel
-             tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F)); // First row for the label
-             tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 33F)); // Second row for buttons
-             tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F)); // Third row for single button
-
-             // Create and add the label to the first row
-             Label bulletsLabel = new Label
-             {
-                 Text = "Bullets",
-                 AutoSize = true,
-                 TextAlign = ContentAlignment.MiddleCenter,
-                 Dock = DockStyle.Fill
-             };
-             tableLayoutPanel.Controls.Add(bulletsLabel, 0, 0);
-
-             // Define the file paths for each image
-             string[] images = new string[]
-             {
-         "D:\\UI\\Minutes of Meeting\\MOMC_PROJECT\\Resources\\icons8-done-26.png",
-         "D:\\UI\\Minutes of Meeting\\MOMC_PROJECT\\Resources\\icons8-filled-circle-24.png",
-         "D:\\UI\\Minutes of Meeting\\MOMC_PROJECT\\Resources\\icons8-square-26.png"
-             };
-
-             // Create and add buttons with images to the second row
-             for (int i = 0; i < 2; i++)
-             {
-                 FlowLayoutPanel buttonPanel = new FlowLayoutPanel
-                 {
-                     Dock = DockStyle.Fill,
-                     FlowDirection = FlowDirection.LeftToRight,
-                     AutoSize = false
-                 };
-
-                 for (int j = 0; j < 3; j++) // Adjusted loop to iterate through all images
-                 {
-                     Button button = new Button
-                     {
-                         Size = new Size(60, 30), // Set the size of each button
-                         TextAlign = ContentAlignment.MiddleCenter,
-                         FlatStyle = FlatStyle.Flat // Make the button flat for better image display
-                     };
-
-                     // Calculate the correct index in the images array
-                     int index = (i * 3) + j;
-                     if (index < images.Length)
-                     {
-                         button.Image = Image.FromFile(images[index]); // Load image from file path and set it as button's image
-                     }
-
-                     // Handle the click event for each button
-                     button.Click += (btnSender, btnEvent) =>
-                     {
-                         selectedButton = (Button)btnSender;
-                     };
-
-                     buttonPanel.Controls.Add(button);
-                 }
-
-                 tableLayoutPanel.Controls.Add(buttonPanel, 0, i + 1);
-             }
-
-             // Create and add a single button to the third row
-             Button singleButton = new Button
-             {
-                 Size = new Size(60, 30), // Set the size of the button
-                 TextAlign = ContentAlignment.MiddleCenter,
-                 FlatStyle = FlatStyle.Flat // Make the button flat for better image display
-             };
-
-             // Handle the click event for the single button
-             singleButton.Click += (btnSender, btnEvent) =>
-             {
-                 if (selectedButton != null)
-                 {
-                     // Append the image of the selected button to richTextBox3
-                     richTextBox3.AppendText(Environment.NewLine);
-                     richTextBox3.SelectionStart = richTextBox3.TextLength;
-                     // Convert the image to a bitmap and place it on the clipboard
-                     Clipboard.SetImage((Bitmap)selectedButton.Image);
-
-                     // Paste the image from the clipboard into the rich text box
-                     richTextBox3.Paste();
-                 }
-             };
-
-             tableLayoutPanel.Controls.Add(singleButton, 0, 2);
-
-             // Add the TableLayoutPanel to panel9
-             panel9.Controls.Add(tableLayoutPanel);*/
         }
         private List<Panel> buttonPanels = new List<Panel>();
         private void button15_Click(object sender, EventArgs e)
@@ -1119,12 +851,45 @@ namespace MOMC_PROJECT
         }
         private void button16_Click(object sender, EventArgs e)
         {
-            panel10.Visible = true;
-            panel10.Controls.Clear();
+            // Check if dataGridView1 is not initialized or has no data
+            if (dataGridView1 == null || dataGridView1.Rows.Count == 0)
+            {
+                panel10.Visible = true;
+                panel10.Controls.Clear();
+                panel11.Visible = true;
+                isTableVisible = true; // Set the flag to indicate that the table is visible
 
-            // Initialize DataGridView
-            InitializeDataGridView();
+                // Initialize DataGridView
+                InitializeDataGridView();
+
+                // Store the entered data into a list
+                List<string> enteredData = new List<string>();
+                foreach (string line in richTextBox3.Lines)
+                {
+                    enteredData.Add(line);
+                }
+
+                // Ensure there are at least 12 lines to allow updating
+                while (richTextBox3.Lines.Length < 12)
+                {
+                    richTextBox3.AppendText(Environment.NewLine);
+                }
+
+                // Update data from line 10 with the entered data
+                int lineIndex = 10; // 0-based index for the 11th line
+                int count = Math.Min(enteredData.Count, richTextBox3.Lines.Length - lineIndex);
+                for (int i = 0; i < count; i++)
+                {
+                    richTextBox3.Lines[lineIndex + i] = enteredData[i];
+                }
+
+                // Move the cursor to the start of the 11th line
+                int lineStart = richTextBox3.GetFirstCharIndexFromLine(lineIndex);
+                richTextBox3.Select(lineStart, 0);
+                richTextBox3.Focus();
+            }
         }
+
         private void btn_undo_Click(object sender, EventArgs e)
         {
             if (undoStack.Count > 0)
@@ -1156,6 +921,27 @@ namespace MOMC_PROJECT
                 redoStack.Clear(); // Clear redo stack
                 UpdateUndoRedoButtons();
             }
+            // Save the current selection start and length
+            int selectionStart = richTextBox3.SelectionStart;
+            int selectionLength = richTextBox3.SelectionLength;
+
+            // Determine the starting line based on the presence of the data grid view
+            int startingLine = dataGridView1 != null ? 10 : 0;
+
+            // Set the starting line for text insertion
+            if (richTextBox3.Lines.Length > startingLine)
+            {
+                int lineStart = richTextBox3.GetFirstCharIndexFromLine(startingLine);
+
+                // Ensure the current selection start is at or after the starting line
+                selectionStart = Math.Max(selectionStart, lineStart);
+
+                richTextBox3.Select(selectionStart, 0);
+            }
+
+            // Restore the previous selection
+            richTextBox3.Select(selectionStart, selectionLength);
+            richTextBox3.ScrollToCaret();
         }
         private void UpdateUndoRedoButtons()
         {
@@ -1171,6 +957,7 @@ namespace MOMC_PROJECT
         private void MeetingsInfo_ComposeEmail_Load_2(object sender, EventArgs e)
         {
             panel10.Visible = false;
+            panel11.Visible = false;
         }
 
         private void contextMenuStrip1_Opening(object sender, CancelEventArgs e)
@@ -1205,8 +992,13 @@ namespace MOMC_PROJECT
         }
         private void deleteTableToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            dataGridView1.Columns.Clear();
-            dataGridView1.Rows.Clear();
+            if (dataGridView1 != null)
+            {
+                dataGridView1.Columns.Clear();
+                dataGridView1.Rows.Clear();
+                dataGridView1.Dispose(); // Dispose the dataGridView1 control to completely destroy it
+                dataGridView1 = null; // Set dataGridView1 to null to indicate it's no longer initialized
+            }
             panel10.Visible = false;
         }
         private void button2_Click(object sender, EventArgs e)
@@ -1271,7 +1063,10 @@ namespace MOMC_PROJECT
                 dataGridView1.Columns.Insert(columnIndex, new DataGridViewTextBoxColumn());
             }
         }
-
+        private bool IsTableVisible()
+        {
+            return dataGridView1.Visible;
+        }
         private void richTextBox3_KeyPress(object sender, KeyPressEventArgs e)
         {
             // Check if the Enter key is pressed
@@ -1303,6 +1098,68 @@ namespace MOMC_PROJECT
                     }
                 }
             }
+        }
+
+        private void richTextBox3_KeyDown(object sender, KeyEventArgs e)
+        {
+
+            if (e.KeyCode == Keys.Back)
+            {
+                // Get the current cursor position
+                int currentPosition = richTextBox3.SelectionStart;
+
+                // If the cursor is at the starting line, prevent further backspace action
+                if (dataGridView1 != null && currentPosition <= richTextBox3.GetFirstCharIndexFromLine(10))
+                {
+                    e.Handled = true;
+                    return;
+                }
+            }
+        }
+        private void button3_Click(object sender, EventArgs e)
+        {
+            this.Enabled = false;
+            PreviewMailScreen p = new PreviewMailScreen();
+            p.Text = "Preview Mail Screen";
+
+            p.FromEmailAddress = textBox5.Text;
+            p.ToEmailAddresses = new List<string>(richTextBox2.Lines.Where(line => !string.IsNullOrWhiteSpace(line)));
+            p.Subject = richTextBox2.Text;
+            p.Body = richTextBox3.Text;
+            StringBuilder body = new StringBuilder();
+            body.AppendLine(richTextBox3.Text);
+            body.AppendLine("Data from Table:");
+            if (dataGridView1 != null)
+            {
+                foreach (DataGridViewRow row in dataGridView1.Rows)
+                {
+                    foreach (DataGridViewCell cell in row.Cells)
+                    {
+                        body.Append(cell.Value.ToString());
+                        body.Append("\t");
+                    }
+                    body.AppendLine();
+                }
+                p.DataGridViewContent = body.ToString();
+            }
+            p.Attachments = new List<string>(attachments);
+            // Show the dynamic form
+            p.ShowDialog();
+
+            // Re-enable the main form when the dynamic form is closed
+            this.Enabled = true;
+        }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            panel1.Controls.Clear();
+            panel1.BackColor = Color.White;
+            MOMC mOMC = new MOMC();
+            mOMC.TopLevel = false;  // This makes it not a top-level control
+            mOMC.FormBorderStyle = FormBorderStyle.None;  // Remove borders if necessary
+            mOMC.Dock = DockStyle.Fill;
+            panel1.Controls.Add(mOMC);
+            mOMC.Show();
         }
     }
 }
