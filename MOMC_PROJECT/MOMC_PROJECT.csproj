@@ -30,4 +30,6 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <ProjectExtensions><VisualStudio><UserProperties data_1json__JsonSchema="&quot;19n81a0427@gmail.com" /></VisualStudio></ProjectExtensions>
+
 </Project>

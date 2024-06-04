@@ -34,15 +34,20 @@
             panel1 = new Panel();
             label4 = new Label();
             panel2 = new Panel();
+            button1 = new Button();
             label5 = new Label();
             richTextBox1 = new RichTextBox();
             richTextBox2 = new RichTextBox();
             richTextBox3 = new RichTextBox();
             label6 = new Label();
             label7 = new Label();
-            listBox1 = new ListBox();
+            listView1 = new ListView();
+            dataGridView1 = new DataGridView();
+            panel3 = new Panel();
             panel1.SuspendLayout();
             panel2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
+            panel3.SuspendLayout();
             SuspendLayout();
             // 
             // label1
@@ -77,7 +82,7 @@
             panel1.BackColor = SystemColors.ActiveBorder;
             panel1.BorderStyle = BorderStyle.FixedSingle;
             panel1.Controls.Add(label4);
-            panel1.Location = new Point(4, 224);
+            panel1.Location = new Point(4, 163);
             panel1.Name = "panel1";
             panel1.Size = new Size(646, 37);
             panel1.TabIndex = 3;
@@ -95,12 +100,23 @@
             // 
             panel2.BackColor = SystemColors.ActiveBorder;
             panel2.BorderStyle = BorderStyle.FixedSingle;
+            panel2.Controls.Add(button1);
             panel2.Controls.Add(label5);
-            panel2.Location = new Point(4, 400);
+            panel2.Location = new Point(4, 319);
             panel2.Name = "panel2";
             panel2.Size = new Size(646, 37);
             panel2.TabIndex = 4;
             panel2.Paint += panel2_Paint;
+            // 
+            // button1
+            // 
+            button1.Location = new Point(502, 6);
+            button1.Name = "button1";
+            button1.Size = new Size(139, 23);
+            button1.TabIndex = 5;
+            button1.Text = "View / Hide Table";
+            button1.UseVisualStyleBackColor = true;
+            button1.Click += button1_Click;
             // 
             // label5
             // 
@@ -116,24 +132,24 @@
             richTextBox1.Location = new Point(55, 81);
             richTextBox1.Name = "richTextBox1";
             richTextBox1.ReadOnly = true;
-            richTextBox1.Size = new Size(584, 122);
+            richTextBox1.Size = new Size(584, 76);
             richTextBox1.TabIndex = 5;
             richTextBox1.Text = "";
             // 
             // richTextBox2
             // 
-            richTextBox2.Location = new Point(4, 267);
+            richTextBox2.Location = new Point(4, 206);
             richTextBox2.Name = "richTextBox2";
-            richTextBox2.Size = new Size(646, 127);
+            richTextBox2.Size = new Size(646, 107);
             richTextBox2.TabIndex = 6;
             richTextBox2.Text = "";
             // 
             // richTextBox3
             // 
-            richTextBox3.Location = new Point(4, 443);
+            richTextBox3.Location = new Point(4, 362);
             richTextBox3.Name = "richTextBox3";
             richTextBox3.ReadOnly = true;
-            richTextBox3.Size = new Size(646, 219);
+            richTextBox3.Size = new Size(646, 283);
             richTextBox3.TabIndex = 7;
             richTextBox3.Text = "";
             // 
@@ -155,21 +171,44 @@
             label7.TabIndex = 9;
             label7.Text = "label7";
             // 
-            // listBox1
+            // listView1
             // 
-            listBox1.FormattingEnabled = true;
-            listBox1.ItemHeight = 15;
-            listBox1.Location = new Point(12, 282);
-            listBox1.Name = "listBox1";
-            listBox1.Size = new Size(627, 94);
-            listBox1.TabIndex = 10;
-            listBox1.DoubleClick += listBox1_DoubleClick;
+            listView1.Location = new Point(12, 218);
+            listView1.Name = "listView1";
+            listView1.Size = new Size(627, 84);
+            listView1.TabIndex = 11;
+            listView1.UseCompatibleStateImageBehavior = false;
+            listView1.MouseClick += listView1_MouseClick;
+            // 
+            // dataGridView1
+            // 
+            dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridView1.Location = new Point(14, 20);
+            dataGridView1.MultiSelect = false;
+            dataGridView1.Name = "dataGridView1";
+            dataGridView1.ReadOnly = true;
+            dataGridView1.Size = new Size(380, 72);
+            dataGridView1.TabIndex = 0;
+            dataGridView1.CellContentClick += dataGridView1_CellContentClick;
+            // 
+            // panel3
+            // 
+            panel3.AutoScroll = true;
+            panel3.BackColor = Color.White;
+            panel3.Controls.Add(dataGridView1);
+            panel3.Location = new Point(5, 362);
+            panel3.Name = "panel3";
+            panel3.Size = new Size(638, 125);
+            panel3.TabIndex = 12;
+            panel3.Visible = false;
+            panel3.Paint += panel3_Paint;
             // 
             // PreviewMailScreen
             // 
             AutoScaleMode = AutoScaleMode.None;
             ClientSize = new Size(651, 661);
-            Controls.Add(listBox1);
+            Controls.Add(panel3);
+            Controls.Add(listView1);
             Controls.Add(label7);
             Controls.Add(label6);
             Controls.Add(richTextBox3);
@@ -188,6 +227,8 @@
             panel1.PerformLayout();
             panel2.ResumeLayout(false);
             panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
+            panel3.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -206,6 +247,9 @@
         private RichTextBox richTextBox3;
         private Label label6;
         private Label label7;
-        private ListBox listBox1;
+        private ListView listView1;
+        private DataGridView dataGridView1;
+        private Panel panel3;
+        private Button button1;
     }
 }

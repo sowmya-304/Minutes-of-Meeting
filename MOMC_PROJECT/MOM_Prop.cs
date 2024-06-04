@@ -82,6 +82,25 @@ namespace MOMC_PROJECT
                 FillColor = fillColor;
                 ShapeType = shapeType;
             }
-        }
+            //=========================
+
+            public class DrawingItem
+            {
+                public Image Image { get; set; }
+                public Rectangle Rectangle { get; set; }
+
+                public DrawingItem(Image image, Rectangle rectangle)
+                {
+                    Image = image;
+                    Rectangle = rectangle;
+                }
+
+                // Clone method to create a deep copy of the drawing item
+                public DrawingItem Clone()
+                {
+                    return new DrawingItem((Image)Image.Clone(), Rectangle);
+                }
+            }
+        }//==========
     }
 }

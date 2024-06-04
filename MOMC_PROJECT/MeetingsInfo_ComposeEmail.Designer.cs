@@ -34,18 +34,22 @@
             button4 = new Button();
             label12 = new Label();
             panel3 = new Panel();
+            panel5 = new Panel();
+            label14 = new Label();
+            linkLabel3 = new LinkLabel();
+            button5 = new Button();
+            panel9 = new Panel();
             panel10 = new Panel();
             panel12 = new Panel();
-            panel9 = new Panel();
-            richTextBox3 = new RichTextBox();
-            panel7 = new Panel();
-            btn_redo = new Button();
             panel8 = new Panel();
             panel11 = new Panel();
             button2 = new Button();
             button1 = new Button();
             button16 = new Button();
             button15 = new Button();
+            richTextBox3 = new RichTextBox();
+            panel7 = new Panel();
+            btn_redo = new Button();
             btn_undo = new Button();
             comboBox2 = new ComboBox();
             btn_m_align_linespacing = new Button();
@@ -56,17 +60,19 @@
             btn_mail_italic = new Button();
             btn_mail_bold = new Button();
             panel6 = new Panel();
+            button7 = new Button();
+            button6 = new Button();
+            label13 = new Label();
             button3 = new Button();
             btn_sendmail = new Button();
             btn_mail_insert = new Button();
             btn_mail_format = new Button();
-            panel5 = new Panel();
+            panel5DW = new Panel();
             panel4 = new Panel();
             richTextBox2 = new RichTextBox();
             richTextBox1 = new RichTextBox();
             textBox5 = new TextBox();
             linkLabel2 = new LinkLabel();
-            linkLabel1 = new LinkLabel();
             label11 = new Label();
             label10 = new Label();
             label9 = new Label();
@@ -98,9 +104,9 @@
             panel1.SuspendLayout();
             panel3.SuspendLayout();
             panel10.SuspendLayout();
-            panel7.SuspendLayout();
             panel8.SuspendLayout();
             panel11.SuspendLayout();
+            panel7.SuspendLayout();
             panel6.SuspendLayout();
             panel2.SuspendLayout();
             contextMenuStrip1.SuspendLayout();
@@ -146,103 +152,105 @@
             // 
             // panel3
             // 
-            panel3.Controls.Add(panel10);
+            panel3.Controls.Add(panel5);
+            panel3.Controls.Add(label14);
+            panel3.Controls.Add(linkLabel3);
+            panel3.Controls.Add(button5);
             panel3.Controls.Add(panel9);
+            panel3.Controls.Add(panel10);
+            panel3.Controls.Add(panel8);
             panel3.Controls.Add(richTextBox3);
             panel3.Controls.Add(panel7);
             panel3.Controls.Add(panel6);
-            panel3.Controls.Add(panel5);
+            panel3.Controls.Add(panel5DW);
             panel3.Controls.Add(panel4);
             panel3.Controls.Add(richTextBox2);
             panel3.Controls.Add(richTextBox1);
             panel3.Controls.Add(textBox5);
             panel3.Controls.Add(linkLabel2);
-            panel3.Controls.Add(linkLabel1);
             panel3.Controls.Add(label11);
             panel3.Controls.Add(label10);
             panel3.Controls.Add(label9);
             panel3.Controls.Add(label8);
             panel3.Location = new Point(0, 329);
             panel3.Name = "panel3";
-            panel3.Size = new Size(1366, 367);
+            panel3.Size = new Size(1366, 409);
             panel3.TabIndex = 3;
+            // 
+            // panel5
+            // 
+            panel5.Location = new Point(666, 98);
+            panel5.Name = "panel5";
+            panel5.Size = new Size(215, 119);
+            panel5.TabIndex = 26;
+            // 
+            // label14
+            // 
+            label14.AutoSize = true;
+            label14.Font = new Font("Arial", 11.25F, FontStyle.Bold);
+            label14.Location = new Point(15, 229);
+            label14.Name = "label14";
+            label14.Size = new Size(95, 18);
+            label14.TabIndex = 29;
+            label14.Text = "Attachments";
+            // 
+            // linkLabel3
+            // 
+            linkLabel3.AutoSize = true;
+            linkLabel3.Font = new Font("Arial", 11.25F, FontStyle.Bold);
+            linkLabel3.Location = new Point(8, 274);
+            linkLabel3.Name = "linkLabel3";
+            linkLabel3.Size = new Size(181, 18);
+            linkLabel3.TabIndex = 28;
+            linkLabel3.TabStop = true;
+            linkLabel3.Text = "Attach DrawBoard Image";
+            linkLabel3.LinkClicked += linkLabel3_LinkClicked;
+            // 
+            // button5
+            // 
+            button5.Location = new Point(36, 295);
+            button5.Name = "button5";
+            button5.Size = new Size(75, 23);
+            button5.TabIndex = 27;
+            button5.Text = "button5";
+            button5.UseVisualStyleBackColor = true;
+            button5.Click += button5_Click;
+            // 
+            // panel9
+            // 
+            panel9.Location = new Point(663, 102);
+            panel9.Name = "panel9";
+            panel9.Size = new Size(212, 115);
+            panel9.TabIndex = 25;
+            panel9.Paint += panel9_Paint;
             // 
             // panel10
             // 
             panel10.BackColor = Color.White;
             panel10.Controls.Add(panel12);
-            panel10.Location = new Point(532, 104);
+            panel10.Location = new Point(529, 104);
             panel10.Name = "panel10";
-            panel10.Size = new Size(802, 143);
+            panel10.Size = new Size(816, 130);
             panel10.TabIndex = 26;
             panel10.Paint += jd;
             // 
             // panel12
             // 
-            panel12.Location = new Point(281, 7);
+            panel12.Location = new Point(375, 28);
             panel12.Name = "panel12";
             panel12.Size = new Size(200, 97);
             panel12.TabIndex = 19;
-            // 
-            // panel9
-            // 
-            panel9.Location = new Point(650, 102);
-            panel9.Name = "panel9";
-            panel9.Size = new Size(212, 167);
-            panel9.TabIndex = 25;
-            // 
-            // richTextBox3
-            // 
-            richTextBox3.Location = new Point(529, 102);
-            richTextBox3.Name = "richTextBox3";
-            richTextBox3.Size = new Size(834, 249);
-            richTextBox3.TabIndex = 24;
-            richTextBox3.Text = "";
-            richTextBox3.TextChanged += richTextBox3_TextChanged;
-            richTextBox3.KeyDown += richTextBox3_KeyDown;
-            richTextBox3.KeyPress += richTextBox3_KeyPress;
-            // 
-            // panel7
-            // 
-            panel7.Controls.Add(btn_redo);
-            panel7.Controls.Add(panel8);
-            panel7.Controls.Add(btn_undo);
-            panel7.Controls.Add(comboBox2);
-            panel7.Controls.Add(btn_m_align_linespacing);
-            panel7.Controls.Add(btn_mail_numberings);
-            panel7.Controls.Add(btn_mail_bullets);
-            panel7.Controls.Add(btn_mail_ff);
-            panel7.Controls.Add(btn_mail_underline);
-            panel7.Controls.Add(btn_mail_italic);
-            panel7.Controls.Add(btn_mail_bold);
-            panel7.Location = new Point(525, 58);
-            panel7.Name = "panel7";
-            panel7.Size = new Size(830, 37);
-            panel7.TabIndex = 23;
-            // 
-            // btn_redo
-            // 
-            btn_redo.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            btn_redo.Image = (Image)resources.GetObject("btn_redo.Image");
-            btn_redo.ImageAlign = ContentAlignment.MiddleRight;
-            btn_redo.Location = new Point(577, 2);
-            btn_redo.Name = "btn_redo";
-            btn_redo.Size = new Size(81, 31);
-            btn_redo.TabIndex = 14;
-            btn_redo.Text = "Redo";
-            btn_redo.TextAlign = ContentAlignment.MiddleLeft;
-            btn_redo.UseVisualStyleBackColor = true;
-            btn_redo.Click += btn_redo_Click;
             // 
             // panel8
             // 
             panel8.Controls.Add(panel11);
             panel8.Controls.Add(button16);
             panel8.Controls.Add(button15);
-            panel8.Location = new Point(7, 0);
+            panel8.Location = new Point(522, 61);
             panel8.Name = "panel8";
             panel8.Size = new Size(838, 37);
             panel8.TabIndex = 11;
+            panel8.Paint += panel8_Paint;
             // 
             // panel11
             // 
@@ -314,6 +322,55 @@
             button15.UseVisualStyleBackColor = false;
             button15.Click += button15_Click;
             // 
+            // richTextBox3
+            // 
+            richTextBox3.AcceptsTab = true;
+            richTextBox3.AutoWordSelection = true;
+            richTextBox3.BulletIndent = 1;
+            richTextBox3.Font = new Font("Calibri", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            richTextBox3.HideSelection = false;
+            richTextBox3.Location = new Point(529, 102);
+            richTextBox3.Name = "richTextBox3";
+            richTextBox3.Size = new Size(834, 307);
+            richTextBox3.TabIndex = 24;
+            richTextBox3.Text = "";
+            richTextBox3.SelectionChanged += richTextBox3_SelectionChanged;
+            richTextBox3.TextChanged += richTextBox3_TextChanged;
+            richTextBox3.KeyDown += richTextBox3_KeyDown;
+            richTextBox3.KeyPress += richTextBox3_KeyPress;
+            richTextBox3.MouseLeave += richTextBox3_MouseLeave;
+            // 
+            // panel7
+            // 
+            panel7.Controls.Add(btn_redo);
+            panel7.Controls.Add(btn_undo);
+            panel7.Controls.Add(comboBox2);
+            panel7.Controls.Add(btn_m_align_linespacing);
+            panel7.Controls.Add(btn_mail_numberings);
+            panel7.Controls.Add(btn_mail_bullets);
+            panel7.Controls.Add(btn_mail_ff);
+            panel7.Controls.Add(btn_mail_underline);
+            panel7.Controls.Add(btn_mail_italic);
+            panel7.Controls.Add(btn_mail_bold);
+            panel7.Location = new Point(525, 58);
+            panel7.Name = "panel7";
+            panel7.Size = new Size(830, 37);
+            panel7.TabIndex = 23;
+            // 
+            // btn_redo
+            // 
+            btn_redo.Font = new Font("Arial", 11.25F, FontStyle.Bold);
+            btn_redo.Image = (Image)resources.GetObject("btn_redo.Image");
+            btn_redo.ImageAlign = ContentAlignment.MiddleRight;
+            btn_redo.Location = new Point(577, 2);
+            btn_redo.Name = "btn_redo";
+            btn_redo.Size = new Size(81, 31);
+            btn_redo.TabIndex = 14;
+            btn_redo.Text = "Redo";
+            btn_redo.TextAlign = ContentAlignment.MiddleLeft;
+            btn_redo.UseVisualStyleBackColor = true;
+            btn_redo.Click += btn_redo_Click;
+            // 
             // btn_undo
             // 
             btn_undo.Font = new Font("Arial", 11.25F, FontStyle.Bold);
@@ -355,6 +412,7 @@
             btn_mail_numberings.Size = new Size(34, 31);
             btn_mail_numberings.TabIndex = 10;
             btn_mail_numberings.UseVisualStyleBackColor = true;
+            btn_mail_numberings.Click += btn_mail_numberings_Click;
             // 
             // btn_mail_bullets
             // 
@@ -413,6 +471,9 @@
             // 
             // panel6
             // 
+            panel6.Controls.Add(button7);
+            panel6.Controls.Add(button6);
+            panel6.Controls.Add(label13);
             panel6.Controls.Add(button3);
             panel6.Controls.Add(btn_sendmail);
             panel6.Controls.Add(btn_mail_insert);
@@ -421,6 +482,42 @@
             panel6.Name = "panel6";
             panel6.Size = new Size(838, 34);
             panel6.TabIndex = 22;
+            // 
+            // button7
+            // 
+            button7.BackColor = Color.SteelBlue;
+            button7.Font = new Font("Arial", 11.25F, FontStyle.Bold);
+            button7.Location = new Point(321, 0);
+            button7.Name = "button7";
+            button7.Size = new Size(145, 31);
+            button7.TabIndex = 21;
+            button7.Text = "View / Hide Table";
+            button7.UseVisualStyleBackColor = false;
+            button7.Click += button7_Click;
+            // 
+            // button6
+            // 
+            button6.BackColor = Color.SteelBlue;
+            button6.Font = new Font("Arial", 11.25F, FontStyle.Bold);
+            button6.Image = (Image)resources.GetObject("button6.Image");
+            button6.ImageAlign = ContentAlignment.MiddleLeft;
+            button6.Location = new Point(165, 1);
+            button6.Name = "button6";
+            button6.Size = new Size(85, 31);
+            button6.TabIndex = 20;
+            button6.Text = "Save";
+            button6.TextAlign = ContentAlignment.MiddleRight;
+            button6.UseVisualStyleBackColor = false;
+            button6.Click += button6_Click;
+            // 
+            // label13
+            // 
+            label13.AutoSize = true;
+            label13.Location = new Point(271, 8);
+            label13.Name = "label13";
+            label13.Size = new Size(44, 15);
+            label13.TabIndex = 6;
+            label13.Text = "label13";
             // 
             // button3
             // 
@@ -473,15 +570,16 @@
             btn_mail_format.UseVisualStyleBackColor = false;
             btn_mail_format.Click += btn_mail_format_Click;
             // 
-            // panel5
+            // panel5DW
             // 
-            panel5.AutoScroll = true;
-            panel5.BackColor = Color.White;
-            panel5.BorderStyle = BorderStyle.Fixed3D;
-            panel5.Location = new Point(201, 291);
-            panel5.Name = "panel5";
-            panel5.Size = new Size(276, 60);
-            panel5.TabIndex = 20;
+            panel5DW.AutoScroll = true;
+            panel5DW.BackColor = Color.White;
+            panel5DW.BorderStyle = BorderStyle.Fixed3D;
+            panel5DW.Location = new Point(201, 317);
+            panel5DW.Name = "panel5DW";
+            panel5DW.Size = new Size(276, 60);
+            panel5DW.TabIndex = 20;
+            panel5DW.Paint += panel5_Paint;
             // 
             // panel4
             // 
@@ -490,7 +588,7 @@
             panel4.BorderStyle = BorderStyle.Fixed3D;
             panel4.Location = new Point(201, 212);
             panel4.Name = "panel4";
-            panel4.Size = new Size(276, 60);
+            panel4.Size = new Size(276, 80);
             panel4.TabIndex = 19;
             // 
             // richTextBox2
@@ -504,6 +602,7 @@
             // 
             // richTextBox1
             // 
+            richTextBox1.Enabled = false;
             richTextBox1.Location = new Point(201, 86);
             richTextBox1.Name = "richTextBox1";
             richTextBox1.ReadOnly = true;
@@ -513,6 +612,7 @@
             // 
             // textBox5
             // 
+            textBox5.Enabled = false;
             textBox5.Font = new Font("Arial", 11.25F, FontStyle.Bold);
             textBox5.Location = new Point(201, 44);
             textBox5.Name = "textBox5";
@@ -531,18 +631,6 @@
             linkLabel2.TabStop = true;
             linkLabel2.Text = "Attach DrawBoard Image";
             linkLabel2.LinkClicked += linkLabel2_LinkClicked;
-            // 
-            // linkLabel1
-            // 
-            linkLabel1.AutoSize = true;
-            linkLabel1.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            linkLabel1.Location = new Point(8, 229);
-            linkLabel1.Name = "linkLabel1";
-            linkLabel1.Size = new Size(82, 18);
-            linkLabel1.TabIndex = 15;
-            linkLabel1.TabStop = true;
-            linkLabel1.Text = "Attach File";
-            linkLabel1.LinkClicked += linkLabel1_LinkClicked;
             // 
             // label11
             // 
@@ -809,10 +897,11 @@
             panel3.ResumeLayout(false);
             panel3.PerformLayout();
             panel10.ResumeLayout(false);
-            panel7.ResumeLayout(false);
             panel8.ResumeLayout(false);
             panel11.ResumeLayout(false);
+            panel7.ResumeLayout(false);
             panel6.ResumeLayout(false);
+            panel6.PerformLayout();
             panel2.ResumeLayout(false);
             panel2.PerformLayout();
             contextMenuStrip1.ResumeLayout(false);
@@ -846,10 +935,9 @@
         private RichTextBox richTextBox1;
         private TextBox textBox5;
         private LinkLabel linkLabel2;
-        private LinkLabel linkLabel1;
         private Panel panel6;
         private Button btn_mail_format;
-        private Panel panel5;
+        private Panel panel5DW;
         private Panel panel4;
         private Button btn_sendmail;
         private Button btn_mail_insert;
@@ -859,12 +947,9 @@
         private Button btn_mail_underline;
         private Button btn_mail_italic;
         private Button btn_mail_bold;
-        private Button btn_mail_numberings;
         private Button btn_mail_bullets;
         private Button btn_redo;
         private Button btn_undo;
-        private ComboBox comboBox2;
-        private Button btn_m_align_linespacing;
         private Panel panel8;
         private Button button15;
         private Button button3;
@@ -887,5 +972,15 @@
         private Panel panel12;
         private Label label12;
         private Button button4;
+        private Label label13;
+        private Button button5;
+        private LinkLabel linkLabel3;
+        private Label label14;
+        private ComboBox comboBox2;
+        private Button btn_m_align_linespacing;
+        private Button btn_mail_numberings;
+        private Panel panel5;
+        private Button button6;
+        private Button button7;
     }
 }

@@ -4,17 +4,77 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using System.Windows.Shapes;
 
 namespace MOMC_PROJECT
 {
     public partial class DrawImageIcon : UserControl
     {
+     private List<Panel> slides = new List<Panel>();
+      private int currentSlideIndex = -1; // Index of the current slide being displayed
+        private List<Action> actions = new List<Action>();
+        private List<Point> currentFreehandPoints = new List<Point>();
+        private bool isDrawing = false;
+        private bool isPencilMode = false;
+        private bool isEraserMode = false;
+        private Color pencilColor = Color.Black;
+
+        private Stack<List<Shape>> historyStack = new Stack<List<Shape>>();
+
+        // Store redo history
+        private Stack<List<Shape>> redoStack = new Stack<List<Shape>>();
+
         private string selectedShape = ""; // Variable to store the selected shape
 
         public DrawImageIcon()
         {
             InitializeComponent();
+            InitializeDrawingBoard();
         }
+        private void InitializeDrawingBoard()
+        {
+            // Set up drawing board
+            panel2.BackColor = Color.White;
+            panel2.MouseMove += panel2_MouseMove;
+            panel2.MouseDown += panel2_MouseDown;
+            panel2.MouseUp += panel2_MouseUp;
+           // AddNewSlide();
+        }
+        private void AddNewSlide()
+        {
+            // Create a new panel for the slide
+            Panel slide = new Panel();
+            slide.BackColor = Color.White;
+            slide.Dock = DockStyle.Fill;
+            slide.Click += (sender, e) => panel2.Focus(); // Focus on drawing panel when the slide is clicked
+
+            // Add slide to the list
+            slides.Add(slide);
+
+            // Add slide to the panel
+            panel2.Controls.Add(slide);
+
+            // Set as current slide
+            currentSlideIndex = slides.Count - 1;
+        }
+
+
+        private void RemoveCurrentSlide()
+        {
+            if (currentSlideIndex >= 0 && currentSlideIndex < slides.Count)
+            {
+                // Remove current slide from the panel
+                panel2.Controls.Remove(slides[currentSlideIndex]);
+
+                // Remove current slide from the list
+                slides.RemoveAt(currentSlideIndex);
+
+                // Set new current slide index
+                currentSlideIndex = slides.Count - 1;
+            }
+        }
+
+
         public List<System.Drawing.Image> GenerateShapeImages(int width, int height)
         {
             List<System.Drawing.Image> shapeImages = new List<System.Drawing.Image>();
@@ -238,13 +298,13 @@ namespace MOMC_PROJECT
             }
             return bmp;
         }
-        private GraphicsPath RoundedRectangle(Rectangle rect, int cornerRadius)
+        private GraphicsPath RoundedRectangle(System.Drawing.Rectangle rect, int cornerRadius)
         {
             GraphicsPath path = new GraphicsPath();
 
             int diameter = cornerRadius * 2;
             Size size = new Size(diameter, diameter);
-            Rectangle arc = new Rectangle(rect.Location, size);
+            System.Drawing.Rectangle arc = new System.Drawing.Rectangle(rect.Location, size);
 
             // Top left arc
             path.AddArc(arc, 180, 90);
@@ -265,6 +325,7 @@ namespace MOMC_PROJECT
 
             return path;
         }
+
 
         private void btn_shape_Click(object sender, EventArgs e)
         {
@@ -297,7 +358,7 @@ namespace MOMC_PROJECT
                         btn.FlatAppearance.BorderSize = 0;
                         btn.Click += ShapeButton_Click; // Add click event handler
                                                         // Set the Tag property to store the shape type
-                       // btn.Tag = shapes[imageIndex];
+                                                        // btn.Tag = shapes[imageIndex];
 
                         panel2.Controls.Add(btn);
                         imageIndex++;
@@ -346,10 +407,10 @@ namespace MOMC_PROJECT
                 switch (selectedShape)
                 {
                     case "Rectangle":
-                        g.FillRectangle(Brushes.Black, new Rectangle(location.X - width / 2, location.Y - height / 2, width, height));
+                        g.FillRectangle(Brushes.Black, new System.Drawing.Rectangle(location.X - width / 2, location.Y - height / 2, width, height));
                         break;
                     case "Ellipse":
-                        g.FillEllipse(Brushes.Black, new Rectangle(location.X - width / 2, location.Y - height / 2, width, height));
+                        g.FillEllipse(Brushes.Black, new System.Drawing.Rectangle(location.X - width / 2, location.Y - height / 2, width, height));
                         break;
                         // Add cases for other shapes as needed
                 }
@@ -366,5 +427,260 @@ namespace MOMC_PROJECT
                 DrawShapeOnPictureBox(e.Location);
             }
         }
+        private void Undo()
+        {
+            if (historyStack.Count > 1)
+            {
+                // Remove the last drawn shapes from the history stack
+                redoStack.Push(new List<Shape>(historyStack.Pop()));
+                // Restore the previous state of the drawing
+                //Shape = new List<Shape>(historyStack.Peek());
+                // Refresh the drawing board
+                pic.Invalidate();
+            }
+
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            if (actions.Count > 0)
+            {
+                Action undoneAction = actions[actions.Count - 1];
+                actions.RemoveAt(actions.Count - 1);
+                undoneActions.Push(undoneAction); // Store undone action
+
+                panel2.Invalidate(); // Refresh drawing
+            }
+            //Undo();
+        }
+
+        private void panel1_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void panel2_Paint(object sender, PaintEventArgs e)
+        {
+            //foreach (var action in actions)
+            //{
+            //    action.Draw(e.Graphics);
+            //}
+            //if (isDrawing && currentFreehandPoints.Count > 1)
+            //{
+            //    e.Graphics.DrawLines(Pens.Black, currentFreehandPoints.ToArray());
+            //}
+            foreach (var action in actions)
+            {
+                action.Draw(e.Graphics);
+            }
+            if (isDrawing && isPencilMode && currentFreehandPoints.Count > 1)
+            {
+                e.Graphics.DrawLines(new Pen(pencilColor), currentFreehandPoints.ToArray());
+            }
+        }
+
+        private void panel2_MouseMove(object sender, MouseEventArgs e)
+        {
+            //if (isDrawing)
+            //{
+            //    currentFreehandPoints.Add(e.Location);
+            //    panel2.Invalidate(); // Refresh drawing
+            //}
+            if (isDrawing && isPencilMode)
+            {
+                currentFreehandPoints.Add(e.Location);
+                panel2.Invalidate(); // Refresh drawing
+            }
+            else if (isDrawing && isEraserMode)
+            {
+                Erase(e.Location);
+                panel2.Invalidate(); // Refresh drawing
+            }
+        }
+        private void Erase(Point point)
+        {
+            // Define the radius within which drawings should be erased
+            int eraseRadius = 10;
+
+            // Iterate through the actions list
+            for (int i = actions.Count - 1; i >= 0; i--)
+            {
+                if (actions[i] is DrawFreehandAction)
+                {
+                    // Check if any points in the freehand drawing fall within the erase radius
+                    DrawFreehandAction freehandAction = (DrawFreehandAction)actions[i];
+                    List<Point> erasedPoints = new List<Point>();
+
+                    foreach (Point p in freehandAction.Points)
+                    {
+                        double distance = Math.Sqrt(Math.Pow(p.X - point.X, 2) + Math.Pow(p.Y - point.Y, 2));
+                        if (distance <= eraseRadius)
+                        {
+                            // If the point is within the erase radius, remove it
+                            erasedPoints.Add(p);
+                        }
+                    }
+
+                    // Remove the erased points from the freehand drawing
+                    foreach (Point p in erasedPoints)
+                    {
+                        freehandAction.ErasePoint(p);
+                    }
+
+                    // If there are no points left in the freehand drawing, remove the action
+                    if (freehandAction.Points.Count == 0)
+                    {
+                        actions.RemoveAt(i);
+                    }
+                }
+            }
+
+            // Refresh drawing panel
+            panel2.Invalidate();
+        }
+
+
+
+        private void panel2_MouseUp(object sender, MouseEventArgs e)
+        {
+            //isDrawing = false;
+            //if (currentFreehandPoints.Count > 1)
+            //{
+            //    actions.Add(new DrawFreehandAction(new List<Point>(currentFreehandPoints)));
+            //}
+            isDrawing = false;
+            if (currentFreehandPoints.Count > 1 && isPencilMode)
+            {
+                actions.Add(new DrawFreehandAction(new List<Point>(currentFreehandPoints), pencilColor));
+            }
+        }
+
+        private void panel2_MouseDown(object sender, MouseEventArgs e)
+        {
+            isDrawing = true;
+            currentFreehandPoints.Clear();
+            currentFreehandPoints.Add(e.Location);
+        }
+
+        private void btn_pen_Click(object sender, EventArgs e)
+        {
+            isPencilMode = true;
+            isEraserMode = false;
+            pencilColor = Color.Black; // Default color
+        }
+
+        private void btn_eraser_Click(object sender, EventArgs e)
+        {
+            isEraserMode = true;
+            isPencilMode = false;
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+            ColorDialog colorDialog = new ColorDialog();
+            if (colorDialog.ShowDialog() == DialogResult.OK)
+            {
+                pencilColor = colorDialog.Color;
+            }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            using (Bitmap bmp = new Bitmap(panel2.Width, panel2.Height))
+            {
+                panel2.DrawToBitmap(bmp, new System.Drawing.Rectangle(0, 0, panel2.Width, panel2.Height));
+                bmp.Save("drawing.png");
+            }
+        }
+        private Stack<Action> undoneActions = new Stack<Action>();
+
+        private void button6_Click(object sender, EventArgs e)
+        {
+            if (undoneActions.Count > 0)
+            {
+                // Get the last undone action and reapply it
+                Action redoAction = undoneActions.Pop();
+                actions.Add(redoAction);
+
+                // Refresh drawing panel
+                panel2.Invalidate();
+            }
+        }
+
+        private void bt_new_slide_Click(object sender, EventArgs e)
+        {
+            //AddNewSlide();
+        }
+
+        private void btn_remove_slide_Click(object sender, EventArgs e)
+        {
+            //RemoveCurrentSlide();
+        }
+    }
+    public abstract class Action
+    {
+        public abstract void Draw(Graphics g);
+    }
+
+    public class DrawShapeAction : Action
+    {
+        private Shape shape;
+
+        public DrawShapeAction(Shape shape)
+        {
+            this.shape = shape;
+        }
+
+        public override void Draw(Graphics g)
+        {
+            shape.Draw(g);
+        }
+    }
+
+    public class DrawFreehandAction : Action
+    {
+        private List<Point> points;
+        private Color color;
+
+
+        public DrawFreehandAction(List<Point> points, Color color)
+        {
+            this.points = points;
+            this.color = color;
+        }
+
+        public override void Draw(Graphics g)
+        {
+            if (points.Count > 1)
+            {
+                g.DrawLines(new Pen(color), points.ToArray());
+            }
+        }
+        public List<Point> Points { get { return points; } }
+
+        // Method to remove a point
+        public void ErasePoint(Point point)
+        {
+            points.Remove(point);
+        }
+    }
+
+    public class Shape
+    {
+        public List<Point> Points { get; set; }
+
+        public Shape()
+        {
+            Points = new List<Point>();
+        }
+
+        public void Draw(Graphics g)
+        {
+            if (Points.Count > 1)
+            {
+                g.DrawLines(Pens.Black, Points.ToArray());
+            }
+        }
     }
 }
+

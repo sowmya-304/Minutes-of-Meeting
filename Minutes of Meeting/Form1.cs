@@ -261,17 +261,14 @@ namespace Minutes_of_Meeting
                 writer.WriteValue(value.Address);
             }
         }
-
         private void textBox6_TextChanged(object sender, EventArgs e)
         {
 
         }
-
         private void textBox5_TextChanged(object sender, EventArgs e)
         {
 
         }
-
         private void checkedListBox1_ItemCheck(object sender, ItemCheckEventArgs e)
         {
             StringBuilder selectedItems = new StringBuilder();
@@ -290,7 +287,6 @@ namespace Minutes_of_Meeting
         }
         private Dictionary<string, string> emailData = new Dictionary<string, string>(); // Dictionary to store subject and description
         private List<Meeting> meetings;
-
         private void button4_Click(object sender, EventArgs e)
         {
             string subject = textBox6.Text;

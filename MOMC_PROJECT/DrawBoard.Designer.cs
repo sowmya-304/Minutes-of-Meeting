@@ -45,7 +45,6 @@
             btn_select = new Button();
             btn_delete = new Button();
             btn_uplaod = new Button();
-            btn_close = new Button();
             btn_clear = new Button();
             btnRemoveSlide = new Button();
             btn_color = new Button();
@@ -63,6 +62,7 @@
             btn_eraser = new Button();
             pic = new PictureBox();
             label3 = new Label();
+            Closebutton = new Button();
             panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)trackBar2).BeginInit();
             ((System.ComponentModel.ISupportInitialize)trackBar1).BeginInit();
@@ -197,9 +197,9 @@
             // panel2
             // 
             panel2.BackColor = Color.FromArgb(64, 64, 64);
+            panel2.Controls.Add(Closebutton);
             panel2.Controls.Add(panel5);
             panel2.Controls.Add(btn_uplaod);
-            panel2.Controls.Add(btn_close);
             panel2.Controls.Add(btn_clear);
             panel2.Controls.Add(btnRemoveSlide);
             panel2.Controls.Add(btn_color);
@@ -220,6 +220,7 @@
             panel2.Name = "panel2";
             panel2.Size = new Size(1366, 89);
             panel2.TabIndex = 0;
+            panel2.Paint += panel2_Paint;
             // 
             // panel5
             // 
@@ -233,6 +234,7 @@
             panel5.Name = "panel5";
             panel5.Size = new Size(169, 80);
             panel5.TabIndex = 22;
+            panel5.Paint += panel5_Paint;
             // 
             // label2
             // 
@@ -283,20 +285,6 @@
             btn_uplaod.TextAlign = ContentAlignment.BottomCenter;
             btn_uplaod.UseVisualStyleBackColor = false;
             btn_uplaod.Click += btn_uplaod_Click;
-            // 
-            // btn_close
-            // 
-            btn_close.BackColor = Color.White;
-            btn_close.Image = (Image)resources.GetObject("btn_close.Image");
-            btn_close.ImageAlign = ContentAlignment.TopCenter;
-            btn_close.Location = new Point(1302, 6);
-            btn_close.Name = "btn_close";
-            btn_close.Size = new Size(58, 80);
-            btn_close.TabIndex = 18;
-            btn_close.Text = "Close";
-            btn_close.TextAlign = ContentAlignment.BottomCenter;
-            btn_close.UseVisualStyleBackColor = false;
-            btn_close.Click += btn_close_Click;
             // 
             // btn_clear
             // 
@@ -440,6 +428,7 @@
             pic_color.Size = new Size(53, 45);
             pic_color.TabIndex = 6;
             pic_color.UseVisualStyleBackColor = false;
+            pic_color.Click += pic_color_Click;
             // 
             // btn_shape
             // 
@@ -517,9 +506,9 @@
             // 
             pic.BackColor = Color.White;
             pic.BorderStyle = BorderStyle.FixedSingle;
-            pic.Location = new Point(208, 90);
+            pic.Location = new Point(207, 89);
             pic.Name = "pic";
-            pic.Size = new Size(1152, 561);
+            pic.Size = new Size(1159, 566);
             pic.TabIndex = 2;
             pic.TabStop = false;
             pic.Click += pic_Click;
@@ -535,11 +524,24 @@
             label3.AutoSize = true;
             label3.Font = new Font("Segoe UI", 18F, FontStyle.Regular, GraphicsUnit.Point, 0);
             label3.ForeColor = Color.White;
-            label3.Location = new Point(717, 260);
+            label3.Location = new Point(669, 333);
             label3.Name = "label3";
             label3.Size = new Size(116, 32);
             label3.TabIndex = 24;
             label3.Text = "Add Slide";
+            // 
+            // Closebutton
+            // 
+            Closebutton.BackColor = Color.White;
+            Closebutton.Image = (Image)resources.GetObject("Closebutton.Image");
+            Closebutton.Location = new Point(1302, 6);
+            Closebutton.Name = "Closebutton";
+            Closebutton.Size = new Size(64, 79);
+            Closebutton.TabIndex = 26;
+            Closebutton.Text = "Close";
+            Closebutton.TextAlign = ContentAlignment.BottomCenter;
+            Closebutton.UseVisualStyleBackColor = false;
+            Closebutton.Click += Closebutton_Click;
             // 
             // DrawBoard
             // 
@@ -584,10 +586,9 @@
         private Button btn_clear;
         private TrackBar trackBar1;
         private TrackBar trackBar2;
-        private Panel panel4;
         private Button btn_delete;
         private Button btn_uplaod;
-        private Button btn_close;
+
         private ListBox lstSlides;
         private Button btnPreviousSlide;
         private Button btnNextSlide;
@@ -598,7 +599,7 @@
         private Panel panel5;
         private Label label2;
         private Label label3;
-
-        
+        private Panel panel4;
+        private Button Closebutton;
     }
 }

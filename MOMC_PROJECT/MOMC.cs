@@ -12,7 +12,7 @@ namespace MOMC_PROJECT
         public static string toEmailId { get; set; }
         public static List<MeetingData> meetingDataList;
         string otp;
-        private int otpCountDown = 200;
+        private int otpCountDown;
         public MOMC()
         {
             InitializeComponent();
@@ -20,6 +20,9 @@ namespace MOMC_PROJECT
         }
         private void OnLoad()
         {
+            // Initialize the timer
+            timer1.Interval = 1000; // 1 second interval
+            timer1.Tick += timer1_Tick;
             panel2.Visible = true;
             panel3.Visible = false;
             btn_resendotp.Enabled = false;
@@ -28,21 +31,44 @@ namespace MOMC_PROJECT
             btn_verifyotp.Enabled = false;
             btn_verifyotp.BackColor = Color.LightGray;
             btn_verifyotp.ForeColor = Color.Gray;
-            label4.Visible = false;
+            label4.Text = "02:00";
             string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"D:\UI\Minutes of Meeting\MOMC_PROJECT\Data.json");
             string jsonData = System.IO.File.ReadAllText(filePath);
             meetingDataList = JsonConvert.DeserializeObject<List<MeetingData>>(jsonData);
         }
-
+        private bool IsInternetConnected()
+        {
+            try
+            {
+                using (var client = new WebClient())
+                {
+                    using (client.OpenRead("http://clients3.google.com/generate_204"))
+                    {
+                        return true;
+                    }
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
         private void btn_sendotp_Click(object sender, EventArgs e)
         {
-            label7.Text = $"We've Sent an OTP to your email- {tb_email.Text}";
-            toEmail = tb_email.Text.Trim();
-            string fromEmail = "19n81a05c9.sowmya@gmail.com";
-            string password = "tkki grgd aapo uavx\r\n";
-            string subject = "Your One-Time Password (OTP) for MOMC";
-            otp = GenerateOTP();
-            string body = $"Hi\n\nPlease find below your requested OTP:\n{otp}\n\n" +
+            if (!IsInternetConnected())
+            {
+                MessageBox.Show("Please connect to the internet and try again.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            else
+            {
+                label7.Text = $"We've Sent an OTP to your email- {tb_email.Text}";
+                toEmail = tb_email.Text.Trim().ToLower();
+                string fromEmail = "19n81a05c9.sowmya@gmail.com";
+                string password = "tkki grgd aapo uavx\r\n";
+                string subject = "Your One-Time Password (OTP) for MOMC";
+                otp = GenerateOTP();
+                string body = $"Hi\n\nPlease find below your requested OTP:\n{otp}\n\n" +
                 $"Please note that this OTP is valid only for particular time after requesting\n\n\n" +
                 $"In case the OTP expires you can request it again by clicking on 'Resend OTP' button on MOMC";
             var smtpClient = new SmtpClient("smtp.gmail.com")
@@ -60,14 +86,12 @@ namespace MOMC_PROJECT
                 IsBodyHtml = false,
             };
             mailMessage.To.Add(toEmail);
-
             try
             {
                 smtpClient.Send(mailMessage);
                 DialogResult result = MessageBox.Show("OTP sent successfully!", "Success", MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
                 if (result == DialogResult.Cancel)
                 {
-                    otp = null;
                     panel2.Visible = true;
                     panel3.Visible = false;
                 }
@@ -75,6 +99,7 @@ namespace MOMC_PROJECT
                 {
                     panel2.Visible = false;
                     panel3.Visible = true;
+                    otpCountDown = 180;
                     StartOtpTimer();
                     tb_email.Enabled = true;
 
@@ -94,6 +119,7 @@ namespace MOMC_PROJECT
             catch (Exception ex)
             {
                 MessageBox.Show($"Failed to send OTP: {ex.Message}");
+            }
             }
         }
 
@@ -141,12 +167,11 @@ namespace MOMC_PROJECT
                     MessageBox.Show("Invalid Verification Code. Please try again.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
 
             }
         }
-
         private List<string> GetMeetingsForEmail(string email)
         {
             return meetingDataList
@@ -155,9 +180,14 @@ namespace MOMC_PROJECT
                 .Select(m => m.Name)
                 .ToList();
         }
-
         private void btn_resendotp_Click(object sender, EventArgs e)
         {
+            if (!IsInternetConnected())
+            {
+                MessageBox.Show("Please connect to the internet and try again.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            otp = null;
             panel2.Visible = false;
             panel3.Visible = true;
             label7.Text = $"We've Sent an OTP to your email- {tb_email.Text}";
@@ -198,8 +228,7 @@ namespace MOMC_PROJECT
                 {
                     panel2.Visible = false;
                     panel3.Visible = true;
-                    otp = null;
-                    otpCountDown = 120;
+                    otpCountDown = 180;
                     StartOtpTimer();
                     //tb_email.Enabled = true;
 
@@ -252,7 +281,9 @@ namespace MOMC_PROJECT
             if (otpCountDown > 0)
             {
                 otpCountDown--;
-                label4.Text = $"time left: {otpCountDown}s";
+                int minutes = (otpCountDown / 60);
+                int seconds = (otpCountDown % 60);
+                label4.Text = $"time left: {minutes:D2}:{seconds:D2}";
                 btn_resendotp.Enabled = false;
                 btn_resendotp.BackColor = Color.LightGray;
                 btn_resendotp.ForeColor = Color.Gray;
@@ -268,6 +299,13 @@ namespace MOMC_PROJECT
                 btn_resendotp.ForeColor = Color.White;
                 MessageBox.Show("OTP has expired. Please request a new one.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            MeetingsInfo_ComposeEmail m = new MeetingsInfo_ComposeEmail();
+            panel1.Controls.Clear();
+            panel1.Controls.Add(m);
         }
     }
 }

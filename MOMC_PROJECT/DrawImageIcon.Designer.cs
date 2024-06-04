@@ -29,6 +29,8 @@
         private void InitializeComponent()
         {
             panel1 = new Panel();
+            button2 = new Button();
+            button1 = new Button();
             listBox1 = new ListBox();
             button6 = new Button();
             button5 = new Button();
@@ -46,6 +48,8 @@
             // 
             // panel1
             // 
+            panel1.Controls.Add(button2);
+            panel1.Controls.Add(button1);
             panel1.Controls.Add(listBox1);
             panel1.Controls.Add(button6);
             panel1.Controls.Add(button5);
@@ -62,6 +66,27 @@
             panel1.Name = "panel1";
             panel1.Size = new Size(1030, 574);
             panel1.TabIndex = 0;
+            panel1.Paint += panel1_Paint;
+            // 
+            // button2
+            // 
+            button2.Location = new Point(296, 97);
+            button2.Name = "button2";
+            button2.Size = new Size(54, 45);
+            button2.TabIndex = 12;
+            button2.Text = "Save";
+            button2.UseVisualStyleBackColor = true;
+            button2.Click += button2_Click;
+            // 
+            // button1
+            // 
+            button1.Location = new Point(296, 35);
+            button1.Name = "button1";
+            button1.Size = new Size(54, 45);
+            button1.TabIndex = 11;
+            button1.Text = "Color";
+            button1.UseVisualStyleBackColor = true;
+            button1.Click += button1_Click;
             // 
             // listBox1
             // 
@@ -78,7 +103,9 @@
             button6.Name = "button6";
             button6.Size = new Size(54, 45);
             button6.TabIndex = 9;
+            button6.Text = "Redo";
             button6.UseVisualStyleBackColor = true;
+            button6.Click += button6_Click;
             // 
             // button5
             // 
@@ -86,7 +113,9 @@
             button5.Name = "button5";
             button5.Size = new Size(54, 45);
             button5.TabIndex = 8;
+            button5.Text = "Undo";
             button5.UseVisualStyleBackColor = true;
+            button5.Click += button5_Click;
             // 
             // btn_eraser
             // 
@@ -96,6 +125,7 @@
             btn_eraser.TabIndex = 7;
             btn_eraser.Text = "Eraser";
             btn_eraser.UseVisualStyleBackColor = true;
+            btn_eraser.Click += btn_eraser_Click;
             // 
             // btn_pen
             // 
@@ -105,6 +135,7 @@
             btn_pen.TabIndex = 6;
             btn_pen.Text = "Pen";
             btn_pen.UseVisualStyleBackColor = true;
+            btn_pen.Click += btn_pen_Click;
             // 
             // btn_remove_slide
             // 
@@ -114,6 +145,7 @@
             btn_remove_slide.TabIndex = 5;
             btn_remove_slide.Text = "Remove Slide";
             btn_remove_slide.UseVisualStyleBackColor = true;
+            btn_remove_slide.Click += btn_remove_slide_Click;
             // 
             // bt_new_slide
             // 
@@ -123,13 +155,18 @@
             bt_new_slide.TabIndex = 4;
             bt_new_slide.Text = "New Slide";
             bt_new_slide.UseVisualStyleBackColor = true;
+            bt_new_slide.Click += bt_new_slide_Click;
             // 
             // panel2
             // 
-            panel2.Location = new Point(428, 15);
+            panel2.Location = new Point(193, 182);
             panel2.Name = "panel2";
-            panel2.Size = new Size(305, 143);
+            panel2.Size = new Size(630, 203);
             panel2.TabIndex = 3;
+            panel2.Paint += panel2_Paint;
+            panel2.MouseDown += panel2_MouseDown;
+            panel2.MouseMove += panel2_MouseMove;
+            panel2.MouseUp += panel2_MouseUp;
             // 
             // btn_shape
             // 
@@ -153,9 +190,9 @@
             // pic
             // 
             pic.BorderStyle = BorderStyle.FixedSingle;
-            pic.Location = new Point(184, 182);
+            pic.Location = new Point(375, 391);
             pic.Name = "pic";
-            pic.Size = new Size(832, 379);
+            pic.Size = new Size(358, 139);
             pic.TabIndex = 0;
             pic.TabStop = false;
             pic.Paint += pic_Paint;
@@ -189,5 +226,7 @@
         private Button btn_pen;
         private Button btn_remove_slide;
         private Button bt_new_slide;
+        private Button button1;
+        private Button button2;
     }
 }

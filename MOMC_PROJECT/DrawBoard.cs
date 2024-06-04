@@ -4,11 +4,16 @@ using static MOMC_PROJECT.MOM_Prop;
 using iTextSharp.text;
 using iTextSharp.text.pdf;
 using System.Drawing;
+using System.ComponentModel.DataAnnotations;
+using System.Net.Mail;
+using System.Diagnostics;
+using System.Windows.Forms;
+using System.Collections.Generic;
 namespace MOMC_PROJECT
 {
     public partial class DrawBoard : UserControl
     {
-        //draw and color 
+
         Bitmap bm;
         Graphics g;
         private Point px, py;
@@ -40,13 +45,9 @@ namespace MOMC_PROJECT
         //slides
         private List<Slide> slides;
         private int currentSlideIndex;
-        //undo redo
-        // private Stack<List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>> undoStack = new Stack<List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>>();
-        // private Stack<List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>> redoStack = new Stack<List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>>();
 
-        private Stack<List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>> undoStack = new Stack<List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>>();
-        private Stack<List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>> redoStack = new Stack<List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>>();
-        private List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>> currentDrawing = new List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>();
+        private Stack<Bitmap> undoStack = new Stack<Bitmap>();
+        private Stack<Bitmap> redoStack = new Stack<Bitmap>();
         private Panel drawingPanel = new Panel();
 
         //Saved picturebox path
@@ -59,14 +60,73 @@ namespace MOMC_PROJECT
         private Bitmap currentBitmap;
         private PointF rect;
 
+        private Stack<Bitmap> undoStack1 = new Stack<Bitmap>();
+        private Stack<Bitmap> redoStack2 = new Stack<Bitmap>();
+
+
+
+
+
         public DrawBoard()
         {
             InitializeComponent();
             ScreenLoad();
             btn_undo.Click += btn_undo_Click;
             btn_redo.Click += btn_redo_Click;
+            SaveState();
+        }
+        private void SaveState()
+        {
+            undoStack.Push(new Bitmap(bm));
+            // redoStack.Clear();
+            //  btn_undo.Enabled = undoStack.Count > 1;
+            // btn_redo.Enabled = redoStack.Count > 1;
+
+            //Bitmap currentState = new Bitmap(bm);
+            //undoStack.Push(currentState);
+            //redoStack.Clear();
+
+            //Bitmap currentImage = new Bitmap(pic.Image);
+            //undoStack.Push(currentImage);
+            //redoStack.Clear();
+            //Debug.WriteLine("State saved. Undo stack size: " + undoStack.Count);
+        }
+
+        private void SaveStateToUndoStack()
+        {
+            SaveState();
+        }
+        private void Undo()
+        {
+            if (undoStack.Count > 1)
+            {
+                redoStack.Push(new Bitmap(bm)); // Save current state to redo stack before undo
+                Bitmap previousState = undoStack.Pop();
+                bm = new Bitmap(undoStack.Peek());
+                // bm = new Bitmap(previousState); // Revert to the previous state
+                g = Graphics.FromImage(bm); // Update graphics object
+                pic.Image = bm;
+                pic.Invalidate(); // Refresh to show the updated image
+                btn_redo.Enabled = true;
+            }
+            // btn_undo.Enabled = undoStack.Count > 1;
+            // btn_redo.Enabled = redoStack.Count > 1;
+        }
+        private void Redo()
+        {
+            if (redoStack.Count > 0)
+            {
+                undoStack.Push(new Bitmap(bm)); // Save the current state to the undo stack before redoing
+                bm = new Bitmap(redoStack.Pop()); // Revert to the next state
+                g = Graphics.FromImage(bm); // Update graphics object
+                pic.Image = bm;
+                pic.Invalidate(); // Refresh to show the updated image
+            }
+            // btn_undo.Enabled = undoStack.Count > 1; // Disable if only the initial state is left
+            //btn_redo.Enabled = redoStack.Count > 0;
 
         }
+
 
         private void ScreenLoad()
         {
@@ -79,7 +139,7 @@ namespace MOMC_PROJECT
             this.Height = 720;
             bm = new Bitmap(pic.Width, pic.Height);
             g = Graphics.FromImage(bm);
-            g.Clear(Color.White);
+            // g.Clear(Color.White);
             pic.Image = bm;
             slides = new List<Slide>();
             currentSlideIndex = -1;
@@ -91,6 +151,9 @@ namespace MOMC_PROJECT
             pic.Image = currentBitmap;
             //this.btn_rename.Click += new System.EventHandler(this.btn_rename_Click);
         }
+
+        //
+
         private void pic_MouseDown(object sender, MouseEventArgs e)
         {
             paint = true;
@@ -200,16 +263,16 @@ namespace MOMC_PROJECT
             {
                 isImageDrawing = false;
                 images.Add(new Tuple<System.Drawing.Image, System.Drawing.Rectangle>(selectedImage, currentImageRect));
-                selectedImage = null; // Reset selected image
-                Cursor = Cursors.Default; // Change cursor back to default
+                selectedImage = null;
+                Cursor = Cursors.Default;
                 pic.Invalidate();
             }
             if (isShapeDrawing && selectedIconImage != null)
             {
                 isShapeDrawing = false;
                 shapes.Add(new Tuple<System.Drawing.Image, System.Drawing.Rectangle>(selectedIconImage, currentShapeRect));
-                selectedIconImage = null; // Reset selected icon image
-                Cursor = Cursors.Default; // Change cursor back to default
+                selectedIconImage = null;
+                Cursor = Cursors.Default;
                 pic.Invalidate();
             }
             if (isDragging && isSelecting)
@@ -218,19 +281,50 @@ namespace MOMC_PROJECT
                 selectionRectangle = GetShapeBounds(startPoint, endPoint);
                 isDragging = false;
                 Cursor = Cursors.Default;
-                pic.Invalidate(); // Refresh to show the final selection rectangle
-            }
-            Cursor cursor = Cursors.Default;
-            if (isImageDrawing && selectedImage != null)
-            {
-                isImageDrawing = false;
-                // Add the drawn image to the currentDrawing list
-                AddDrawingAction(selectedImage, currentImageRect);
-                // Reset selected image and cursor
-                selectedImage = null;
-                Cursor = Cursors.Default;
                 pic.Invalidate();
             }
+            SaveState();
+            //paint = false;
+            //if (isImageDrawing && selectedImage != null)
+            //{
+            //    isImageDrawing = false;
+            //    images.Add(new Tuple<System.Drawing.Image, System.Drawing.Rectangle>(selectedImage, currentImageRect));
+            //    selectedImage = null; // Reset selected image
+            //    Cursor = Cursors.Default; // Change cursor back to default
+            //    pic.Invalidate();
+            //}
+            //if (isShapeDrawing && selectedIconImage != null)
+            //{
+            //    isShapeDrawing = false;
+            //    shapes.Add(new Tuple<System.Drawing.Image, System.Drawing.Rectangle>(selectedIconImage, currentShapeRect));
+            //    selectedIconImage = null; // Reset selected icon image
+            //    Cursor = Cursors.Default; // Change cursor back to default
+            //    pic.Invalidate();
+            //}
+            //if (isDragging && isSelecting)
+            //{
+            //    endPoint = e.Location;
+            //    selectionRectangle = GetShapeBounds(startPoint, endPoint);
+            //    isDragging = false;
+            //    Cursor = Cursors.Default;
+            //    pic.Invalidate(); // Refresh to show the final selection rectangle
+            //}
+            //Cursor cursor = Cursors.Default;
+            //if (isImageDrawing && selectedImage != null)
+            //{
+            //    isImageDrawing = false;
+            //    // Add the drawn image to the currentDrawing list
+            //    AddDrawingAction(selectedImage, currentImageRect);
+            //    // Reset selected image and cursor
+            //    selectedImage = null;
+            //    Cursor = Cursors.Default;
+            //    pic.Invalidate();
+            //}
+            //SaveState();
+            //btn_undo.Enabled = true;
+            //btn_redo.Enabled = false;
+
+
         }
         private System.Drawing.Rectangle GetShapeBounds(Point p1, Point p2)
         {
@@ -516,46 +610,173 @@ namespace MOMC_PROJECT
             Cursor cursor = CreateCursor(selectedIconImage);
             panel4.Visible = false;
         }
+
+
+        public enum CustomIconType
+        {
+            Square,
+            Circle,
+            Star,
+            Heart,
+            flower,
+            Bell,
+            Check,
+            Times,
+            Plus,
+            Minus,
+            ArrowUp,
+            ArrowDown,
+            ArrowLeft,
+            ArrowRight,
+            Pause,
+            Play,
+            Stop,
+            FastForward,
+            StepForward,
+            Music,
+            Video,
+            Image,
+            Camera,
+            Film,
+            Bolt,
+            Lightbulb,
+            Cloud,
+            Sun,
+            Moon,
+            Wind,
+            Fire,
+            Water,
+            Snowflake,
+            Tree,
+            Leaf,
+            Globe,
+            Map,
+            Compass,
+            Flag,
+            Cog,
+            Tools,
+            Hammer,
+            Wrench,
+            Screwdriver,
+            Lock,
+            Unlock,
+            Key,
+            Home,
+            Building,
+            Car,
+            Bicycle,
+            Bus,
+            Train,
+            Plane,
+            Ship,
+            Subway,
+            Truck,
+            Horse,
+            Dog,
+            Cat,
+            Fish,
+            Dove,
+            Dragon,
+            Frog,
+            Paw
+        }
+
+        public class CustomIcon
+        {
+            public CustomIconType IconType { get; set; }
+            public System.Drawing.Icon IconImage { get; set; }
+
+            public CustomIcon(CustomIconType iconType, System.Drawing.Icon iconImage)
+            {
+                IconType = iconType;
+                IconImage = iconImage;
+            }
+        }
         private void btn_shape_Click(object sender, EventArgs e)
         {
+
             index = 0;
             Cursor cursor = Cursors.Default;
             panel4.Visible = true;
-            // Clear the panel before adding buttons and images
+            //    // Clear the panel before adding buttons and images
             panel4.Controls.Clear();
 
-            // Define the dimensions of the grid
-            int rowCount = 8;
-            int colCount = 8;
-            int cellWidth = 30; // Adjust as needed
-            int cellHeight = 30; // Adjust as needed
+            //    // Define the dimensions of the grid
+            //    int rowCount = 8;
+            //    int colCount = 8;
+            //    int cellWidth = 30; // Adjust as needed
+            //    int cellHeight = 30; // Adjust as needed
 
             // Create an array of FontAwesome icons
+            //IconChar[] icons = new IconChar[]
+            //{
+            //    IconChar.Square,IconChar.Circle, IconChar.Star,
+            //    IconChar.Heart, IconChar.Bell,
+            //    IconChar.Check, IconChar.Times, IconChar.Plus,
+            //    IconChar.Minus, IconChar.ArrowUp, IconChar.ArrowDown,
+            //    IconChar.ArrowLeft, IconChar.ArrowRight, IconChar.Pause,
+            //    IconChar.Play, IconChar.Stop, IconChar.FastForward,
+            //    IconChar.StepForward, IconChar.Music, IconChar.Video,
+            //    IconChar.Image, IconChar.Camera, IconChar.Film,
+            //    IconChar.Bolt, IconChar.Lightbulb, IconChar.Cloud,
+            //    IconChar.Sun, IconChar.Moon, IconChar.Wind,
+            //    IconChar.Fire, IconChar.Water, IconChar.Snowflake,
+            //    IconChar.Tree, IconChar.Leaf,IconChar.Globe,
+            //    IconChar.Map, IconChar.Compass,
+            //    IconChar.Flag, IconChar.Cog, IconChar.Tools,
+            //    IconChar.Hammer, IconChar.Wrench, IconChar.Screwdriver,
+            //    IconChar.Lock, IconChar.Unlock, IconChar.Key,
+            //    IconChar.Home, IconChar.Building, IconChar.Car,
+            //    IconChar.Bicycle, IconChar.Bus, IconChar.Train,
+            //    IconChar.Plane, IconChar.Ship, IconChar.Subway,
+            //    IconChar.Truck, IconChar.Horse, IconChar.Dog,
+            //    IconChar.Cat, IconChar.Fish, IconChar.Dove,
+            //    IconChar.Dragon, IconChar.Frog, IconChar.Paw
+            //};
+
+            //int iconIndex = 0;
+            //int totalIcons = icons.Length;
+
+            //for (int row = 0; row < rowCount; row++)
+            //{
+            //    for (int col = 0; col < colCount; col++)
+            //    {
+            //        IconButton btn = new IconButton();
+            //        btn.Width = cellWidth;
+            //        btn.Height = cellHeight;
+            //        btn.Top = row * cellHeight;
+            //        btn.Left = col * cellWidth;
+            //        btn.IconChar = icons[iconIndex % totalIcons];
+            //        btn.IconColor = Color.Black;
+            //        btn.IconSize = 20;
+            //        btn.Text = "";
+            //        btn.FlatStyle = FlatStyle.Flat;
+            //        btn.FlatAppearance.BorderSize = 0;
+            //        btn.Click += IconButton_Click; // Add click event handler
+            //        panel4.Controls.Add(btn);
+            //        iconIndex++;
+            //    }
+            //}
+
+
+
             IconChar[] icons = new IconChar[]
-            {
-                IconChar.Square,IconChar.Circle, IconChar.Star,
-                IconChar.Heart, IconChar.Bell,
-                IconChar.Check, IconChar.Times, IconChar.Plus,
-                IconChar.Minus, IconChar.ArrowUp, IconChar.ArrowDown,
-                IconChar.ArrowLeft, IconChar.ArrowRight, IconChar.Pause,
-                IconChar.Play, IconChar.Stop, IconChar.FastForward,
-                IconChar.StepForward, IconChar.Music, IconChar.Video,
-                IconChar.Image, IconChar.Camera, IconChar.Film,
-                IconChar.Bolt, IconChar.Lightbulb, IconChar.Cloud,
-                IconChar.Sun, IconChar.Moon, IconChar.Wind,
-                IconChar.Fire, IconChar.Water, IconChar.Snowflake,
-                IconChar.Tree, IconChar.Leaf,IconChar.Globe,
-                IconChar.Map, IconChar.Compass,
-                IconChar.Flag, IconChar.Cog, IconChar.Tools,
-                IconChar.Hammer, IconChar.Wrench, IconChar.Screwdriver,
-                IconChar.Lock, IconChar.Unlock, IconChar.Key,
-                IconChar.Home, IconChar.Building, IconChar.Car,
-                IconChar.Bicycle, IconChar.Bus, IconChar.Train,
-                IconChar.Plane, IconChar.Ship, IconChar.Subway,
-                IconChar.Truck, IconChar.Horse, IconChar.Dog,
-                IconChar.Cat, IconChar.Fish, IconChar.Dove,
-                IconChar.Dragon, IconChar.Frog, IconChar.Paw
-            };
+   {
+      IconChar.Line,IconChar.Square, IconChar.Minus, IconChar.Star, IconChar.Ellipsis,IconChar.TriangleCircleSquare,
+       IconChar.StarHalfAlt, IconChar.StarHalf,  IconChar.ArrowUp,
+       IconChar.ArrowDown, IconChar.ArrowLeft, IconChar.ArrowRight,
+       IconChar.CaretUp, IconChar.CaretDown, IconChar.CaretLeft,
+       IconChar.CaretRight, IconChar.ChevronUp, IconChar.ChevronDown,
+
+       IconChar.ChevronLeft, IconChar.ChevronRight, IconChar.LongArrowUp,
+       IconChar.LongArrowDown, IconChar.LongArrowLeft, IconChar.LongArrowRight
+   };
+
+            // Set the dimensions of the grid
+            int rowCount = 5;
+            int colCount = 5;
+            int cellWidth = 50; // Adjust as needed
+            int cellHeight = 50; // Adjust as needed
 
             int iconIndex = 0;
             int totalIcons = icons.Length;
@@ -564,36 +785,50 @@ namespace MOMC_PROJECT
             {
                 for (int col = 0; col < colCount; col++)
                 {
-                    IconButton btn = new IconButton();
-                    btn.Width = cellWidth;
-                    btn.Height = cellHeight;
-                    btn.Top = row * cellHeight;
-                    btn.Left = col * cellWidth;
-                    btn.IconChar = icons[iconIndex % totalIcons];
-                    btn.IconColor = Color.Black;
-                    btn.IconSize = 20;
-                    btn.Text = "";
-                    btn.FlatStyle = FlatStyle.Flat;
-                    btn.FlatAppearance.BorderSize = 0;
-                    btn.Click += IconButton_Click; // Add click event handler
-                    panel4.Controls.Add(btn);
-                    iconIndex++;
+                    if (iconIndex < totalIcons)
+                    {
+                        IconButton btn = new IconButton();
+                        btn.Width = cellWidth;
+                        btn.Height = cellHeight;
+                        btn.Top = row * cellHeight;
+                        btn.Left = col * cellWidth;
+                        btn.IconChar = icons[iconIndex];
+                        btn.IconColor = Color.Black;
+                        btn.IconSize = 20;
+                        btn.Text = "";
+                        btn.FlatStyle = FlatStyle.Flat;
+                        btn.FlatAppearance.BorderSize = 0;
+                        btn.Click += IconButton_Click; // Add click event handler
+                        panel4.Controls.Add(btn);
+                        iconIndex++;
+                    }
                 }
             }
         }
 
         private void btn_select_Click(object sender, EventArgs e)
         {
+            //Cursor = Cursors.Cross;
+
+            //isSelecting = !isSelecting; // Toggle the selection mode
+            //if (!isSelecting)
+            //{
+            //    selectionRectangle = System.Drawing.Rectangle.Empty; // Clear the selection rectangle if deselecting
+            //    pic.Invalidate(); // Refresh the PictureBox to update the display
+            //}
+            //selectedIcon = IconChar.None; // Disable drawing icons when selecting
+            //index = 0;
+
+
             Cursor = Cursors.Cross;
 
-            isSelecting = !isSelecting; // Toggle the selection mode
-            if (!isSelecting)
-            {
-                selectionRectangle = System.Drawing.Rectangle.Empty; // Clear the selection rectangle if deselecting
-                pic.Invalidate(); // Refresh the PictureBox to update the display
-            }
+            isSelecting = true; // Enable selection mode
             selectedIcon = IconChar.None; // Disable drawing icons when selecting
             index = 0;
+
+            // Optionally clear any existing selection rectangle
+            selectionRectangle = System.Drawing.Rectangle.Empty;
+            pic.Invalidate(); // Refresh the PictureBox to update th
         }
         private bool IsRectangleIntersecting(System.Drawing.Rectangle rect1, System.Drawing.Rectangle rect2)
         {
@@ -601,70 +836,248 @@ namespace MOMC_PROJECT
         }
         private void btn_delete_Click(object sender, EventArgs e)
         {
+
             if (selectionRectangle != System.Drawing.Rectangle.Empty)
             {
+
+                List<int> itemsToRemove = new List<int>();
+
                 // Iterate over the list in reverse order to safely remove items
-                for (int i = images.Count - 1; i >= 0; i--)
+                for (int i = itemsToRemove.Count - 1; i >= 0; i--)
                 {
-                    if (IsRectangleIntersecting(images[i].Item2, selectionRectangle))
-                    {
-                        images.RemoveAt(i);
-                    }
+                    images.RemoveAt(itemsToRemove[i]);
                 }
 
                 selectionRectangle = System.Drawing.Rectangle.Empty; // Clear the selection rectangle
                 pic.Invalidate(); // Refresh the PictureBox to update the display
             }
             isSelecting = false; // Disable selection mode
+
         }
+
+        //public static List<String> attachments = new List<String>();
+        //private List<Panel> buttonPanels = new List<Panel>();===
+        private List<string> attachments = new List<string>();
+        private List<Panel> buttonPanels = new List<Panel>();
+        private int buttonHeight;
+
         private void btn_uplaod_Click(object sender, EventArgs e)
         {
-            using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+
+
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Multiselect = true;
+            openFileDialog.Filter = "All Files (*.*)|*.*";
+            // openFileDialog.Filter = "JPEG Image|*.jpg|JPEG Image|*.jpeg|PNG Image|*.png";
+
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                // Set the file filter to allow saving as JPEG, JPG, or PNG
-                saveFileDialog.Filter = "JPEG Image|*.jpg|JPEG Image|*.jpeg|PNG Image|*.png";
-
-                // Display the dialog and wait for the user's response
-                DialogResult result = saveFileDialog.ShowDialog();
-
-                // If the user clicks "Save"
-                if (result == DialogResult.OK)
-                {
-                    // Get the selected filename
-                    string fileName = saveFileDialog.FileName;
-
-                    // Create a new bitmap with the same size as the PictureBox
-                    Bitmap combinedImage = new Bitmap(pic.Width, pic.Height);
-
-                    // Get the graphics object of the combined image
-                    using (Graphics g = Graphics.FromImage(combinedImage))
-                    {
-                        // Draw the background image from the PictureBox
-                        g.DrawImage(pic.Image, Point.Empty);
-
-                        // Draw the images stored in the list
-                        foreach (var imageRect in images)
-                        {
-                            g.DrawImage(imageRect.Item1, imageRect.Item2);
-                        }
-
-                        // Draw the shapes/icons on top of the background image
-                        foreach (var shape in shapes)
-                        {
-                            g.DrawImage(shape.Item1, shape.Item2);
-                        }
-                    }
-
-                    // Save the combined image to the selected location
-                    combinedImage.Save(fileName);
-                }
+                List<string> selectedFilePaths = new List<string>(openFileDialog.FileNames);
+                AttachFilesToPanel1(selectedFilePaths);
             }
-            panel1.Controls.Clear();
-            panel1.BackColor = SystemColors.Control;
-            MeetingsInfo_ComposeEmail m = new MeetingsInfo_ComposeEmail();
-            panel1.Dock = DockStyle.Fill;
-            panel1.Controls.Add(m);
         }
+        private void AttachFilesToPanel1(List<string> filePaths)
+        {
+            MeetingsInfo_ComposeEmail mc = new MeetingsInfo_ComposeEmail();
+            if (mc != null)
+            {
+                Panel panel5DW = mc.Panel5DW;
+
+                if (panel5DW != null)
+                {
+                    panel5DW.Controls.Clear();
+                    buttonPanels.Clear();
+                    panel5DW.AutoScroll = true;
+
+                    int buttonWidth = 200;
+                    int buttonHeight = 50;
+                    int fileButtonGap = 20;
+                    int removeButtonGap = 0;
+                    int maxButtonsPerRow = (panel5DW.Width) / (buttonWidth + fileButtonGap);
+                    int fileCount = 0;
+
+                    foreach (string filePath in filePaths)
+                    {
+                        attachments.Add(filePath);
+                        int rowIndex = fileCount / maxButtonsPerRow;
+                        int colIndex = fileCount % maxButtonsPerRow;
+                        int x = colIndex * (buttonWidth + fileButtonGap);
+                        int y = rowIndex * (buttonHeight + removeButtonGap);
+
+                        Panel buttonPanel = new Panel
+                        {
+                            Size = new Size(buttonWidth, buttonHeight),
+                            Location = new Point(x, y),
+                            BorderStyle = BorderStyle.FixedSingle
+                        };
+
+                        PictureBox iconPictureBox = new PictureBox
+                        {
+                            Size = new Size(32, 32),
+                            Location = new Point(10, (buttonHeight - 32) / 2),
+                            Image = System.Drawing.Icon.ExtractAssociatedIcon(filePath).ToBitmap(),
+                            SizeMode = PictureBoxSizeMode.StretchImage
+                        };
+                        buttonPanel.Controls.Add(iconPictureBox);
+
+                        Label fileInfoLabel = new Label
+                        {
+                            AutoSize = true,
+                            Location = new Point(iconPictureBox.Right + 10, (buttonHeight - 32) / 2),
+                            Text = $"{System.IO.Path.GetFileName(filePath)} ({new FileInfo(filePath).Length / 1024} KB)",
+                            MaximumSize = new Size(buttonWidth - (iconPictureBox.Right + 40), buttonHeight)
+                        };
+                        buttonPanel.Controls.Add(fileInfoLabel);
+
+                        System.Windows.Forms.Button removeButton = new System.Windows.Forms.Button
+                        {
+                            Text = "X",
+                            Size = new Size(20, 20),
+                            Location = new Point(buttonWidth - 30, (buttonHeight - 20) / 2)
+                        };
+                        removeButton.Click += (btnSender, btnE) =>
+                        {
+                            int indexToRemove = buttonPanels.IndexOf(buttonPanel);
+                            buttonPanels.RemoveAt(indexToRemove);
+                            panel5DW.Controls.Remove(buttonPanel);
+                            attachments.RemoveAt(indexToRemove);
+                            UpdateButtonPanelLocations(panel5DW, maxButtonsPerRow, buttonWidth, fileButtonGap, removeButtonGap);
+                            fileCount--;
+                        };
+                        buttonPanel.Controls.Add(removeButton);
+
+                        buttonPanel.Click += (panelSender, panelE) =>
+                        {
+                            try
+                            {
+                                Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show($"Error opening file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }
+                        };
+
+                        panel5DW.Controls.Add(buttonPanel);
+                        buttonPanels.Add(buttonPanel);
+                        fileCount++;
+                    }
+                }
+
+
+                panel1.Controls.Clear();
+                panel1.Dock = DockStyle.Fill;
+                panel1.BackColor = SystemColors.Control;
+                panel1.Controls.Add(mc);
+            }
+        }
+        private void AttachFilesToPanel2(string filePath)
+        {
+            MeetingsInfo_ComposeEmail mc = new MeetingsInfo_ComposeEmail();
+            if (mc != null)
+            {
+                Panel panel5DW = mc.Panel5DW;
+
+                if (panel5DW != null)
+                {
+                    panel5DW.Controls.Clear();
+                    buttonPanels.Clear();
+                    panel5DW.AutoScroll = true;
+
+                    int buttonWidth = 200;
+                    int buttonHeight = 50;
+                    int fileButtonGap = 20;
+                    int removeButtonGap = 0;
+                    int maxButtonsPerRow = (panel5DW.Width) / (buttonWidth + fileButtonGap);
+                    int fileCount = 0;
+
+                    //  foreach (string filePath in filePath)
+                    // {
+                    attachments.Add(filePath);
+                    int rowIndex = fileCount / maxButtonsPerRow;
+                    int colIndex = fileCount % maxButtonsPerRow;
+                    int x = colIndex * (buttonWidth + fileButtonGap);
+                    int y = rowIndex * (buttonHeight + removeButtonGap);
+
+                    Panel buttonPanel = new Panel
+                    {
+                        Size = new Size(buttonWidth, buttonHeight),
+                        Location = new Point(x, y),
+                        BorderStyle = BorderStyle.FixedSingle
+                    };
+
+                    PictureBox iconPictureBox = new PictureBox
+                    {
+                        Size = new Size(32, 32),
+                        Location = new Point(10, (buttonHeight - 32) / 2),
+                        Image = System.Drawing.Icon.ExtractAssociatedIcon(filePath).ToBitmap(),
+                        SizeMode = PictureBoxSizeMode.StretchImage
+                    };
+                    buttonPanel.Controls.Add(iconPictureBox);
+
+                    Label fileInfoLabel = new Label
+                    {
+                        AutoSize = true,
+                        Location = new Point(iconPictureBox.Right + 10, (buttonHeight - 32) / 2),
+                        Text = $"{System.IO.Path.GetFileName(filePath)} ({new FileInfo(filePath).Length / 1024} KB)",
+                        MaximumSize = new Size(buttonWidth - (iconPictureBox.Right + 40), buttonHeight)
+                    };
+                    buttonPanel.Controls.Add(fileInfoLabel);
+
+                    System.Windows.Forms.Button removeButton = new System.Windows.Forms.Button
+                    {
+                        Text = "X",
+                        Size = new Size(20, 20),
+                        Location = new Point(buttonWidth - 30, (buttonHeight - 20) / 2)
+                    };
+                    removeButton.Click += (btnSender, btnE) =>
+                    {
+                        int indexToRemove = buttonPanels.IndexOf(buttonPanel);
+                        buttonPanels.RemoveAt(indexToRemove);
+                        panel5DW.Controls.Remove(buttonPanel);
+                        attachments.RemoveAt(indexToRemove);
+                        UpdateButtonPanelLocations(panel5DW, maxButtonsPerRow, buttonWidth, fileButtonGap, removeButtonGap);
+                        fileCount--;
+                    };
+                    buttonPanel.Controls.Add(removeButton);
+
+                    buttonPanel.Click += (panelSender, panelE) =>
+                    {
+                        try
+                        {
+                            Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"Error opening file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    };
+
+                    panel5DW.Controls.Add(buttonPanel);
+                    buttonPanels.Add(buttonPanel);
+                    fileCount++;
+                    //}
+                }
+                panel1.Controls.Clear();
+                panel1.Dock = DockStyle.Fill;
+                panel1.BackColor = SystemColors.Control;
+                panel1.Controls.Add(mc);
+            }
+        }
+
+
+
+        private void UpdateButtonPanelLocations(Panel panel5DW, int maxButtonsPerRow, int buttonWidth, int fileButtonGap, int removeButtonGap)
+        {
+            for (int i = 0; i < buttonPanels.Count; i++)
+            {
+                int row = i / maxButtonsPerRow;
+                int col = i % maxButtonsPerRow;
+                int newX = col * (buttonWidth + fileButtonGap);
+                int newY = row * (buttonHeight + removeButtonGap);
+                buttonPanels[i].Location = new Point(newX, newY);
+            }
+        }   
         private void btn_SaveClose_Click(object sender, EventArgs e)
         {
             using (SaveFileDialog saveFileDialog = new SaveFileDialog())
@@ -705,17 +1118,11 @@ namespace MOMC_PROJECT
 
                     // Save the combined image to the selected location
                     combinedImage.Save(fileName);
+                    AttachFilesToPanel2(fileName);
                 }
             }
         }
-        private void btn_close_Click(object sender, EventArgs e)
-        {
-            panel1.Controls.Clear();
-            MeetingsInfo_ComposeEmail meetingsInfo_ComposeEmail = new MeetingsInfo_ComposeEmail();
-            panel1.Dock = DockStyle.Fill;
-            panel1.BackColor = SystemColors.Control;
-            panel1.Controls.Add(meetingsInfo_ComposeEmail);
-        }
+      
         private void btnAddSlide_Click(object sender, EventArgs e)
         {
             pic.Visible = true;
@@ -856,6 +1263,8 @@ namespace MOMC_PROJECT
         }
         private void btn_SaveAll_Click(object sender, EventArgs e)
         {
+
+
             if (slides == null || slides.Count == 0)
             {
                 MessageBox.Show("No slides to save.");
@@ -864,8 +1273,18 @@ namespace MOMC_PROJECT
 
             using (SaveFileDialog saveDialog = new SaveFileDialog())
             {
+                //if (slides.Count == 1)
+                //{
+                //    // saveDialog.Filter = "JPEG Image|*.jpg|JPEG Image|*.jpeg|PNG Image|*.png";
+                //    saveDialog.Filter = "PNG Image (*.png)|*.png";
+                //    saveDialog.Title = "Save Drawboard Image";
+                //}
+                //else if (slides.Count > 1)
+                //{
                 saveDialog.Filter = "PDF files (*.pdf)|*.pdf";
-                saveDialog.Title = "Save PDF";
+                saveDialog.Title = "Save Drawboard PDF file";
+
+                // }
                 if (saveDialog.ShowDialog() == DialogResult.OK)
                 {
                     string pdfFilePath = saveDialog.FileName;
@@ -909,7 +1328,7 @@ namespace MOMC_PROJECT
                                 // Convert the combined image to a byte array
                                 using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
                                 {
-                                    combinedImage.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                                    combinedImage.Save(stream, System.Drawing.Imaging.ImageFormat.Jpeg);
                                     byte[] imageBytes = stream.ToArray();
 
                                     // Add the image to the PDF document
@@ -922,11 +1341,14 @@ namespace MOMC_PROJECT
                                     if (i < slides.Count - 1)
                                     {
                                         document.NewPage();
-                                    }   
+                                    }
                                 }
                             }
 
-                            MessageBox.Show("PDF saved successfully.");
+                            MessageBox.Show("Saved and Uploaded Successfully.");
+
+                            // Attach the saved PDF file to the panel
+                            AttachFilesToPanel2(pdfFilePath);
                         }
                         catch (Exception ex)
                         {
@@ -935,7 +1357,9 @@ namespace MOMC_PROJECT
                     }
                 }
             }
+
         }
+
         private iTextSharp.text.Image ConvertSlideToImage(Slide slide)
         {
             int slideWidth = 800;
@@ -1041,59 +1465,27 @@ namespace MOMC_PROJECT
 
         private void PerformDrawing(System.Drawing.Image image, System.Drawing.Rectangle rectangle)
         {
-            // Save current state before drawing
-            SaveStateToUndoStack();
 
-            // Draw the image onto the PictureBox
-            using (Graphics g = Graphics.FromImage(pic.Image))
-            {
-                g.DrawImage(image, rect);
-            }
-
-            pic.Invalidate(); // Trigger repaint
         }
 
-        private void SaveStateToUndoStack()
-        {
-            // Create a clone of the current drawing state
-            var clone = new List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>();
-            foreach (var item in currentDrawing)
-            {
-                clone.Add(new Tuple<System.Drawing.Image, System.Drawing.Rectangle>(item.Item1, item.Item2));
-            }
 
-            // Push the clone to the undoStack
-            undoStack.Push(clone);
-        }
         public void btn_undo_Click(object sender, EventArgs e)
         {
-            if (undoStack.Count > 0)
-            {
-                // Push the current state to redoStack
-                redoStack.Push(new List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>(currentDrawing));
+            Undo();
 
-                // Retrieve the previous state from undoStack
-                currentDrawing = undoStack.Pop();
-
-                // Clear the drawing area
-                g.Clear(Color.White);
-                //pic.Image = bm;
-
-                for (int i = 0; i < currentDrawing.Count - 1; i++)
-                {
-                    var item = currentDrawing[i];
-                    g.DrawImage(item.Item1, item.Item2);
-                }
-
-                pic.Invalidate(); // Trigger repaint
-            }
         }
+
+
+        private void ClearLastDrawing(List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>> lastDrawing)
+        {
+
+        }
+
         private void AddDrawingAction(System.Drawing.Image image, System.Drawing.Rectangle location)
         {
-            currentDrawing.Add(new Tuple<System.Drawing.Image, System.Drawing.Rectangle>(image, location));
-            // Save the current state to the undo stack after each drawing action
-            SaveStateToUndoStack();
+
         }
+
         private void pic_Click(object sender, EventArgs e)
         {
 
@@ -1106,22 +1498,43 @@ namespace MOMC_PROJECT
 
         private void btn_redo_Click(object sender, EventArgs e)
         {
-            if (redoStack.Count > 0)
+            Redo();
+
+
+        }
+
+        private void panel5_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void pic_color_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void panel2_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+      
+        private void Closebutton_Click(object sender, EventArgs e)
+        {
+            //DialogResult result = MessageBox.Show("Are you sure you want to close the page?", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            DialogResult result = MessageBox.Show("Are you sure you want to close the page?", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+            // If the user clicks "Yes", close the form
+            if(result == DialogResult.Yes)
             {
-                // Push the current state to undoStack
-                undoStack.Push(new List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>(currentDrawing));
-
-                // Retrieve the next state from redoStack
-                currentDrawing = redoStack.Pop();
-
-                // Redraw the currentDrawing
-                foreach (var item in currentDrawing)
-                {
-                    g.DrawImage(item.Item1, item.Item2);
-                }
-
-                pic.Invalidate(); // Trigger repaint
+                panel1.Controls.Clear();
+                MeetingsInfo_ComposeEmail meetingsInfo_ComposeEmail = new MeetingsInfo_ComposeEmail();
+                panel1.Dock = DockStyle.Fill;
+                panel1.BackColor = SystemColors.Control;
+                panel1.Controls.Add(meetingsInfo_ComposeEmail);
             }
+     
+           
         }
     }
 }

@@ -31,6 +31,7 @@
             components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MOMC));
             panel1 = new Panel();
+            button2 = new Button();
             panel3 = new Panel();
             label6 = new Label();
             button1 = new Button();
@@ -57,6 +58,7 @@
             // panel1
             // 
             panel1.BackColor = Color.SteelBlue;
+            panel1.Controls.Add(button2);
             panel1.Controls.Add(panel3);
             panel1.Controls.Add(panel2);
             panel1.Dock = DockStyle.Fill;
@@ -64,6 +66,17 @@
             panel1.Name = "panel1";
             panel1.Size = new Size(1350, 702);
             panel1.TabIndex = 0;
+           // panel1.Paint += panel1_Paint;
+            // 
+            // button2
+            // 
+            button2.Location = new Point(59, 145);
+            button2.Name = "button2";
+            button2.Size = new Size(75, 23);
+            button2.TabIndex = 13;
+            button2.Text = "button2";
+            button2.UseVisualStyleBackColor = true;
+            button2.Click += button2_Click;
             // 
             // panel3
             // 
@@ -291,5 +304,6 @@
         private Label label5;
         private Label label6;
         private PictureBox pictureBox1;
+        private Button button2;
     }
 }

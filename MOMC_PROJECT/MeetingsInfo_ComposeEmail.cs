@@ -11,6 +11,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using static MOMC_PROJECT.MOM_Prop;
@@ -20,200 +21,285 @@ namespace MOMC_PROJECT
 {
     public partial class MeetingsInfo_ComposeEmail : UserControl
     {
+        public Panel Panel5DW
+        {
+            get { return panel5DW; }
+        }
         private List<MeetingData> meetingDataList;
-        public static List<string> attachments = new List<string>();
+        public static List<string> attachments;
         public static string selected_meeting_name = "";
         private ComboBox comboBox1; // Declare comboBox1 at the class level
         private ComboBox comboBox3;
-        private Button selectedButton = null; // To keep track of the selected button in panel9
         private Stack<string> undoStack = new Stack<string>();
         private Stack<string> redoStack = new Stack<string>();
         private string currentText = "";
         private DataGridView dataGridView1;
-        private bool isTableVisible = false; // Flag to track table visibility
+        private List<Panel> buttonPanels = new List<Panel>();
 
         public MeetingsInfo_ComposeEmail()
         {
             InitializeComponent();
+            attachments = new List<string>();
             currentText = richTextBox3.Text; // Initialize current text
-            UpdateUndoRedoButtons();
             OnLoad();
             PopulateMeetingsComboBox();
             AttachMouseDownEventHandler(this);
-            //InitializeDataGridView();
-            InitializeComponent1();
-
+            InitializeBulletButtons();
+            IntializeTableLayoutPanel();
         }
-        private void InitializeComponent1()
+        private void InitializeBulletButtons()
         {
-            AddBulletButton("•", new Point(0, 0));
-            AddBulletButton("◦", new Point(60, 0));
-            AddBulletButton("▪", new Point(0, 60));
-            AddBulletButton("▫", new Point(60, 60));
+            try
+            {
+                var bulletButtons = new (string Symbol, Point Position)[]
+                {
+                  ("●", new Point(0, 0)),
+                  ("◆", new Point(60, 0)),
+                  ("☐", new Point(0, 60)),
+                  ("★", new Point(60, 60)),
+                  ("✔", new Point(120, 0)),
+                  ("➤", new Point(120, 60))
+                };
+                foreach (var (symbol, position) in bulletButtons)
+                {
+                    AddBulletButton(symbol, position);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
         private void AddBulletButton(string bulletChar, Point location)
         {
-            // Calculate the maximum button size based on panel size
-            int maxWidth = panel9.ClientSize.Width / 6; // Divide by 2 to allow for multiple buttons
-            int maxHeight = panel9.ClientSize.Height;
-
-            // Determine the smaller dimension to maintain the button's aspect ratio
-            int buttonSize = Math.Min(maxWidth, maxHeight);
-
-            Button button = new Button
+            try
             {
-                Size = new Size(buttonSize, buttonSize),
-                Location = location,
-                Text = bulletChar.ToString(),
-                TextAlign = ContentAlignment.TopCenter,
-            };
-
-            // Adjust font size based on button size
-            button.Font = new Font(button.Font.FontFamily, buttonSize / 3, button.Font.Style); // Adjusted font size based on button size
-
-            ToolTip toolTip = new ToolTip();
-            toolTip.SetToolTip(button, $"Bullet: {bulletChar}");
-            button.Click += btn_mail_bullets_Click;
-
-            panel9.Controls.Add(button);
-        }
-
-
-        private string previousBullet = "";
-        private void ApplyBulletToSelectedLine(string bulletChar)
-        {
-            int selectionStart = richTextBox3.SelectionStart;
-            int lineIndex = richTextBox3.GetLineFromCharIndex(selectionStart);
-
-            // Check if the line index is valid
-            if (lineIndex >= 0 && lineIndex < richTextBox3.Lines.Length)
+                int maxWidth = panel5.ClientSize.Width / 6; // Divide by 2 to allow for multiple buttons
+                int maxHeight = panel5.ClientSize.Height;
+                // Determine the smaller dimension to maintain the button's aspect ratio
+                int buttonSize = Math.Min(maxWidth, maxHeight);
+                Button button = new Button
+                {
+                    Size = new Size(buttonSize, buttonSize),
+                    Location = location,
+                    Text = bulletChar.ToString(),
+                    TextAlign = ContentAlignment.TopCenter,
+                };
+                // Adjust font size based on button size
+                button.Font = new Font(button.Font.FontFamily, buttonSize / 3, button.Font.Style);
+                button.Click += btn_mail_bullets_Click;
+                panel5.Controls.Add(button);
+            }
+            catch (Exception ex)
             {
-                int lineStart = richTextBox3.GetFirstCharIndexFromLine(lineIndex);
-                int lineLength = richTextBox3.Lines[lineIndex].Length;
-
-                // Get the current line text
-                string lineText = richTextBox3.Lines[lineIndex];
-
-                // Check if the current line already has a bullet point
-                if (lineText.StartsWith(previousBullet))
-                {
-                    // Replace the existing bullet point with the new one
-                    richTextBox3.Select(lineStart, previousBullet.Length);
-                    richTextBox3.SelectedText = bulletChar;
-                }
-                else if (lineText.StartsWith(previousBullet + " "))
-                {
-                    // Replace the existing sub-bullet point with the new one
-                    richTextBox3.Select(lineStart, previousBullet.Length + 1);
-                    richTextBox3.SelectedText = bulletChar + " ";
-                }
-                else
-                {
-                    // Insert the new bullet point at the beginning of the line as sub-bullet
-                    richTextBox3.Select(lineStart, 0);
-                    richTextBox3.SelectedText = bulletChar + " ";
-                }
-
-                // Store the current bullet character as the previous bullet character
-                previousBullet = bulletChar;
-
-                // Apply bullet points to subsequent lines with the same bullet point until an empty line or different bullet point
-                for (int i = lineIndex + 1; i < richTextBox3.Lines.Length; i++)
-                {
-                    int nextLineStart = richTextBox3.GetFirstCharIndexFromLine(i);
-                    string nextLineText = richTextBox3.Lines[i];
-                    if (nextLineText.TrimStart().StartsWith(bulletChar) || nextLineText.Trim() == "")
-                    {
-                        richTextBox3.Select(nextLineStart, 0);
-                        richTextBox3.SelectedText = bulletChar + " ";
-                    }
-                    else
-                    {
-                        break; // Stop applying bullet points if the next line doesn't match
-                    }
-                }
-
-                // Restore selection to original position
-                richTextBox3.Select(selectionStart + bulletChar.Length + 1, 0);
-                richTextBox3.Focus();
+                Console.WriteLine(ex.Message);
             }
         }
-        /*  private void ApplyBulletToSelectedText(string bulletChar)
+        private string previousBullet = " ";
+        /*  private void ApplyBulletToSelectedLine(string bulletChar)
           {
-              int selectionStart = richTextBox3.SelectionStart;
-              int selectionEnd = selectionStart + richTextBox3.SelectionLength;
-
-              int startLineIndex = richTextBox3.GetLineFromCharIndex(selectionStart);
-              int endLineIndex = richTextBox3.GetLineFromCharIndex(selectionEnd);
-
-              for (int lineIndex = startLineIndex; lineIndex <= endLineIndex; lineIndex++)
+              try
               {
+                  if (string.IsNullOrEmpty(richTextBox3.Text))
+                  {
+                      return; // Do nothing if the RichTextBox is empty
+                  }
+                  int selectionStart = richTextBox3.SelectionStart;
+                  int lineIndex = richTextBox3.GetLineFromCharIndex(selectionStart);
                   // Check if the line index is valid
                   if (lineIndex >= 0 && lineIndex < richTextBox3.Lines.Length)
                   {
                       int lineStart = richTextBox3.GetFirstCharIndexFromLine(lineIndex);
                       string lineText = richTextBox3.Lines[lineIndex];
+                      // Store the original font size
+                      float originalFontSize = richTextBox3.SelectionFont.Size;
 
-                      // Check if the current line already has a bullet point
-                      if (lineText.StartsWith(previousBullet))
+                      // Define a fixed font size for the bullet
+                      float bulletFontSize = 8; // You can adjust this value
+
+                      // Create a font for the bullet
+                      Font bulletFont = new Font(richTextBox3.SelectionFont.FontFamily, bulletFontSize);
+
+                      // Check if the current line already has a bullet point and spaces
+                      if (lineText.StartsWith(bulletChar + "   "))
+                      {
+                          // The line already has the correct bullet and spaces, do nothing
+                          return;
+                      }
+                      else if (lineText.StartsWith(previousBullet + "   "))
+                      {
+                          // Replace the existing bullet point with the new one
+                          richTextBox3.Select(lineStart, previousBullet.Length + 3);
+                          richTextBox3.SelectionFont = bulletFont;
+                          richTextBox3.SelectedText = bulletChar + "   ";
+                      }
+                      else if (lineText.StartsWith(previousBullet))
                       {
                           // Replace the existing bullet point with the new one
                           richTextBox3.Select(lineStart, previousBullet.Length);
-                          richTextBox3.SelectedText = bulletChar;
-                      }
-                      else if (lineText.StartsWith(previousBullet + " "))
-                      {
-                          // Replace the existing sub-bullet point with the new one
-                          richTextBox3.Select(lineStart, previousBullet.Length + 1);
-                          richTextBox3.SelectedText = bulletChar + " ";
+                          richTextBox3.SelectionFont = bulletFont;
+                          richTextBox3.SelectedText = bulletChar + "   ";
                       }
                       else
                       {
-                          // Insert the new bullet point at the beginning of the line as sub-bullet
+                          // Insert the new bullet point at the beginning of the line
                           richTextBox3.Select(lineStart, 0);
-                          richTextBox3.SelectedText = bulletChar + " ";
+                          richTextBox3.SelectionFont = bulletFont;
+                          richTextBox3.SelectedText = bulletChar + "   " + lineText;
+
+                          // Remove the original text after inserting bullet and spaces to avoid duplication
+                          richTextBox3.Select(lineStart + bulletChar.Length + 3, lineText.Length);
+                          richTextBox3.SelectedText = string.Empty;
                       }
+
+                      // Store the current bullet character as the previous bullet character
+                      previousBullet = bulletChar;
+
+                      // Apply bullet points to subsequent lines with the same bullet point until an empty line or different bullet point
+                      for (int i = lineIndex + 1; i < richTextBox3.Lines.Length; i++)
+                      {
+                          int nextLineStart = richTextBox3.GetFirstCharIndexFromLine(i);
+                          string nextLineText = richTextBox3.Lines[i];
+                          if (nextLineText.TrimStart().StartsWith(bulletChar) || nextLineText.Trim() == "")
+                          {
+                              richTextBox3.Select(nextLineStart, 0);
+                              richTextBox3.SelectionFont = bulletFont;
+                              richTextBox3.SelectedText = bulletChar + "   ";
+                          }
+                          else
+                          {
+                              break; // Stop applying bullet points if the next line doesn't match
+                          }
+                      }
+                      // Restore selection to a position after the text on the current line
+                      richTextBox3.Select(lineStart + bulletChar.Length + 3 + lineText.Length, 0);
+                      richTextBox3.SelectionFont = new Font(richTextBox3.SelectionFont.FontFamily, originalFontSize);
+                      richTextBox3.Focus();
                   }
               }
+              catch (Exception ex)
+              {
+                  Console.WriteLine(ex.Message);
+              }
+          }*/
+        private void ApplyBulletToSelectedLine(string bulletChar)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(richTextBox3.Text))
+                {
+                    return; // Do nothing if the RichTextBox is empty
+                }
 
-              // Store the current bullet character as the previous bullet character
-              previousBullet = bulletChar;
+                // Get the start and end character indices of the selection
+                int selectionStart = richTextBox3.SelectionStart;
+                int selectionEnd = selectionStart + richTextBox3.SelectionLength;
 
-              // Restore selection to original position
-              richTextBox3.Select(selectionStart, selectionEnd - selectionStart);
-              richTextBox3.Focus();
-          }
-  */
+                // Get the line indices for the start and end of the selection
+                int startLineIndex = richTextBox3.GetLineFromCharIndex(selectionStart);
+                int endLineIndex = richTextBox3.GetLineFromCharIndex(selectionEnd);
 
+                // Store the original font size, use a default font if SelectionFont is null
+                float originalFontSize = richTextBox3.SelectionFont?.Size ?? 10f;
+                FontFamily fontFamily = richTextBox3.SelectionFont?.FontFamily ?? new FontFamily("Arial");
+
+                // Define a fixed font size for the bullet
+                float bulletFontSize = 8; // You can adjust this value
+
+                // Create a font for the bullet
+                Font bulletFont = new Font(fontFamily, bulletFontSize);
+
+                // Loop through each line within the selected range
+                for (int lineIndex = startLineIndex; lineIndex <= endLineIndex; lineIndex++)
+                {
+                    // Check if the line index is valid
+                    if (lineIndex >= 0 && lineIndex < richTextBox3.Lines.Length)
+                    {
+                        int lineStart = richTextBox3.GetFirstCharIndexFromLine(lineIndex);
+                        string lineText = richTextBox3.Lines[lineIndex];
+
+                        // Check if the current line already has a bullet point and spaces
+                        if (lineText.StartsWith(bulletChar + "   "))
+                        {
+                            // The line already has the correct bullet and spaces, do nothing
+                            continue;
+                        }
+                        else if (lineText.StartsWith(previousBullet + "   "))
+                        {
+                            // Replace the existing bullet point with the new one
+                            richTextBox3.Select(lineStart, previousBullet.Length + 3);
+                            richTextBox3.SelectionFont = bulletFont;
+                            richTextBox3.SelectedText = bulletChar + "   ";
+                        }
+                        else if (lineText.StartsWith(previousBullet))
+                        {
+                            // Replace the existing bullet point with the new one
+                            richTextBox3.Select(lineStart, previousBullet.Length);
+                            richTextBox3.SelectionFont = bulletFont;
+                            richTextBox3.SelectedText = bulletChar + "   ";
+                        }
+                        else
+                        {
+                            // Insert the new bullet point at the beginning of the line
+                            richTextBox3.Select(lineStart, 0);
+                            richTextBox3.SelectionFont = bulletFont;
+                            richTextBox3.SelectedText = bulletChar + "   " + lineText;
+
+                            // Remove the original text after inserting bullet and spaces to avoid duplication
+                            richTextBox3.Select(lineStart + bulletChar.Length + 3, lineText.Length);
+                            richTextBox3.SelectedText = string.Empty;
+                        }
+                    }
+                }
+
+                // Store the current bullet character as the previous bullet character
+                previousBullet = bulletChar;
+
+                // Restore selection to the original range
+                richTextBox3.Select(selectionStart, selectionEnd - selectionStart);
+                richTextBox3.SelectionFont = new Font(fontFamily, originalFontSize);
+                richTextBox3.Focus();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
 
 
         private void InitializeDataGridView()
         {
-            // Initialize DataGridView
-            dataGridView1 = new DataGridView();
-            dataGridView1.Dock = DockStyle.Fill;
-            dataGridView1.BackgroundColor = Color.White;
-            dataGridView1.Size = panel10.Size;
-            dataGridView1.AllowUserToAddRows = true;
-            dataGridView1.RowHeadersVisible = false;
-            dataGridView1.ColumnHeadersVisible = false;
-            dataGridView1.AllowUserToResizeRows = false;
-            dataGridView1.AllowUserToResizeColumns = false;
-            dataGridView1.AllowUserToDeleteRows = true;
-            dataGridView1.AllowUserToOrderColumns = false;
-            dataGridView1.EditMode = DataGridViewEditMode.EditOnKeystrokeOrF2;
-            panel10.Controls.Add(dataGridView1);
-
-            // Create columns
-            for (int i = 0; i < 3; i++)
+            try
             {
-                dataGridView1.Columns.Add("Column" + i, "");
+                // Initialize DataGridView
+                dataGridView1 = new DataGridView();
+                dataGridView1.Dock = DockStyle.Fill;
+                dataGridView1.BackgroundColor = Color.White;
+                dataGridView1.Size = panel10.Size;
+                dataGridView1.AllowUserToAddRows = true;
+                dataGridView1.RowHeadersVisible = false;
+                dataGridView1.ColumnHeadersVisible = false;
+                dataGridView1.AllowUserToResizeRows = false;
+                dataGridView1.AllowUserToResizeColumns = false;
+                dataGridView1.AllowUserToDeleteRows = true;
+                dataGridView1.AllowUserToOrderColumns = false;
+                dataGridView1.MultiSelect = false;
+                dataGridView1.EditMode = DataGridViewEditMode.EditOnKeystrokeOrF2;
+                panel10.Controls.Add(dataGridView1);
+                // Create columns
+                for (int i = 0; i < 3; i++)
+                {
+                    dataGridView1.Columns.Add("Column" + i, "");
+                }
+                // Create rows
+                for (int i = 0; i < 3; i++)
+                {
+                    dataGridView1.Rows.Add();
+                }
             }
-
-            // Create rows
-            for (int i = 0; i < 3; i++)
+            catch (Exception ex)
             {
-                dataGridView1.Rows.Add();
+                Console.WriteLine(ex.Message);
             }
         }
         private void OnLoad()
@@ -222,14 +308,10 @@ namespace MOMC_PROJECT
             textBox2.Enabled = false;
             textBox3.Enabled = false;
             textBox4.Enabled = false;
-            textBox5.Enabled = false;
-            richTextBox1.Enabled = false;
             // Define the path to the JSON file
             string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"D:\UI\Minutes of Meeting\MOMC_PROJECT\Data.json");
-
             // Read the JSON file
             string jsonData = File.ReadAllText(filePath);
-
             // Deserialize the JSON data to a list of your desired object
             meetingDataList = JsonConvert.DeserializeObject<List<MeetingData>>(jsonData);
             cb_emailmeetings.SelectedIndexChanged += cb_emailmeetings_SelectedIndexChanged;
@@ -244,10 +326,17 @@ namespace MOMC_PROJECT
         }
         private void linkLabel2_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            panel1.Controls.Clear();
-            DrawBoard db = new DrawBoard();
-            panel1.Dock = DockStyle.Fill;
-            panel1.Controls.Add(db);
+            try
+            {
+                panel1.Controls.Clear();
+                DrawBoard db = new DrawBoard();
+                panel1.Dock = DockStyle.Fill;
+                panel1.Controls.Add(db);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
         private void cb_emailmeetings_SelectedIndexChanged(object sender, EventArgs e)
         {
@@ -269,66 +358,79 @@ namespace MOMC_PROJECT
                         richTextBox1.Text += attendeeEmail + Environment.NewLine;
                     }
                     richTextBox2.Text = $"Minutes of Meeting: {textBox1.Text} - {textBox3.Text}";
+                    richTextBox3.Text = $"Minutes of Meeting Mail: {textBox1.Text} " +
+                                        $"Meeting Start Time: {textBox2.Text}" +
+                                        $"Meeting End Time: {textBox3.Text}" +
+                                        $"Meeting Duration: {selectedMeeting.EndDateTime - selectedMeeting.StartDateTime}";
                     clb_attendees.Items.Clear();
                     foreach (var attendee in selectedMeeting.AttendeeEmail)
                     {
                         clb_attendees.Items.Add(attendee, true);
                     }
-
                     panel4.Controls.Clear();
-
+                    //    int selectedIndex = cb_emailmeetings.SelectedIndex;
+                    // loadDescription();
                 }
             }
+         //   SaveDataToStructure();
+            string s = cb_emailmeetings.Text;
+            LoadDataFromStructure(s);
         }
-
-        private void RemoveButton_Click(object sender, EventArgs e)
+        public void loadDescription()
         {
-
+            string subject = richTextBox2.Text;
+            if (!string.IsNullOrWhiteSpace(subject) && emailData.ContainsKey(subject))
+            {
+                richTextBox3.Rtf = emailData[subject]; // Load description from dictionary
+            }
+            else
+            {
+                richTextBox3.Clear();
+            }
         }
-        private void AttachmentLabel_Click(object sender, EventArgs e)
-        {
-        }
-
-
-        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-
-        }
-
+        // 
         private void clb_attendees_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string selectedMeetingName = cb_emailmeetings.SelectedItem?.ToString();
-
-            if (selectedMeetingName != null && meetingDataList != null)
+            try
             {
-                var selectedMeeting = meetingDataList
-                    .SelectMany(md => md.Meetings)
-                    .FirstOrDefault(m => m.Name == selectedMeetingName);
+                string selectedMeetingName = cb_emailmeetings.SelectedItem?.ToString();
 
-                if (selectedMeeting != null)
+                if (selectedMeetingName != null && meetingDataList != null)
                 {
-                    richTextBox1.Clear(); // Clear existing content
+                    var selectedMeeting = meetingDataList
+                        .SelectMany(md => md.Meetings)
+                        .FirstOrDefault(m => m.Name == selectedMeetingName);
 
-                    // Iterate through all items in the checked list box
-                    foreach (var itemIndex in clb_attendees.CheckedIndices)
+                    if (selectedMeeting != null)
                     {
-                        int index = (int)itemIndex;
-                        richTextBox1.AppendText(selectedMeeting.AttendeeEmail[index] + Environment.NewLine);
+                        richTextBox1.Clear(); // Clear existing content
+
+                        // Iterate through all items in the checked list box
+                        foreach (var itemIndex in clb_attendees.CheckedIndices)
+                        {
+                            int index = (int)itemIndex;
+                            richTextBox1.AppendText(selectedMeeting.AttendeeEmail[index] + Environment.NewLine);
+                        }
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
-
         private void btn_sendmail_Click(object sender, EventArgs e)
         {
             try
             {
+                label13.Visible = true;
+                label13.Text = "Sending...";
+                label13.Refresh();
                 MailMessage message = new MailMessage();
                 SmtpClient smtpClient = new SmtpClient("smtp.gmail.com", 587);
                 string senderEmail = MOMC.toEmail;
                 string senderPassword = "tkki grgd aapo uavx\r\n";
                 message.From = new MailAddress(senderEmail);
-
                 // Add all email addresses from richTextBox1 to the To list of the email
                 foreach (string email in richTextBox1.Lines)
                 {
@@ -340,22 +442,29 @@ namespace MOMC_PROJECT
                 message.Subject = richTextBox2.Text;
                 //message.Body = richTextBox3.Text;
                 StringBuilder body = new StringBuilder();
-
-                // Append the content of richTextBox3 to the body
-                body.AppendLine(richTextBox3.Text);
-
-                // Append the content of dataGridView1 to the body
-                body.AppendLine("Data from Table:");
+                // Convert DataGridView content to HTML table
+                body.AppendLine("<table border='1'>");
+                // Add table headers
+                body.AppendLine("<tr>");
+                foreach (DataGridViewColumn column in dataGridView1.Columns)
+                {
+                    body.AppendLine("<th>" + column.HeaderText + "</th>");
+                }
+                body.AppendLine("</tr>");
+                // Add table rows
                 foreach (DataGridViewRow row in dataGridView1.Rows)
                 {
+                    body.AppendLine("<tr>");
                     foreach (DataGridViewCell cell in row.Cells)
                     {
-                        body.Append(cell.Value.ToString());
-                        body.Append("\t");
+                        body.AppendLine("<td>" + cell.Value.ToString() + "</td>");
                     }
-                    body.AppendLine();
+                    body.AppendLine("</tr>");
                 }
+                body.AppendLine("</table>");
 
+                // Append the content of richTextBox3 to the body
+                body.AppendLine(richTextBox3.Rtf);
                 message.Body = body.ToString();
                 // Attach files
                 foreach (string filePath in attachments)
@@ -368,585 +477,1021 @@ namespace MOMC_PROJECT
                 smtpClient.EnableSsl = true;
                 smtpClient.UseDefaultCredentials = false;
                 smtpClient.Credentials = new NetworkCredential(senderEmail, senderPassword);
-
                 smtpClient.Send(message);
-
-                // Display success message
-                MessageBox.Show("Email sent successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                label13.Text = "Sent";
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.StackTrace);
-                // Display error message
-                MessageBox.Show("Failed to send email. Error: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Console.WriteLine(ex.StackTrace + ex.Message);
+                label13.Text = "Failed to send email.Check Your Internet Connection";
             }
         }
         private void btn_mail_format_Click(object sender, EventArgs e)
         {
-            panel7.Visible = true;
-            panel8.Visible = false;
-
+            try
+            {
+                panel7.Visible = true;
+                panel8.Visible = false;
+                panel11.Visible = false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
-
         private void btn_mail_insert_Click(object sender, EventArgs e)
         {
-            panel7.Visible = false;
-            panel11.Visible = false;
-            panel8.Visible = true;
+            try
+            {
+                if (panel10.Visible)
+                {
+                    panel11.Visible = true;
+                }
+                else
+                {
+                    panel11.Visible = false;
+                }
+                if(dataGridView1!= null)
+                {
+                    button16.Enabled = false;
+                }
+                else
+                {
+                    button16.Enabled = true;
+                }
+                panel7.Visible = false;
+              //  panel11.Visible = false;
+                panel8.Visible = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
-
+        private bool ContainsSpecialCharacters(string text)
+        {
+            // Define the special characters
+            string specialCharacters = "●◆☐★✔➤";
+            // Check if any of the special characters exist in the text
+            foreach (char c in text)
+            {
+                if (specialCharacters.Contains(c))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
         private void btn_mail_bold_Click(object sender, EventArgs e)
         {
-            int selectionStart = richTextBox3.SelectionStart;
-            int selectionLength = richTextBox3.SelectionLength;
-            bool isSelected = selectionLength > 0;
-
-            if (isSelected)
+            try
             {
-                Font currentFont = richTextBox3.SelectionFont;
-                FontStyle newFontStyle;
+                int selectionStart = richTextBox3.SelectionStart;
+                int selectionLength = richTextBox3.SelectionLength;
+                bool isSelected = selectionLength > 0;
 
-                if (currentFont.Style.HasFlag(FontStyle.Bold))
+                if (isSelected)
                 {
-                    newFontStyle = currentFont.Style & ~FontStyle.Bold; // Unbold
+                    // Check if selected text contains special characters
+                    string selectedText = richTextBox3.SelectedText;
+                    bool containsSpecialCharacters = ContainsSpecialCharacters(selectedText);
+
+                    if (!containsSpecialCharacters)
+                    {
+                        Font currentFont = richTextBox3.SelectionFont;
+                        FontStyle newFontStyle;
+
+                        if (currentFont.Style.HasFlag(FontStyle.Bold))
+                        {
+                            newFontStyle = currentFont.Style & ~FontStyle.Bold; // Unbold
+                        }
+                        else
+                        {
+                            newFontStyle = currentFont.Style | FontStyle.Bold; // Bold
+                        }
+
+                        // Preserve font size and font family
+                        float fontSize = Convert.ToSingle(comboBox1.Text);
+                        string fontFamily = comboBox3.Text;
+                        Font newFont = new Font(fontFamily, fontSize, newFontStyle);
+                        richTextBox3.SelectionFont = newFont;
+                    }
                 }
                 else
                 {
-                    newFontStyle = currentFont.Style | FontStyle.Bold; // Bold
-                }
+                    // Check if the text is already bold or not
+                    bool isAllBold = richTextBox3.SelectionFont != null && richTextBox3.SelectionFont.Bold;
 
-                richTextBox3.SelectionFont = new Font(currentFont.FontFamily, currentFont.Size, newFontStyle);
+                    // Preserve existing italic, underline, font family, and font size formatting
+                    FontStyle existingStyle;
+
+                    if (isAllBold)
+                    {
+                        existingStyle = richTextBox3.SelectionFont.Style & ~FontStyle.Bold; // Unbold
+                    }
+                    else
+                    {
+                        existingStyle = richTextBox3.SelectionFont.Style | FontStyle.Bold; // Bold
+                    }
+
+                    // Preserve font size and font family
+                    float fontSize = Convert.ToSingle(comboBox1.Text);
+                    string fontFamily = comboBox3.Text;
+                    Font newFont = new Font(fontFamily, fontSize, existingStyle);
+
+                    // Apply bold or unbold to entire content, excluding special characters
+                    richTextBox3.SelectAll();
+                    foreach (char c in richTextBox3.Text)
+                    {
+                        if (!ContainsSpecialCharacters(c.ToString()))
+                        {
+                            richTextBox3.Select(richTextBox3.Text.IndexOf(c), 1);
+                            richTextBox3.SelectionFont = newFont;
+                        }
+                    }
+                    richTextBox3.Select(selectionStart, selectionLength);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                // Check if the text is already bold or not
-                bool isAllBold = richTextBox3.SelectionFont != null && richTextBox3.SelectionFont.Bold;
-
-                // Preserve existing italic, underline, font family, and font size formatting
-                FontStyle existingStyle;
-
-                if (isAllBold)
-                {
-                    existingStyle = richTextBox3.SelectionFont.Style & ~FontStyle.Bold; // Unbold
-                }
-                else
-                {
-                    existingStyle = richTextBox3.SelectionFont.Style | FontStyle.Bold; // Bold
-                }
-
-                // Apply bold or unbold to entire content
-                richTextBox3.SelectAll();
-                richTextBox3.SelectionFont = new Font(richTextBox3.Font.FontFamily, richTextBox3.Font.Size, existingStyle);
-                richTextBox3.Select(selectionStart, selectionLength);
+                Console.WriteLine(ex.Message);
             }
         }
 
         private void btn_mail_italic_Click(object sender, EventArgs e)
         {
-            int selectionStart = richTextBox3.SelectionStart;
-            int selectionLength = richTextBox3.SelectionLength;
-            bool isSelected = selectionLength > 0;
-
-            if (isSelected)
+            try
             {
-                Font currentFont = richTextBox3.SelectionFont;
-                FontStyle newFontStyle;
+                int selectionStart = richTextBox3.SelectionStart;
+                int selectionLength = richTextBox3.SelectionLength;
+                bool isSelected = selectionLength > 0;
 
-                if (currentFont.Style.HasFlag(FontStyle.Italic))
+                if (isSelected)
                 {
-                    newFontStyle = currentFont.Style & ~FontStyle.Italic; // Unitalic
+                    // Check if selected text contains special characters
+                    string selectedText = richTextBox3.SelectedText;
+                    bool containsSpecialCharacters = ContainsSpecialCharacters(selectedText);
+
+                    if (!containsSpecialCharacters)
+                    {
+                        Font currentFont = richTextBox3.SelectionFont;
+                        FontStyle newFontStyle;
+
+                        if (currentFont.Style.HasFlag(FontStyle.Italic))
+                        {
+                            newFontStyle = currentFont.Style & ~FontStyle.Italic; // Unitalic
+                        }
+                        else
+                        {
+                            newFontStyle = currentFont.Style | FontStyle.Italic; // Italic
+                        }
+
+                        float fontSize = Convert.ToSingle(comboBox1.Text);
+                        string fontFamily = comboBox3.Text;
+                        Font newFont = new Font(fontFamily, fontSize, newFontStyle);
+                        richTextBox3.SelectionFont = newFont;
+                    }
                 }
                 else
                 {
-                    newFontStyle = currentFont.Style | FontStyle.Italic; // Italic
-                }
+                    // Check if the text is already italic or not
+                    bool isAllItalic = richTextBox3.SelectionFont != null && richTextBox3.SelectionFont.Italic;
 
-                richTextBox3.SelectionFont = new Font(currentFont.FontFamily, currentFont.Size, newFontStyle);
+                    // Preserve existing bold, underline, font family, and font size formatting
+                    FontStyle existingStyle;
+
+                    if (isAllItalic)
+                    {
+                        existingStyle = richTextBox3.SelectionFont.Style & ~FontStyle.Italic; // Unitalic
+                    }
+                    else
+                    {
+                        existingStyle = richTextBox3.SelectionFont.Style | FontStyle.Italic; // Italic
+                    }
+
+                    float fontSize = Convert.ToSingle(comboBox1.Text);
+                    string fontFamily = comboBox3.Text;
+                    Font newFont = new Font(fontFamily, fontSize, existingStyle);
+
+                    // Apply italic or unitalic to entire content, excluding special characters
+                    richTextBox3.SelectAll();
+                    foreach (char c in richTextBox3.Text)
+                    {
+                        if (!ContainsSpecialCharacters(c.ToString()))
+                        {
+                            richTextBox3.Select(richTextBox3.Text.IndexOf(c), 1);
+                            richTextBox3.SelectionFont = newFont;
+                        }
+                    }
+                    richTextBox3.Select(selectionStart, selectionLength);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                // Check if the text is already italic or not
-                bool isAllItalic = richTextBox3.SelectionFont != null && richTextBox3.SelectionFont.Italic;
-
-                // Preserve existing bold, underline, font family, and font size formatting
-                FontStyle existingStyle;
-
-                if (isAllItalic)
-                {
-                    existingStyle = richTextBox3.SelectionFont.Style & ~FontStyle.Italic; // Unitalic
-                }
-                else
-                {
-                    existingStyle = richTextBox3.SelectionFont.Style | FontStyle.Italic; // Italic
-                }
-
-                // Apply italic or unitalic to entire content
-                richTextBox3.SelectAll();
-                richTextBox3.SelectionFont = new Font(richTextBox3.Font.FontFamily, richTextBox3.Font.Size, existingStyle);
-                richTextBox3.Select(selectionStart, selectionLength);
+                Console.WriteLine(ex.Message);
             }
         }
-
         private void btn_mail_underline_Click(object sender, EventArgs e)
         {
-            int selectionStart = richTextBox3.SelectionStart;
-            int selectionLength = richTextBox3.SelectionLength;
-            bool isSelected = selectionLength > 0;
-
-            if (isSelected)
+            try
             {
-                Font currentFont = richTextBox3.SelectionFont;
-                FontStyle newFontStyle;
+                int selectionStart = richTextBox3.SelectionStart;
+                int selectionLength = richTextBox3.SelectionLength;
+                bool isSelected = selectionLength > 0;
 
-                if (currentFont.Style.HasFlag(FontStyle.Underline))
+                if (isSelected)
                 {
-                    newFontStyle = currentFont.Style & ~FontStyle.Underline; // Ununderline
+                    // Check if selected text contains special characters
+                    string selectedText = richTextBox3.SelectedText;
+                    bool containsSpecialCharacters = ContainsSpecialCharacters(selectedText);
+
+                    if (!containsSpecialCharacters)
+                    {
+                        Font currentFont = richTextBox3.SelectionFont;
+                        FontStyle newFontStyle;
+
+                        if (currentFont.Style.HasFlag(FontStyle.Underline))
+                        {
+                            newFontStyle = currentFont.Style & ~FontStyle.Underline; // Ununderline
+                        }
+                        else
+                        {
+                            newFontStyle = currentFont.Style | FontStyle.Underline; // Underline
+                        }
+
+                        float fontSize = Convert.ToSingle(comboBox1.Text);
+                        string fontFamily = comboBox3.Text;
+                        Font newFont = new Font(fontFamily, fontSize, newFontStyle);
+
+                        richTextBox3.SelectionFont = newFont;
+                    }
                 }
                 else
                 {
-                    newFontStyle = currentFont.Style | FontStyle.Underline; // Underline
-                }
+                    // Check if the text is already underlined or not
+                    bool isAllUnderline = richTextBox3.SelectionFont != null && richTextBox3.SelectionFont.Underline;
 
-                richTextBox3.SelectionFont = new Font(currentFont.FontFamily, currentFont.Size, newFontStyle);
+                    // Preserve existing bold, italic, font family, and font size formatting
+                    FontStyle existingStyle;
+
+                    if (isAllUnderline)
+                    {
+                        existingStyle = richTextBox3.SelectionFont.Style & ~FontStyle.Underline; // Ununderline
+                    }
+                    else
+                    {
+                        existingStyle = richTextBox3.SelectionFont.Style | FontStyle.Underline; // Underline
+                    }
+
+                    float fontSize = Convert.ToSingle(comboBox1.Text);
+                    string fontFamily = comboBox3.Text;
+                    Font newFont = new Font(fontFamily, fontSize, existingStyle);
+
+                    // Apply underline or ununderline to entire content, excluding special characters
+                    richTextBox3.SelectAll();
+                    foreach (char c in richTextBox3.Text)
+                    {
+                        if (!ContainsSpecialCharacters(c.ToString()))
+                        {
+                            richTextBox3.Select(richTextBox3.Text.IndexOf(c), 1);
+                            richTextBox3.SelectionFont = newFont;
+                        }
+                    }
+                    richTextBox3.Select(selectionStart, selectionLength);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                // Check if the text is already underlined or not
-                bool isAllUnderline = richTextBox3.SelectionFont != null && richTextBox3.SelectionFont.Underline;
-
-                // Preserve existing bold, italic, font family, and font size formatting
-                FontStyle existingStyle;
-
-                if (isAllUnderline)
-                {
-                    existingStyle = richTextBox3.SelectionFont.Style & ~FontStyle.Underline; // Ununderline
-                }
-                else
-                {
-                    existingStyle = richTextBox3.SelectionFont.Style | FontStyle.Underline; // Underline
-                }
-
-                // Apply underline or ununderline to entire content
-                richTextBox3.SelectAll();
-                richTextBox3.SelectionFont = new Font(richTextBox3.Font.FontFamily, richTextBox3.Font.Size, existingStyle);
-                richTextBox3.Select(selectionStart, selectionLength);
+                Console.WriteLine(ex.Message);
             }
         }
+        public void IntializeTableLayoutPanel()
+        {
+            try
+            {
+                // Set the size of panel9
+                panel9.Size = new Size(212, 167);
 
+                // Clear any existing controls from panel9
+                panel9.Controls.Clear();
+
+                // Create a TableLayoutPanel to organize the controls
+                TableLayoutPanel tableLayoutPanel = new TableLayoutPanel
+                {
+                    ColumnCount = 3,  // Three columns to accommodate the third row buttons
+                    RowCount = 6,     // Six rows as specified
+                    Dock = DockStyle.Fill,
+                    AutoSize = true
+                };
+
+                // Define the column and row styles to fit the panel size
+                tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
+                tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
+                tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
+
+                for (int i = 0; i < 6; i++)
+                {
+                    tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 16.66F)); // Approximately 1/6 of the height
+                }
+
+                // First row with a single label
+                Label label1 = new Label
+                {
+                    Text = "Font Formatting",
+                    AutoSize = true,
+                    TextAlign = ContentAlignment.MiddleCenter,
+                    Dock = DockStyle.Fill
+                };
+                tableLayoutPanel.Controls.Add(label1, 0, 0);
+                tableLayoutPanel.SetColumnSpan(label1, 3); // Span across all three columns
+
+                // Second row with two combo boxes
+                comboBox1 = new ComboBox { Dock = DockStyle.Fill }; // Use the class-level comboBox1
+                comboBox3 = new ComboBox { Dock = DockStyle.Fill };
+                List<int> fontSizes = new List<int>();
+
+                for (int i = 8; i <= 72; i++)
+                {
+                    if (i % 2 == 0)
+                    {
+                        fontSizes.Add(i);
+                    }
+                }
+
+                int[] fontSizesArray = fontSizes.ToArray();
+
+                foreach (int size in fontSizes)
+                {
+                    comboBox1.Items.Add(size);
+                }
+                comboBox1.IntegralHeight = false;
+                comboBox1.MaxDropDownItems = 5;
+                comboBox1.SelectedIndexChanged += (s, args) => panel9.Visible = false;
+
+                foreach (FontFamily fontFamily in FontFamily.Families)
+                {
+                    comboBox3.Items.Add(fontFamily.Name);
+                }
+                comboBox3.IntegralHeight = false;
+                comboBox3.MaxDropDownItems = 5;
+                comboBox3.SelectedIndexChanged += (s, args) => panel9.Visible = false;
+                comboBox1.SelectedIndexChanged += comboBox1_SelectedIndexChanged;
+                comboBox3.SelectedIndexChanged += comboBox3_SelectedIndexChanged;
+
+                tableLayoutPanel.Controls.Add(comboBox1, 0, 1);
+                tableLayoutPanel.Controls.Add(comboBox3, 1, 1);
+                tableLayoutPanel.SetColumnSpan(comboBox3, 2); // Span across the second and third columns
+
+                // Third row with three buttons
+                Button button1 = new Button { Text = "ab", Dock = DockStyle.Fill };
+                Button button2 = new Button { Text = "X2", Dock = DockStyle.Fill };
+                Button button3 = new Button { Text = "2X", Dock = DockStyle.Fill };
+                button1.Click += (s, args) => panel9.Visible = false;
+                button2.Click += (s, args) => panel9.Visible = false;
+                button3.Click += (s, args) => panel9.Visible = false;
+                tableLayoutPanel.Controls.Add(button1, 0, 2);
+                tableLayoutPanel.Controls.Add(button2, 1, 2);
+                tableLayoutPanel.Controls.Add(button3, 2, 2);
+                button1.Click += (s, args) => ToggleStrikeout();
+                button2.Click += (s, args) => ToggleSubscript();
+                button3.Click += (s, args) => ToggleSuperscript();
+                // Fourth, fifth, and sixth rows each with a single button
+                Button button4 = new Button { Text = "Highlight", Dock = DockStyle.Fill };
+                Button button5 = new Button { Text = "Font Color", Dock = DockStyle.Fill };
+                Button button6 = new Button { Text = "Clear All Formatting", Dock = DockStyle.Fill };
+                button4.Click += (s, args) => panel9.Visible = false;
+                button5.Click += (s, args) => panel9.Visible = false;
+                button6.Click += (s, args) => panel9.Visible = false;
+                button4.Click += (s, args) => HighlightText();
+                button5.Click += (s, args) => ChangeFontColor();
+                button6.Click += (s, args) => ClearAllFormatting();
+                tableLayoutPanel.Controls.Add(button4, 0, 3);
+                tableLayoutPanel.SetColumnSpan(button4, 3); // Span across all three columns
+                tableLayoutPanel.Controls.Add(button5, 0, 4);
+                tableLayoutPanel.SetColumnSpan(button5, 3); // Span across all three columns
+                tableLayoutPanel.Controls.Add(button6, 0, 5);
+                tableLayoutPanel.SetColumnSpan(button6, 3); // Span across all three columns              
+                // Add the TableLayoutPanel to panel9
+                panel9.Controls.Add(tableLayoutPanel);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
         private void btn_mail_ff_Click(object sender, EventArgs e)
         {
-            // Make panel9 visible
+            // panel9.Controls.Clear();
+            // IntializeTableLayoutPanel();
+            panel5.Visible = false;
             panel9.Visible = true;
-
-            // Set the size of panel9
-            panel9.Size = new Size(212, 167);
-
-            // Clear any existing controls from panel9
-            panel9.Controls.Clear();
-
-            // Create a TableLayoutPanel to organize the controls
-            TableLayoutPanel tableLayoutPanel = new TableLayoutPanel
+        }
+        private void HighlightText()
+        {
+            ColorDialog colorDialog = new ColorDialog();
+            if (colorDialog.ShowDialog() == DialogResult.OK)
             {
-                ColumnCount = 3,  // Three columns to accommodate the third row buttons
-                RowCount = 6,     // Six rows as specified
-                Dock = DockStyle.Fill,
-                AutoSize = true
-            };
-
-            // Define the column and row styles to fit the panel size
-            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
-            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
-            tableLayoutPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 33.33F));
-
-            for (int i = 0; i < 6; i++)
-            {
-                tableLayoutPanel.RowStyles.Add(new RowStyle(SizeType.Percent, 16.66F)); // Approximately 1/6 of the height
+                richTextBox3.SelectionBackColor = colorDialog.Color;
             }
-
-            // First row with a single label
-            Label label1 = new Label
+        }
+        private void ChangeFontColor()
+        {
+            ColorDialog colorDialog = new ColorDialog();
+            if (colorDialog.ShowDialog() == DialogResult.OK)
             {
-                Text = "Font Formatting",
-                AutoSize = true,
-                TextAlign = ContentAlignment.MiddleCenter,
-                Dock = DockStyle.Fill
-            };
-            tableLayoutPanel.Controls.Add(label1, 0, 0);
-            tableLayoutPanel.SetColumnSpan(label1, 3); // Span across all three columns
-
-            // Second row with two combo boxes
-            comboBox1 = new ComboBox { Dock = DockStyle.Fill }; // Use the class-level comboBox1
-            comboBox3 = new ComboBox { Dock = DockStyle.Fill };
-            int[] fontSizes = { 8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 36, 48, 72 };
-
-            // Add font sizes to comboBox1
-            foreach (int size in fontSizes)
-            {
-                comboBox1.Items.Add(size);
+                richTextBox3.SelectionColor = colorDialog.Color;
             }
-            comboBox1.IntegralHeight = false;
-            comboBox1.MaxDropDownItems = 5;
-            comboBox1.SelectedIndexChanged += (s, args) => panel9.Visible = false;
-
-            foreach (FontFamily fontFamily in FontFamily.Families)
+        }
+        private void ClearAllFormatting()
+        {
+            if (richTextBox3.SelectionLength > 0)
             {
-                comboBox3.Items.Add(fontFamily.Name);
+                int start = richTextBox3.SelectionStart;
+                int length = richTextBox3.SelectionLength;
+                string selectedText = richTextBox3.SelectedText;
+
+                richTextBox3.SelectionFont = richTextBox3.Font;
+                richTextBox3.SelectionColor = richTextBox3.ForeColor;
+                richTextBox3.SelectionBackColor = richTextBox3.BackColor;
+
+                richTextBox3.SelectedText = selectedText;
+                richTextBox3.Select(start, length);
             }
-            comboBox3.IntegralHeight = false;
-            comboBox3.MaxDropDownItems = 5;
-            comboBox3.SelectedIndexChanged += (s, args) => panel9.Visible = false;
-            comboBox1.SelectedIndexChanged += comboBox1_SelectedIndexChanged;
-            comboBox3.SelectedIndexChanged += comboBox3_SelectedIndexChanged;
+        }
+        private void ToggleSuperscript()
+        {
+            // Apply superscript (set character offset to a small positive value)
+            ChangeSelectionOffset(richTextBox3, 5);
+        }
 
-            tableLayoutPanel.Controls.Add(comboBox1, 0, 1);
-            tableLayoutPanel.Controls.Add(comboBox3, 1, 1);
-            tableLayoutPanel.SetColumnSpan(comboBox3, 2); // Span across the second and third columns
+        private void ToggleSubscript()
+        {
+            // Apply subscript (set character offset to a small negative value)
+            ChangeSelectionOffset(richTextBox3, -5);
+        }
+        private void ChangeSelectionOffset(RichTextBox rtb, int offset)
+        {
+            // Toggle the current offset if necessary
+            int currentOffset = rtb.SelectionCharOffset;
+            rtb.SelectionCharOffset = (currentOffset == offset) ? 0 : offset;
+        }
+        private void ToggleStrikeout()
+        {
+            try
+            {
+                if (richTextBox3.SelectionFont != null)
+                {
+                    Font currentFont = richTextBox3.SelectionFont;
+                    FontStyle newFontStyle;
 
-            // Third row with three buttons
-            Button button1 = new Button { Text = "ab", Dock = DockStyle.Fill };
-            Button button2 = new Button { Text = "X2", Dock = DockStyle.Fill };
-            Button button3 = new Button { Text = "2X", Dock = DockStyle.Fill };
-            button1.Click += (s, args) => panel9.Visible = false;
-            button2.Click += (s, args) => panel9.Visible = false;
-            button3.Click += (s, args) => panel9.Visible = false;
-            tableLayoutPanel.Controls.Add(button1, 0, 2);
-            tableLayoutPanel.Controls.Add(button2, 1, 2);
-            tableLayoutPanel.Controls.Add(button3, 2, 2);
-
-            // Fourth, fifth, and sixth rows each with a single button
-            Button button4 = new Button { Text = "Highlight", Dock = DockStyle.Fill };
-            Button button5 = new Button { Text = "Font Color", Dock = DockStyle.Fill };
-            Button button6 = new Button { Text = "Clear All Formatting", Dock = DockStyle.Fill };
-            button4.Click += (s, args) => panel9.Visible = false;
-            button5.Click += (s, args) => panel9.Visible = false;
-            button6.Click += (s, args) => panel9.Visible = false;
-            tableLayoutPanel.Controls.Add(button4, 0, 3);
-            tableLayoutPanel.SetColumnSpan(button4, 3); // Span across all three columns
-            tableLayoutPanel.Controls.Add(button5, 0, 4);
-            tableLayoutPanel.SetColumnSpan(button5, 3); // Span across all three columns
-            tableLayoutPanel.Controls.Add(button6, 0, 5);
-            tableLayoutPanel.SetColumnSpan(button6, 3); // Span across all three columns
-
-            // Add the TableLayoutPanel to panel9
-            panel9.Controls.Add(tableLayoutPanel);
-
+                    if (richTextBox3.SelectionFont.Strikeout)
+                    {
+                        // If the current text is already striked out, remove the strikeout style
+                        newFontStyle = currentFont.Style & ~FontStyle.Strikeout;
+                    }
+                    else
+                    {
+                        // If the current text is not striked out, add the strikeout style
+                        newFontStyle = currentFont.Style | FontStyle.Strikeout;
+                    }
+                    richTextBox3.SelectionFont = new Font(currentFont.FontFamily, currentFont.Size, newFontStyle);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (comboBox1.SelectedItem != null)
+            try
             {
-                int newSize = Convert.ToInt32(comboBox1.SelectedItem);
-                ApplyFontSize(newSize);
+                if (comboBox1.SelectedItem != null)
+                {
+                    int newSize = Convert.ToInt32(comboBox1.SelectedItem);
+                    comboBox1.Text = newSize.ToString();
+                    ApplyFontSize(newSize);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
+        /* private void ApplyFontSize(int newSize)
+         {
+             try
+             {
+                 int selectionStart = richTextBox3.SelectionStart;
+                 int lineIndex = richTextBox3.GetLineFromCharIndex(selectionStart);
+                 int charIndexFromLine = richTextBox3.GetFirstCharIndexFromLine(lineIndex);
+
+
+                     FontStyle existingStyle = FontStyle.Regular;
+
+                     if (richTextBox3.SelectionFont != null)
+                     {
+                         if (richTextBox3.SelectionFont.Bold)
+                         {
+                             existingStyle |= FontStyle.Bold;
+                         }
+                         if (richTextBox3.SelectionFont.Italic)
+                         {
+                             existingStyle |= FontStyle.Italic;
+                         }
+                         if (richTextBox3.SelectionFont.Underline)
+                         {
+                             existingStyle |= FontStyle.Underline;
+                         }
+                     }
+                     // Apply font size to text from the current line onwards
+                     int lengthToEnd = richTextBox3.TextLength - charIndexFromLine;
+                     richTextBox3.Select(charIndexFromLine, lengthToEnd);
+
+                     Font newFont = new Font(richTextBox3.SelectionFont.FontFamily, newSize, existingStyle);
+                     richTextBox3.SelectionFont = newFont;
+
+                     // Restore the selection and cursor position
+                     richTextBox3.Select(selectionStart, 0);
+                     richTextBox3.ScrollToCaret();
+
+             }
+             catch (Exception ex)
+             {
+                 Console.WriteLine(ex.Message);
+             }
+         }*/
         private void ApplyFontSize(int newSize)
         {
-            int selectionStart = richTextBox3.SelectionStart;
-            int selectionLength = richTextBox3.SelectionLength;
-            bool isSelected = selectionLength > 0;
+            try
+            {
+                int selectionStart = richTextBox3.SelectionStart;
+                int selectionLength = richTextBox3.SelectionLength;
 
-            FontStyle existingStyle = FontStyle.Regular;
+                // Get the selected text
+                string selectedText = richTextBox3.SelectedText;
+
+                // Get the font style of the current selection
+                FontStyle existingStyle = GetSelectionFontStyle();
+
+                // Apply font size to the selected text excluding special characters
+                richTextBox3.Select(selectionStart, selectionLength);
+
+                Font currentFont = richTextBox3.SelectionFont;
+                if (currentFont != null)
+                {
+                    // Create a new font with the updated size
+                    Font newFont = new Font(currentFont.FontFamily, newSize, existingStyle);
+
+                    // Apply the new font to the selected text
+                    richTextBox3.SelectionFont = newFont;
+                }
+
+                // Restore the selection and cursor position
+                richTextBox3.Select(selectionStart, selectionLength);
+                richTextBox3.ScrollToCaret();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        private FontStyle GetSelectionFontStyle()
+        {
+            FontStyle fontStyle = FontStyle.Regular;
 
             if (richTextBox3.SelectionFont != null)
             {
                 if (richTextBox3.SelectionFont.Bold)
                 {
-                    existingStyle |= FontStyle.Bold;
+                    fontStyle |= FontStyle.Bold;
                 }
                 if (richTextBox3.SelectionFont.Italic)
                 {
-                    existingStyle |= FontStyle.Italic;
+                    fontStyle |= FontStyle.Italic;
                 }
                 if (richTextBox3.SelectionFont.Underline)
                 {
-                    existingStyle |= FontStyle.Underline;
+                    fontStyle |= FontStyle.Underline;
                 }
             }
 
-            if (isSelected)
-            {
-                Font currentFont = richTextBox3.SelectionFont;
-                Font newFont = new Font(currentFont.FontFamily, newSize, existingStyle);
-                richTextBox3.SelectionFont = newFont;
-            }
-            else
-            {
-                Font currentFont = richTextBox3.Font;
-                Font newFont = new Font(currentFont.FontFamily, newSize, existingStyle);
-                richTextBox3.Font = newFont;
-            }
-
-            // Restore the selection and preserve other formatting
-            richTextBox3.Select(selectionStart, selectionLength);
-            if (richTextBox3.SelectionFont != null)
-            {
-                richTextBox3.SelectionFont = new Font(richTextBox3.SelectionFont.FontFamily, newSize, existingStyle);
-            }
+            return fontStyle;
         }
 
         private void comboBox3_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (comboBox3.SelectedItem != null)
+            try
             {
-                string newFontFamily = comboBox3.SelectedItem.ToString();
-                ApplyFontFamily(newFontFamily);
+                if (comboBox3.SelectedItem != null)
+                {
+                    string newFontFamily = comboBox3.SelectedItem.ToString();
+                    //string newFontFamily = comboBox3.Text.ToString();
+                    ApplyFontFamily(newFontFamily);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
 
         private void ApplyFontFamily(string newFontFamily)
         {
-            int selectionStart = richTextBox3.SelectionStart;
-            int selectionLength = richTextBox3.SelectionLength;
-            bool isSelected = selectionLength > 0;
-
-            FontStyle existingStyle = FontStyle.Regular;
-
-            if (richTextBox3.SelectionFont != null)
+            try
             {
-                if (richTextBox3.SelectionFont.Bold)
+                int selectionStart = richTextBox3.SelectionStart;
+                int selectionLength = richTextBox3.SelectionLength;
+                bool isSelected = selectionLength > 0;
+
+                FontStyle existingStyle = FontStyle.Regular;
+
+                if (richTextBox3.SelectionFont != null)
                 {
-                    existingStyle |= FontStyle.Bold;
+                    if (richTextBox3.SelectionFont.Bold)
+                    {
+                        existingStyle |= FontStyle.Bold;
+                    }
+                    if (richTextBox3.SelectionFont.Italic)
+                    {
+                        existingStyle |= FontStyle.Italic;
+                    }
+                    if (richTextBox3.SelectionFont.Underline)
+                    {
+                        existingStyle |= FontStyle.Underline;
+                    }
                 }
-                if (richTextBox3.SelectionFont.Italic)
+
+                if (isSelected)
                 {
-                    existingStyle |= FontStyle.Italic;
+                    FontFamily currentFontFamily = richTextBox3.SelectionFont.FontFamily;
+                    float size = richTextBox3.SelectionFont.Size;
+                    Font newFont = new Font(currentFontFamily, size, existingStyle);
+                    richTextBox3.SelectionFont = newFont;
                 }
-                if (richTextBox3.SelectionFont.Underline)
+                else
                 {
-                    existingStyle |= FontStyle.Underline;
+                    FontFamily currentFontFamily = richTextBox3.SelectionFont.FontFamily;
+                    float size = richTextBox3.SelectionFont.Size;
+                    Font newFont = new Font(currentFontFamily, size, existingStyle);
+                    richTextBox3.Font = newFont;
+                }
+                // Restore the selection and preserve other formatting
+                richTextBox3.Select(selectionStart, selectionLength);
+                if (richTextBox3.SelectionFont != null)
+                {
+                    richTextBox3.SelectionFont = new Font(newFontFamily, richTextBox3.SelectionFont.Size, existingStyle);
                 }
             }
-
-            if (isSelected)
+            catch (Exception ex)
             {
-                Font currentFont = richTextBox3.SelectionFont;
-                Font newFont = new Font(newFontFamily, currentFont.Size, existingStyle);
-                richTextBox3.SelectionFont = newFont;
-            }
-            else
-            {
-                Font currentFont = richTextBox3.Font;
-                Font newFont = new Font(newFontFamily, currentFont.Size, existingStyle);
-                richTextBox3.Font = newFont;
-            }
-
-            // Restore the selection and preserve other formatting
-            richTextBox3.Select(selectionStart, selectionLength);
-            if (richTextBox3.SelectionFont != null)
-            {
-                richTextBox3.SelectionFont = new Font(newFontFamily, richTextBox3.SelectionFont.Size, existingStyle);
+                Console.WriteLine(ex.Message);
             }
         }
         //closes panel9
         private void AttachMouseDownEventHandler(Control parent)
         {
-            foreach (Control control in parent.Controls)
+            try
             {
-                control.MouseDown += new MouseEventHandler(AnyControl_MouseDown);
-                if (control.HasChildren)
+                foreach (Control control in parent.Controls)
                 {
-                    AttachMouseDownEventHandler(control);
+                    control.MouseDown += new MouseEventHandler(AnyControl_MouseDown);
+                    if (control.HasChildren)
+                    {
+                        AttachMouseDownEventHandler(control);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
         private void AnyControl_MouseDown(object sender, MouseEventArgs e)
         {
-            if (panel9.Visible)
+            try
             {
-                panel9.Visible = false;
-            }
-        }
-
-        private void btn_mail_bullets_Click(object sender, EventArgs e)
-        {
-            panel9.Controls.Clear();
-            InitializeComponent1();
-            Button button = (Button)sender;
-            string bulletChar = button.Text;
-            //  ApplyBulletToSelectedText(bulletChar);
-            ApplyBulletToSelectedLine(bulletChar);
-            panel9.Visible = true;
-
-        }
-        private List<Panel> buttonPanels = new List<Panel>();
-        private void button15_Click(object sender, EventArgs e)
-        {
-
-            OpenFileDialog openFileDialog = new OpenFileDialog();
-            openFileDialog.Multiselect = true;
-            openFileDialog.Filter = "All Files (*.*)|*.*";
-
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                int buttonWidth = 200;
-                int buttonHeight = 50;
-                int fileButtonGap = 20;
-                int removeButtonGap = 0;
-                int maxButtonsPerRow = (panel4.Width) / (buttonWidth + fileButtonGap);
-                int fileCount = 0;
-                panel4.Controls.Clear();
-                buttonPanels.Clear();
-                panel4.AutoScroll = true;
-                foreach (string selectedFilePath in openFileDialog.FileNames)
+                if (panel9.Visible)
                 {
-                    string filePath = selectedFilePath;
-                    int rowIndex = fileCount / maxButtonsPerRow;
-                    int colIndex = fileCount % maxButtonsPerRow;
-                    int x = colIndex * (buttonWidth + fileButtonGap);
-                    int y = rowIndex * (buttonHeight + removeButtonGap);
-                    Panel buttonPanel = new Panel();
-                    buttonPanel.Size = new Size(buttonWidth, buttonHeight);
-                    buttonPanel.Location = new Point(x, y);
-                    buttonPanel.BorderStyle = BorderStyle.FixedSingle;
-                    PictureBox iconPictureBox = new PictureBox();
-                    iconPictureBox.Size = new Size(32, 32);
-                    iconPictureBox.Location = new Point(10, (buttonHeight - iconPictureBox.Height) / 2);
-                    iconPictureBox.Image = System.Drawing.Icon.ExtractAssociatedIcon(filePath).ToBitmap();
-                    iconPictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
-                    buttonPanel.Controls.Add(iconPictureBox);
-                    Label fileInfoLabel = new Label();
-                    fileInfoLabel.AutoSize = true;
-                    fileInfoLabel.Location = new Point(iconPictureBox.Right + 10, (buttonHeight - fileInfoLabel.Height) / 2);
-                    fileInfoLabel.Text = $"{Path.GetFileName(filePath)} ({new FileInfo(filePath).Length / 1024} KB)";
-                    int maxLabelWidth = buttonWidth - (iconPictureBox.Right + 40);
-                    fileInfoLabel.MaximumSize = new Size(maxLabelWidth, buttonHeight);
-                    buttonPanel.Controls.Add(fileInfoLabel);
-                    System.Windows.Forms.Button removeButton = new System.Windows.Forms.Button();
-                    removeButton.Text = "X";
-                    removeButton.Size = new Size(20, 20);
-                    removeButton.Location = new Point(buttonWidth - 30, (buttonHeight - removeButton.Height) / 2);
-                    removeButton.Click += (btnSender, btnE) =>
-                    {
-                        int indexToRemove = buttonPanels.IndexOf(buttonPanel);
-                        buttonPanels.RemoveAt(indexToRemove);
-                        panel4.Controls.Remove(buttonPanel);
-                        for (int i = indexToRemove; i < buttonPanels.Count; i++)
-                        {
-                            int row = i / maxButtonsPerRow;
-                            int col = i % maxButtonsPerRow;
-                            int newX = col * (buttonWidth + fileButtonGap);
-                            int newY = row * (buttonHeight + removeButtonGap);
-                            buttonPanels[i].Location = new Point(newX, newY);
-                        }
-                        fileCount--;
-                    };
-                    buttonPanel.Controls.Add(removeButton);
-                    buttonPanel.Click += (panelSender, panelE) =>
-                    {
-                        try
-                        {
-                            Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show($"Error opening file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-                    };
-                    panel4.Controls.Add(buttonPanel);
-                    buttonPanels.Add(buttonPanel);
-                    fileCount++;
+                    panel9.Visible = false;
+                    panel11.Visible = false;
+                }
+                if (label13.Visible)
+                {
+                    label13.Visible = false;
+                }
+                if (panel5.Visible)
+                {
+                    panel5.Visible = false;
                 }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+        private void btn_mail_bullets_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                //   panel5.Controls.Clear();
+                // InitializeBulletButtons();
+                Button button = (Button)sender;
+                string bulletChar = button.Text;
+                ApplyBulletToSelectedLine(bulletChar);
+                // panel9.Visible = false;
+                panel5.Visible = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+        public void AddControlToPanel5(Control control)
+        {
+            panel5DW.Controls.Add(control);
+        }
+        // dont change this 
+        private void button15_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                OpenFileDialog openFileDialog = new OpenFileDialog
+                {
+                    Multiselect = true,
+                    Filter = "All Files|*.*" // Allow all file types
+                 //  Filter = "JPEG Image|*.jpg|JPEG Image|*.jpeg|PNG Image|*.png"
+                };
 
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+
+                    long maxTotalSize = 25 * 1024 * 1024; // 25 MB in bytes
+                    long currentTotalSize = 0;
+
+                    // Calculate the total size of existing attachments
+                    foreach (string filePath in attachments)
+                    {
+                        FileInfo fileInfo = new FileInfo(filePath);
+                        currentTotalSize += fileInfo.Length;
+                    }
+
+                    long newFilesTotalSize = 0;
+                    foreach (string selectedFilePath in openFileDialog.FileNames)
+                    {
+                        FileInfo fileInfo = new FileInfo(selectedFilePath);
+                        newFilesTotalSize += fileInfo.Length;
+                    }
+
+                    // Check if the total size exceeds the limit
+                    if (currentTotalSize + newFilesTotalSize > maxTotalSize)
+                    {
+                        MessageBox.Show("The total size of the selected files exceeds 25 MB. Please select smaller files.");
+                        return;
+                    }
+                    int buttonWidth = 200;
+                    int buttonHeight = 50;
+                    int fileButtonGap = 20;
+                    int removeButtonGap = 0;
+                    int maxButtonsPerRow = panel5DW.Width / (buttonWidth + fileButtonGap);
+                    int fileCount = attachments.Count; // Start file count from current list size
+                    panel4.Controls.Clear();
+                    buttonPanels.Clear();
+                    panel4.AutoScroll = true;
+
+                    // Re-add existing attachments
+                    foreach (string filePath in attachments)
+                    {
+                        AddFileButton(filePath, fileCount, buttonWidth, buttonHeight, fileButtonGap, removeButtonGap, maxButtonsPerRow);
+                        fileCount++;
+                    }
+
+                    // Add new attachments
+                    foreach (string selectedFilePath in openFileDialog.FileNames)
+                    {
+                        int existingIndex = attachments.IndexOf(selectedFilePath);
+                        if (existingIndex != -1)
+                        {
+                            // If file already exists, replace it
+                            attachments[existingIndex] = selectedFilePath;
+                            panel4.Controls.Remove(buttonPanels[existingIndex]);
+                            buttonPanels[existingIndex] = CreateFileButtonPanel(selectedFilePath, existingIndex, buttonWidth, buttonHeight, fileButtonGap, removeButtonGap, maxButtonsPerRow);
+                            panel4.Controls.Add(buttonPanels[existingIndex]);
+                        }
+                        else
+                        {
+                            // If file is new, add it
+                            attachments.Add(selectedFilePath);
+                            AddFileButton(selectedFilePath, fileCount, buttonWidth, buttonHeight, fileButtonGap, removeButtonGap, maxButtonsPerRow);
+                            fileCount++;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+        private void AddFileButton(string filePath, int fileCount, int buttonWidth, int buttonHeight, int fileButtonGap, int removeButtonGap, int maxButtonsPerRow)
+        {
+            int rowIndex = fileCount / maxButtonsPerRow;
+            int colIndex = fileCount % maxButtonsPerRow;
+            int x = colIndex * (buttonWidth + fileButtonGap);
+            int y = rowIndex * (buttonHeight + removeButtonGap);
+            Panel buttonPanel = CreateFileButtonPanel(filePath, fileCount, buttonWidth, buttonHeight, fileButtonGap, removeButtonGap, maxButtonsPerRow);
+
+            int newRow = buttonPanels.Count / maxButtonsPerRow;
+            int newCol = buttonPanels.Count % maxButtonsPerRow;
+
+            int newX = newCol * (buttonWidth + fileButtonGap);
+            int newY = newRow * (buttonHeight + removeButtonGap);
+
+            if ((newCol + 1) * (buttonWidth + fileButtonGap) > panel4.Width)
+            {
+                panel4.HorizontalScroll.Value += buttonWidth + fileButtonGap;
+            }
+
+            if (newCol > 0)
+            {
+                int previousButtonIndex = buttonPanels.Count - 1;
+                int previousButtonX = buttonPanels[previousButtonIndex].Location.X;
+                int previousButtonWidth = buttonPanels[previousButtonIndex].Width;
+                newX = previousButtonX + previousButtonWidth + fileButtonGap;
+            }
+
+            buttonPanel.Location = new Point(newX, newY);
+            panel4.Controls.Add(buttonPanel);
+            buttonPanels.Add(buttonPanel);
+        }
+
+        private Panel CreateFileButtonPanel(string filePath, int index, int buttonWidth, int buttonHeight, int fileButtonGap, int removeButtonGap, int maxButtonsPerRow)
+        {
+            Panel buttonPanel = new Panel
+            {
+                Size = new Size(buttonWidth, buttonHeight),
+                Location = new Point(index % maxButtonsPerRow * (buttonWidth + fileButtonGap), index / maxButtonsPerRow * (buttonHeight + removeButtonGap)),
+                BorderStyle = BorderStyle.FixedSingle
+            };
+
+            PictureBox iconPictureBox = new PictureBox();
+            iconPictureBox.Size = new Size(32, 32);
+            iconPictureBox.Location = new Point(10, (buttonHeight - iconPictureBox.Height) / 2);
+            iconPictureBox.Image = System.Drawing.Icon.ExtractAssociatedIcon(filePath).ToBitmap();
+            iconPictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
+            buttonPanel.Controls.Add(iconPictureBox);
+            Label fileInfoLabel = new Label();
+            fileInfoLabel.AutoSize = true;
+            fileInfoLabel.Location = new Point(iconPictureBox.Right + 10, (buttonHeight - fileInfoLabel.Height) / 2);
+            fileInfoLabel.Text = $"{Path.GetFileName(filePath)} ({new FileInfo(filePath).Length / 1024} KB)";
+            int maxLabelWidth = buttonWidth - (iconPictureBox.Right + 40);
+            fileInfoLabel.MaximumSize = new Size(maxLabelWidth, buttonHeight);
+            buttonPanel.Controls.Add(fileInfoLabel);
+
+            System.Windows.Forms.Button removeButton = new System.Windows.Forms.Button();
+            removeButton.Text = "X";
+            removeButton.Size = new Size(20, 20);
+            removeButton.Location = new Point(buttonWidth - 30, (buttonHeight - removeButton.Height) / 2);
+            removeButton.Click += (btnSender, btnE) =>
+            {
+                int indexToRemove = buttonPanels.IndexOf(buttonPanel);
+                if (indexToRemove >= 0 && indexToRemove < buttonPanels.Count)
+                {
+                    buttonPanels.RemoveAt(indexToRemove);
+                    attachments.RemoveAt(indexToRemove);
+                    panel4.Controls.Remove(buttonPanel);
+                    for (int i = indexToRemove; i < buttonPanels.Count; i++)
+                    {
+                        int row = i / maxButtonsPerRow;
+                        int col = i % maxButtonsPerRow;
+                        int newX = col * (buttonWidth + fileButtonGap);
+                        int newY = row * (buttonHeight + removeButtonGap);
+                        buttonPanels[i].Location = new Point(newX, newY);
+                    }
+                }
+            };
+            buttonPanel.Controls.Add(removeButton);
+
+            buttonPanel.Click += (panelSender, panelE) =>
+            {
+                try
+                {
+                    Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error opening file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            };
+            return buttonPanel;
         }
         private void button16_Click(object sender, EventArgs e)
         {
-            // Check if dataGridView1 is not initialized or has no data
-            if (dataGridView1 == null || dataGridView1.Rows.Count == 0)
+            try
             {
-                panel10.Visible = true;
-                panel10.Controls.Clear();
-                panel11.Visible = true;
-                isTableVisible = true; // Set the flag to indicate that the table is visible
-
-                // Initialize DataGridView
-                InitializeDataGridView();
-
-                // Store the entered data into a list
-                List<string> enteredData = new List<string>();
-                foreach (string line in richTextBox3.Lines)
+                if (dataGridView1 != null)
                 {
-                    enteredData.Add(line);
+                    dataGridView1.Dispose();
                 }
-
-                // Ensure there are at least 12 lines to allow updating
-                while (richTextBox3.Lines.Length < 12)
+                // Check if dataGridView1 is not initialized or has no data
+                if (dataGridView1 == null || dataGridView1.Rows.Count == 0)
                 {
-                    richTextBox3.AppendText(Environment.NewLine);
-                }
+                    button16.Enabled = false;
+                    button7.Visible = true;
+                    panel10.Visible = true;
+                    panel11.Visible = true;
+                    panel10.Controls.Clear();
+                    // Initialize DataGridView
+                    InitializeDataGridView();
+                    string currentText = richTextBox3.Text;
 
-                // Update data from line 10 with the entered data
-                int lineIndex = 10; // 0-based index for the 11th line
-                int count = Math.Min(enteredData.Count, richTextBox3.Lines.Length - lineIndex);
-                for (int i = 0; i < count; i++)
-                {
-                    richTextBox3.Lines[lineIndex + i] = enteredData[i];
+                    // Split the text into lines
+                    string[] lines = currentText.Split('\n');
+                    for (int i = 0; i < 10; i++)
+                    {
+                        Array.Resize(ref lines, lines.Length + 1);
+                        Array.Copy(lines, 0, lines, 1, lines.Length - 1);
+                        lines[0] = "";
+                    }
+                    string newText = string.Join("\n", lines);
+                    // Set the new text as the text of RichTextBox3
+                    richTextBox3.Text = newText;
+                    richTextBox3.Focus();
+                    richTextBox3.SelectionStart = 20;
+                    richTextBox3.ScrollToCaret();
                 }
-
-                // Move the cursor to the start of the 11th line
-                int lineStart = richTextBox3.GetFirstCharIndexFromLine(lineIndex);
-                richTextBox3.Select(lineStart, 0);
-                richTextBox3.Focus();
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
         }
 
         private void btn_undo_Click(object sender, EventArgs e)
         {
-            if (undoStack.Count > 0)
+            try
             {
-                redoStack.Push(currentText); // Store current state for redo
-                currentText = undoStack.Pop(); // Get previous state from undo stack
-                richTextBox3.Text = currentText; // Update RichTextBox
-                UpdateUndoRedoButtons();
+                if (undoStack.Count > 0)
+                {
+                    redoStack.Push(currentText); // Store current state for redo
+                    currentText = undoStack.Pop(); // Get previous state from undo stack
+                    richTextBox3.Text = currentText; // Update RichTextBox
+                    UpdateUndoRedoButtons();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
 
         private void btn_redo_Click(object sender, EventArgs e)
         {
-            if (redoStack.Count > 0)
+            try
             {
-                undoStack.Push(currentText); // Store current state for undo
-                currentText = redoStack.Pop(); // Get next state from redo stack
-                richTextBox3.Text = currentText; // Update RichTextBox
-                UpdateUndoRedoButtons();
+                if (redoStack.Count > 0)
+                {
+                    undoStack.Push(currentText); // Store current state for undo
+                    currentText = redoStack.Pop(); // Get next state from redo stack
+                    richTextBox3.Text = currentText; // Update RichTextBox
+                    UpdateUndoRedoButtons();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
-
         private void richTextBox3_TextChanged(object sender, EventArgs e)
         {
-            if (currentText != richTextBox3.Text)
+            try
             {
-                undoStack.Push(currentText); // Store previous state for undo
-                currentText = richTextBox3.Text; // Update current text
-                redoStack.Clear(); // Clear redo stack
-                UpdateUndoRedoButtons();
+                if (currentText != richTextBox3.Text)
+                {
+                    undoStack.Push(currentText); // Store previous state for undo
+                    currentText = richTextBox3.Text; // Update current text
+                    redoStack.Clear(); // Clear redo stack
+                   // UpdateUndoRedoButtons();
+                }
             }
-            // Save the current selection start and length
-            int selectionStart = richTextBox3.SelectionStart;
-            int selectionLength = richTextBox3.SelectionLength;
-
-            // Determine the starting line based on the presence of the data grid view
-            int startingLine = dataGridView1 != null ? 10 : 0;
-
-            // Set the starting line for text insertion
-            if (richTextBox3.Lines.Length > startingLine)
+            catch (Exception ex)
             {
-                int lineStart = richTextBox3.GetFirstCharIndexFromLine(startingLine);
-
-                // Ensure the current selection start is at or after the starting line
-                selectionStart = Math.Max(selectionStart, lineStart);
-
-                richTextBox3.Select(selectionStart, 0);
+                Console.WriteLine(ex.Message);
             }
-
-            // Restore the previous selection
-            richTextBox3.Select(selectionStart, selectionLength);
-            richTextBox3.ScrollToCaret();
         }
         private void UpdateUndoRedoButtons()
         {
-            btn_undo.Enabled = undoStack.Count > 0;
-            btn_redo.Enabled = redoStack.Count > 0;
+            try
+            {
+                btn_undo.Enabled = undoStack.Count > 0;
+                btn_redo.Enabled = redoStack.Count > 0;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
 
         private void jd(object sender, PaintEventArgs e)
@@ -956,8 +1501,18 @@ namespace MOMC_PROJECT
 
         private void MeetingsInfo_ComposeEmail_Load_2(object sender, EventArgs e)
         {
-            panel10.Visible = false;
-            panel11.Visible = false;
+            try
+            {
+                panel10.Visible = false;
+                panel11.Visible = false;
+                label13.Visible = false;
+                panel5.Visible = false;
+                button7.Visible = false;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
 
         private void contextMenuStrip1_Opening(object sender, CancelEventArgs e)
@@ -967,100 +1522,192 @@ namespace MOMC_PROJECT
 
         private void button1_Click(object sender, EventArgs e)
         {
-            /* contextMenuStrip1.Visible = true;*/
-            contextMenuStrip1.Show(panel12, new Point(0, panel12.Height));
-
+            try
+            {
+                contextMenuStrip1.Show(panel10, new Point(0, panel12.Height));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
 
         private void deleteColumnsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (dataGridView1.SelectedCells.Count > 0)
+            try
             {
-                int columnIndex = dataGridView1.SelectedCells[0].ColumnIndex;
-                dataGridView1.Columns.RemoveAt(columnIndex);
+                if (dataGridView1.SelectedCells.Count > 0)
+                {
+                    int columnIndex = dataGridView1.SelectedCells[0].ColumnIndex;
+                    dataGridView1.Columns.RemoveAt(columnIndex);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
 
         private void deleteRowsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // Delete the selected row
-            if (dataGridView1.SelectedCells.Count > 0)
+            try
             {
-                int rowIndex = dataGridView1.SelectedCells[0].RowIndex;
-                dataGridView1.Rows.RemoveAt(rowIndex);
+                // Delete the selected row
+                if (dataGridView1.SelectedCells.Count > 0)
+                {
+                    int rowIndex = dataGridView1.SelectedCells[0].RowIndex;
+                    dataGridView1.Rows.RemoveAt(rowIndex);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
         private void deleteTableToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (dataGridView1 != null)
+            try
             {
-                dataGridView1.Columns.Clear();
-                dataGridView1.Rows.Clear();
-                dataGridView1.Dispose(); // Dispose the dataGridView1 control to completely destroy it
-                dataGridView1 = null; // Set dataGridView1 to null to indicate it's no longer initialized
+                if (dataGridView1 != null)
+                {
+                    button16.Enabled = true;
+                    button7.Visible = false;
+                    dataGridView1.Columns.Clear();
+                    dataGridView1.Rows.Clear();
+                    dataGridView1.Dispose(); // Dispose the dataGridView1 control to completely destroy it
+                    dataGridView1 = null; // Set dataGridView1 to null to indicate it's no longer initialized
+                }
+                panel10.Visible = false;
+                panel11.Visible = false;
+                // Get the current text from RichTextBox3
+                string currentText = richTextBox3.Text;
+
+                // Split the text into lines
+                string[] lines = currentText.Split('\n');
+
+                // Remove the first 10 empty lines
+                int count = 0;
+                for (int i = 0; i < lines.Length && count < 10; i++)
+                {
+                    if (string.IsNullOrWhiteSpace(lines[i]))
+                    {
+                        lines[i] = null; // Mark the line for removal
+                        count++;
+                    }
+                    else
+                    {
+                        break; // Stop removing lines if a non-empty line is encountered
+                    }
+                }
+
+                // Join the remaining lines back into a single string
+                string newText = string.Join("\n", lines.Where(line => line != null));
+
+                // Set the new text as the text of RichTextBox3
+                richTextBox3.Text = newText;
             }
-            panel10.Visible = false;
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
         private void button2_Click(object sender, EventArgs e)
         {
-            /* contextMenuStrip2.Visible = true;*/
-            contextMenuStrip2.Show(panel12, new Point(0, panel12.Height));
+            try
+            {
+                contextMenuStrip2.Show(panel10, new Point(0, panel12.Height));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
         private void insertAboveToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // Insert a new row above the selected row
-            if (dataGridView1.SelectedCells.Count > 0)
+            try
             {
-                int rowIndex = dataGridView1.SelectedCells[0].RowIndex;
-                dataGridView1.Rows.Insert(rowIndex, 1);
+                // Insert a new row above the selected row
+                if (dataGridView1.SelectedCells.Count > 0)
+                {
+                    int rowIndex = dataGridView1.SelectedCells[0].RowIndex;
+                    dataGridView1.Rows.Insert(rowIndex, 1);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
 
         private void insertBelowToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // Check if the last row is an uncommitted new row
-            if (dataGridView1.AllowUserToAddRows && dataGridView1.NewRowIndex != -1)
+            try
             {
-                // Save the uncommitted new row index
-                int newRowIndex = dataGridView1.NewRowIndex;
-
-                // End edit to commit the changes
-                dataGridView1.EndEdit();
-
-                // Insert a new row at the end
-                dataGridView1.Rows.Add();
-
-                // Restore the uncommitted new row
-                dataGridView1.Rows[newRowIndex].Visible = false;
-                dataGridView1.Rows[newRowIndex].Visible = true;
-            }
-            else
-            {
-                // Insert a new row below the selected row
-                if (dataGridView1.SelectedCells.Count > 0)
+                // Check if the last row is an uncommitted new row
+                if (dataGridView1.AllowUserToAddRows && dataGridView1.NewRowIndex != -1)
                 {
-                    int rowIndex = dataGridView1.SelectedCells[0].RowIndex;
-                    dataGridView1.Rows.Insert(rowIndex + 1, 1);
+                    // Save the uncommitted new row index
+                    int newRowIndex = dataGridView1.NewRowIndex;
+
+                    // End edit to commit the changes
+                    dataGridView1.EndEdit();
+
+                    // Insert a new row at the end
+                    dataGridView1.Rows.Add();
+
+                    // Restore the uncommitted new row
+                    dataGridView1.Rows[newRowIndex].Visible = false;
+                    dataGridView1.Rows[newRowIndex].Visible = true;
+                }
+                else
+                {
+                    // Insert a new row below the selected row
+                    if (dataGridView1.SelectedCells.Count > 0)
+                    {
+                        int rowIndex = dataGridView1.SelectedCells[0].RowIndex;
+                        dataGridView1.Rows.Insert(rowIndex + 1, 1);
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
-
         private void insertRightToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (dataGridView1.SelectedCells.Count > 0 && dataGridView1.SelectedCells[0].ColumnIndex != dataGridView1.Columns.Count - 1)
+            try
             {
-                int columnIndex = dataGridView1.SelectedCells[0].ColumnIndex;
-                dataGridView1.Columns.Insert(columnIndex + 1, new DataGridViewTextBoxColumn());
+                if (dataGridView1.SelectedCells.Count > 0 && dataGridView1.SelectedCells[0].ColumnIndex != 0)
+                {
+                    int columnIndex = dataGridView1.SelectedCells[0].ColumnIndex;
+                    dataGridView1.Columns.Insert(columnIndex + 1, new DataGridViewTextBoxColumn());
+
+                    // Refresh the DataGridView to reflect the changes
+                    dataGridView1.Refresh();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                // Handle the exception appropriately
             }
         }
 
         private void insertLeftToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            // Check if a column is selected
-            if (dataGridView1.SelectedCells.Count > 0 && dataGridView1.SelectedCells[0].ColumnIndex != 0)
+            try
             {
-                int columnIndex = dataGridView1.SelectedCells[0].ColumnIndex;
-                dataGridView1.Columns.Insert(columnIndex, new DataGridViewTextBoxColumn());
+                // Check if a column is selected
+                if (dataGridView1.SelectedCells.Count > 0 && dataGridView1.SelectedCells[0].ColumnIndex != 0)
+                {
+                    int columnIndex = dataGridView1.SelectedCells[0].ColumnIndex;
+                    dataGridView1.Columns.Insert(columnIndex, new DataGridViewTextBoxColumn());
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
         private bool IsTableVisible()
@@ -1069,97 +1716,517 @@ namespace MOMC_PROJECT
         }
         private void richTextBox3_KeyPress(object sender, KeyPressEventArgs e)
         {
-            // Check if the Enter key is pressed
-            if (e.KeyChar == (char)Keys.Enter)
+            /*  try
+              {
+                  if (e.KeyChar == (char)Keys.Enter)
+                  {
+                      // Get the current line index
+                      int selectionStart = richTextBox3.SelectionStart;
+                      int lineIndex = richTextBox3.GetLineFromCharIndex(selectionStart);
+                      // Check if the line index is valid
+                      if (lineIndex >= 0 && lineIndex < richTextBox3.Lines.Length)
+                      {
+                          int lineStart = richTextBox3.GetFirstCharIndexFromLine(lineIndex);
+                          int lineLength = richTextBox3.Lines[lineIndex].Length;
+                          // Get the previous line text
+                          string previousLineText = "";
+                          if (lineIndex > 0)
+                          {
+                              previousLineText = richTextBox3.Lines[lineIndex - 1];
+                          }
+                          // Check if the previous line already has a bullet point
+                          if (previousLineText.TrimStart().StartsWith(previousBullet))
+                          {
+                              // Insert the bullet point at the beginning of the new line
+                              richTextBox3.Select(lineStart, 0);
+                              richTextBox3.SelectionFont = new Font(richTextBox3.Font.FontFamily, richTextBox3.Font.Size); // Set font size for bullet point
+                              richTextBox3.SelectedText = previousBullet + " ";
+                          }
+                      }
+                  }
+              }
+              catch (Exception ex)
+              {
+                  Console.WriteLine(ex.Message);
+              }*/
+            try
             {
-                // Get the current line index
-                int selectionStart = richTextBox3.SelectionStart;
-                int lineIndex = richTextBox3.GetLineFromCharIndex(selectionStart);
-
-                // Check if the line index is valid
-                if (lineIndex >= 0 && lineIndex < richTextBox3.Lines.Length)
+                if (e.KeyChar == (char)Keys.Enter)
                 {
+                    // Get the current line index
+                    int selectionStart = richTextBox3.SelectionStart;
+                    int lineIndex = richTextBox3.GetLineFromCharIndex(selectionStart);
                     int lineStart = richTextBox3.GetFirstCharIndexFromLine(lineIndex);
                     int lineLength = richTextBox3.Lines[lineIndex].Length;
-
-                    // Get the previous line text
-                    string previousLineText = "";
-                    if (lineIndex > 0)
+                    // Check if the line index is valid
+                    if (lineIndex >= 0 && lineIndex < richTextBox3.Lines.Length)
                     {
-                        previousLineText = richTextBox3.Lines[lineIndex - 1];
+                        string previousLineText = "";
+                        if (lineIndex > 0)
+                        {
+                            previousLineText = richTextBox3.Lines[lineIndex - 1];
+                        }
+
+                        // Check if the previous line already has a bullet point
+                        if (previousLineText.TrimStart().StartsWith(previousBullet))
+                        {
+                            // Insert the bullet point at the beginning of the new line
+                            richTextBox3.Select(lineStart, 0);
+                            richTextBox3.SelectionFont = new Font(richTextBox3.Font.FontFamily, richTextBox3.Font.Size); // Set font size for bullet point
+                            richTextBox3.SelectedText = previousBullet + " ";
+                        }
                     }
-
-                    // Check if the previous line already has a bullet point
-                    if (previousLineText.TrimStart().StartsWith(previousBullet))
+                    // Additional validation to remove bullet point if only bullet point exists in the line
+                    if (lineIndex >= 0 && lineIndex < richTextBox3.Lines.Length)
                     {
-                        // Insert the bullet point at the beginning of the new line
-                        richTextBox3.Select(lineStart, 0);
-                        richTextBox3.SelectedText = previousBullet + " ";
+                       
+                        string currentLineText = richTextBox3.Lines[lineIndex];
+
+                        // Check if the line contains only the bullet point and no other text
+                        if (currentLineText.Trim() == previousBullet)
+                        {
+                            // Remove the bullet point from the current line
+                            richTextBox3.Select(lineStart, lineLength);
+                            richTextBox3.SelectedText = "";
+
+                            // Set previousBullet to null
+                         //  previousBullet = null;
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
 
         private void richTextBox3_KeyDown(object sender, KeyEventArgs e)
         {
-
-            if (e.KeyCode == Keys.Back)
+            try
             {
-                // Get the current cursor position
-                int currentPosition = richTextBox3.SelectionStart;
-
-                // If the cursor is at the starting line, prevent further backspace action
-                if (dataGridView1 != null && currentPosition <= richTextBox3.GetFirstCharIndexFromLine(10))
+                if (panel10.Visible)
                 {
-                    e.Handled = true;
-                    return;
+                    if (e.KeyCode == Keys.Back)
+                      {
+                        // Get the current cursor position
+                        /* int currentPosition = richTextBox3.SelectionStart;
+                         // If the cursor is at the starting line, prevent further backspace action
+                         if (dataGridView1 != null && currentPosition <= richTextBox3.GetFirstCharIndexFromLine(10))
+                         {
+                             e.Handled = true;
+                             return;
+                         }*/
+                        int currentPosition = richTextBox3.SelectionStart;
+                        // If the cursor is at the starting line, prevent further backspace action
+                        if (dataGridView1 != null && currentPosition <= richTextBox3.GetFirstCharIndexFromLine(10))
+                        {
+                            // Select the text from the start of line 10 to the current position
+                            int startOfLine10 = richTextBox3.GetFirstCharIndexFromLine(10);
+                         //   richTextBox3.SelectionStart = startOfLine10;
+                            richTextBox3.SelectionLength = currentPosition - startOfLine10;
+                            richTextBox3.Text = "";
+                            for (int i = 0; i < 10; i++)
+                            {
+                                richTextBox3.AppendText(Environment.NewLine);
+                            }
+                            richTextBox3.SelectionStart = 10;
+                          //  int selectionStart = richTextBox3.SelectionStart;
+                         //   richTextBox3.Select(10, 10);
+                            e.Handled = true;
+                            return;
+                        }
+                    }
                 }
+                /* else
+                 {
+                     e.Handled = false;
+                     return;
+                 }*/
+                if (panel10.Visible)
+                {
+                    if ((e.Control && e.KeyCode == Keys.A))
+                     {
+
+                        /* int currentPosition = richTextBox3.SelectionStart;
+                         if (dataGridView1 != null && currentPosition <= richTextBox3.GetFirstCharIndexFromLine(10))
+                         {
+                             richTextBox3.Clear();
+                             richTextBox3.AppendText(Environment.NewLine);
+                             e.Handled = true;
+                             return;
+                         }*/
+                        e.Handled = true;
+
+                        // Get the start of line 10
+                        int startOfLine10 = richTextBox3.GetFirstCharIndexFromLine(10);
+                        // Select text from the start of line 10 to the end of the text
+                        richTextBox3.SelectionStart = startOfLine10;
+                        richTextBox3.SelectionLength = richTextBox3.Text.Length - startOfLine10;
+                        return;
+                    }
+                }
+               /* else
+                {
+                    e.Handled = false;
+                    return;
+                }*/
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
             }
         }
+        private DataTable meetingTable = new DataTable();
+
         private void button3_Click(object sender, EventArgs e)
         {
-            this.Enabled = false;
-            PreviewMailScreen p = new PreviewMailScreen();
-            p.Text = "Preview Mail Screen";
-
-            p.FromEmailAddress = textBox5.Text;
-            p.ToEmailAddresses = new List<string>(richTextBox2.Lines.Where(line => !string.IsNullOrWhiteSpace(line)));
-            p.Subject = richTextBox2.Text;
-            p.Body = richTextBox3.Text;
-            StringBuilder body = new StringBuilder();
-            body.AppendLine(richTextBox3.Text);
-            body.AppendLine("Data from Table:");
-            if (dataGridView1 != null)
+            try
             {
-                foreach (DataGridViewRow row in dataGridView1.Rows)
+                this.Enabled = false;
+                PreviewMailScreen p = new PreviewMailScreen();
+                p.Text = "Preview Mail Screen";
+                p.FromEmailAddress = textBox5.Text;
+                p.ToEmailAddresses = new List<string>(richTextBox1.Lines.Where(line => !string.IsNullOrWhiteSpace(line)));
+                p.Subject = richTextBox2.Text;
+                p.Body = richTextBox3.Rtf;
+                StringBuilder body = new StringBuilder();
+                if (dataGridView1 != null)
                 {
-                    foreach (DataGridViewCell cell in row.Cells)
-                    {
-                        body.Append(cell.Value.ToString());
-                        body.Append("\t");
-                    }
-                    body.AppendLine();
+                    p.TransferDataFromForm1(dataGridView1);
                 }
-                p.DataGridViewContent = body.ToString();
+                p.Attachments = new List<string>(attachments);
+                // Show the dynamic form
+                p.ShowDialog();
+                // Re-enable the main form when the dynamic form is closed
+                this.Enabled = true;
             }
-            p.Attachments = new List<string>(attachments);
-            // Show the dynamic form
-            p.ShowDialog();
-
-            // Re-enable the main form when the dynamic form is closed
-            this.Enabled = true;
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
 
         private void button4_Click(object sender, EventArgs e)
         {
-            panel1.Controls.Clear();
-            panel1.BackColor = Color.White;
-            MOMC mOMC = new MOMC();
-            mOMC.TopLevel = false;  // This makes it not a top-level control
-            mOMC.FormBorderStyle = FormBorderStyle.None;  // Remove borders if necessary
-            mOMC.Dock = DockStyle.Fill;
-            panel1.Controls.Add(mOMC);
-            mOMC.Show();
+            try
+            {
+                panel1.Controls.Clear();
+                panel1.BackColor = Color.White;
+                MOMC mOMC = new MOMC();
+                mOMC.TopLevel = false;  // This makes it not a top-level control
+                mOMC.FormBorderStyle = FormBorderStyle.None;  // Remove borders if necessary
+                mOMC.Dock = DockStyle.Fill;
+                panel1.Controls.Add(mOMC);
+                mOMC.Show();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        private void panel9_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void panel8_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void panel5_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void button5_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // panel1.Visible = false;
+                OpenFileDialog openFileDialog = new OpenFileDialog();
+                openFileDialog.Multiselect = true;
+                openFileDialog.Filter = " \"JPEG Image|*.jpg|JPEG Image|*.jpeg|PNG Image|*.png\"";
+
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    int buttonWidth = 200;
+                    int buttonHeight = 50;
+                    int fileButtonGap = 20;
+                    int removeButtonGap = 0;
+                    int maxButtonsPerRow = (panel5DW.Width) / (buttonWidth + fileButtonGap);
+                    int fileCount = 0;
+                    panel5DW.Controls.Clear();
+                    buttonPanels.Clear();
+                    panel5DW.AutoScroll = true;
+                    foreach (string selectedFilePath in openFileDialog.FileNames)
+                    {
+                        attachments.Add(selectedFilePath);
+                        string filePath = selectedFilePath;
+                        int rowIndex = fileCount / maxButtonsPerRow;
+                        int colIndex = fileCount % maxButtonsPerRow;
+                        int x = colIndex * (buttonWidth + fileButtonGap);
+                        int y = rowIndex * (buttonHeight + removeButtonGap);
+                        Panel buttonPanel = new Panel();
+                        buttonPanel.Size = new Size(buttonWidth, buttonHeight);
+                        buttonPanel.Location = new Point(x, y);
+                        buttonPanel.BorderStyle = BorderStyle.FixedSingle;
+                        PictureBox iconPictureBox = new PictureBox();
+                        iconPictureBox.Size = new Size(32, 32);
+                        iconPictureBox.Location = new Point(10, (buttonHeight - iconPictureBox.Height) / 2);
+                        iconPictureBox.Image = System.Drawing.Icon.ExtractAssociatedIcon(filePath).ToBitmap();
+                        iconPictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
+                        buttonPanel.Controls.Add(iconPictureBox);
+                        Label fileInfoLabel = new Label();
+                        fileInfoLabel.AutoSize = true;
+                        fileInfoLabel.Location = new Point(iconPictureBox.Right + 10, (buttonHeight - fileInfoLabel.Height) / 2);
+                        fileInfoLabel.Text = $"{Path.GetFileName(filePath)} ({new FileInfo(filePath).Length / 1024} KB)";
+                        int maxLabelWidth = buttonWidth - (iconPictureBox.Right + 40);
+                        fileInfoLabel.MaximumSize = new Size(maxLabelWidth, buttonHeight);
+                        buttonPanel.Controls.Add(fileInfoLabel);
+                        System.Windows.Forms.Button removeButton = new System.Windows.Forms.Button();
+                        removeButton.Text = "X";
+                        removeButton.Size = new Size(20, 20);
+                        removeButton.Location = new Point(buttonWidth - 30, (buttonHeight - removeButton.Height) / 2);
+                        removeButton.Click += (btnSender, btnE) =>
+                        {
+                            int indexToRemove = buttonPanels.IndexOf(buttonPanel);
+                            buttonPanels.RemoveAt(indexToRemove);
+                            attachments.Remove(selectedFilePath);
+                            panel5DW.Controls.Remove(buttonPanel);
+                            for (int i = indexToRemove; i < buttonPanels.Count; i++)
+                            {
+                                int row = i / maxButtonsPerRow;
+                                int col = i % maxButtonsPerRow;
+                                int newX = col * (buttonWidth + fileButtonGap);
+                                int newY = row * (buttonHeight + removeButtonGap);
+                                buttonPanels[i].Location = new Point(newX, newY);
+                            }
+                            fileCount--;
+                        };
+                        buttonPanel.Controls.Add(removeButton);
+                        buttonPanel.Click += (panelSender, panelE) =>
+                        {
+                            try
+                            {
+                                Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show($"Error opening file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }
+                        };
+                        panel5DW.Controls.Add(buttonPanel);
+                        buttonPanels.Add(buttonPanel);
+                        fileCount++;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+        private void linkLabel3_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            try
+            {
+                panel1.Controls.Clear();
+                DrawImageIcon db = new DrawImageIcon();
+                panel1.Dock = DockStyle.Fill;
+                panel1.Controls.Add(db);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+        private void btn_mail_numberings_Click(object sender, EventArgs e)
+        {
+        }
+        private void richTextBox3_MouseLeave(object sender, EventArgs e)
+        {
+            if (Control.ModifierKeys == Keys.Control)
+            {
+                ((HandledMouseEventArgs)e).Handled = false;
+            }
+        }
+        private void richTextBox3_SelectionChanged(object sender, EventArgs e)
+        {
+            if (richTextBox3.SelectionFont != null)
+            {
+                // string selectedText = richTextBox3.SelectedText;
+                string selectedText = richTextBox3.Text;
+                bool isBulletPointSelected = selectedText.Contains("●") || selectedText.Contains("◆") ||
+                                             selectedText.Contains("☐") || selectedText.Contains("★") ||
+                                             selectedText.Contains("✔") || selectedText.Contains("➤");
+                if (!isBulletPointSelected)
+                {
+                    // Set comboBox1.Text to the font size of the selected text
+                    comboBox1.Text = richTextBox3.SelectionFont.Size.ToString();
+
+                    // Check if the font family of the selected text is Calibri
+                    if (richTextBox3.SelectionFont.FontFamily.Name == "Calibri")
+                    {
+                        comboBox3.Text = "Calibri";
+                    }
+                    else
+                    {
+                        // Set comboBox3.Text to another value if the font family is not Calibri
+                        comboBox3.Text = richTextBox3.SelectionFont.FontFamily.Name;
+                    }
+                }
+            }
+        }
+        private Dictionary<string, string> emailData = new Dictionary<string, string>(); // Dictionary to store subject and description
+        List<ProjectData> projectDataList = new List<ProjectData>();
+        private void SaveDataToStructure()
+        {
+            string projectName = cb_emailmeetings.Text;
+            string subject = richTextBox2.Text;
+            string description = richTextBox3.Rtf;
+            List<string[]> dataGridViewData = new List<string[]>();
+            if (dataGridView1 != null)
+            {
+                // Iterate through the DataGridView rows and store data
+                foreach (DataGridViewRow row in dataGridView1.Rows)
+                {
+                    List<string> rowData = new List<string>();
+                    foreach (DataGridViewCell cell in row.Cells)
+                    {
+                        rowData.Add(cell.Value?.ToString() ?? "");
+                    }
+                    dataGridViewData.Add(rowData.ToArray());
+                }
+            }
+            // Create a new ProjectData object and add it to the list
+            ProjectData projectData = new ProjectData(projectName, subject, description, dataGridViewData);
+            projectDataList.Add(projectData);
+        }
+        public void LoadDataFromStructure(string projectName)
+        {
+            // Find the ProjectData object where the projectName matches the specified project name
+            ProjectData projectData = projectDataList.FirstOrDefault(p => p.projectName == projectName);
+            if (projectData != null)
+            {
+                if (dataGridView1 != null)
+                {
+                    dataGridView1.Dispose();
+                }
+                if (projectData != null)
+                {
+                    richTextBox2.Text = projectData.Subject;
+                    richTextBox3.Rtf = projectData.Description;
+                    if (projectData.DataGridViewData != null)
+                    {
+                        InitializeDataGridView();
+                        if (dataGridView1 != null)
+                        {
+                            dataGridView1.Rows.Clear();
+
+                            // Add data from the ProjectData object to the DataGridView
+                            foreach (string[] rowData in projectData.DataGridViewData)
+                            {
+                                dataGridView1.Rows.Add(rowData);
+                            }
+                            if (dataGridView1.Rows.Count > 0)
+                            {
+                                panel10.Visible = true;
+                                button16.Enabled = false;
+                                panel11.Visible = true;
+                                button7.Visible = true;
+                            }
+                        }
+                    }
+                }
+                if (projectData.DataGridViewData == null)
+                {
+                    panel10.Visible = false;
+                    button16.Enabled = true;
+                    panel11.Visible = false;
+                    button7.Visible = false;
+                }
+            }
+            else
+            {
+                panel10.Visible = false;
+                panel11.Visible = false;
+                button7.Visible = false;
+                button16.Enabled = true;
+            }
+        }
+        private void button6_Click(object sender, EventArgs e)
+        {
+            SaveDataToStructure();
+        }
+      
+        // view / hide table
+        private void button7_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (panel10.Visible)
+                {
+                    panel10.Visible = false;
+                    panel11.Visible = false;
+                  //  button16.Enabled = false;
+                    string currentText = richTextBox3.Text;
+
+                    // Split the text into lines
+                    string[] lines = currentText.Split('\n');
+
+                    // Remove the first 10 empty lines
+                    int count = 0;
+                    for (int i = 0; i < lines.Length && count < 10; i++)
+                    {
+                        if (string.IsNullOrWhiteSpace(lines[i]))
+                        {
+                            lines[i] = null; // Mark the line for removal
+                            count++;
+                        }
+                        else
+                        {
+                            break; // Stop removing lines if a non-empty line is encountered
+                        }
+                    }
+
+                    // Join the remaining lines back into a single string
+                    string newText = string.Join("\n", lines.Where(line => line != null));
+
+                    // Set the new text as the text of RichTextBox3
+                    richTextBox3.Text = newText;
+                }
+                else
+                {
+                    panel10.Visible = true;
+                    panel11.Visible = true;
+                    string currentText = richTextBox3.Text;
+
+                    // Split the text into lines
+                    string[] lines = currentText.Split('\n');
+                    for (int i = 0; i < 10; i++)
+                    {
+                        Array.Resize(ref lines, lines.Length + 1);
+                        Array.Copy(lines, 0, lines, 1, lines.Length - 1);
+                        lines[0] = "";
+                    }
+                    string newText = string.Join("\n", lines);
+                    // Set the new text as the text of RichTextBox3
+                    richTextBox3.Text = newText;
+                    richTextBox3.Focus();
+                }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+        internal void AttachFile(string filePath)
+        {
+            throw new NotImplementedException();
         }
     }
 }
