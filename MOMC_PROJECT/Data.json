@@ -2,87 +2,77 @@
   {
     "Id": "1",
     "Email": "19n81a05c9.sowmya@gmail.com",
+    "PassKey": "tkki grgd aapo uavx\r\n",
     "Meetings": [
       {
         "Name": "Project Kickoff Meeting",
         "StartDateTime": "2024-05-20T09:00:00",
         "EndDateTime": "2024-05-20T11:00:00",
         "AttendeeEmail": [ "304sowmya.yennam@gmail.com", "momcproject@gmail.com", "sowm141906@gmail.com" ],
-        "AttendeeName": [ "user1", "example1", "test" ],
-        "DrawBoardImages": [ "image1.jpg", "image2.jpg" ],
-        "Documents": [ "Downloads/MOMC_BRD" ]
+        "AttendeeName": [ "sowmya", "MOMC", "Sow" ]
       },
       {
         "Name": "Weekly Status Meeting",
         "StartDateTime": "2024-05-22T10:00:00",
         "EndDateTime": "2024-05-22T11:00:00",
-        "AttendeeEmail": [ "user1@example.com", "manager@example.com" ],
-        "AttendeeName": [ "user1", "manager" ],
-        "DrawBoardImages": [ "image3.jpg" ],
-        "Documents": [ "document2.pdf" ]
+        "AttendeeEmail": [ "304sowmya.yennam@gmail.com", "momcproject@gmail.com" ],
+        "AttendeeName": [ "sowmya", "MOMC" ]
       }
     ]
   },
   {
     "Id": "2",
     "Email": "304sowmya.yennam@gmail.com",
+    "PassKey": "ovxs shel escc bzqf\r\n",
     "Meetings": [
       {
         "Name": "Team Sync Meeting",
         "StartDateTime": "2024-05-21T14:00:00",
         "EndDateTime": "2024-05-21T15:00:00",
         "AttendeeEmail": [ "304sowmya.yennam@gmail.com", "momcproject@gmail.com", "sowm141906@gmail.com" ],
-        "AttendeeName": [ "sowmya", "momc", "sowmn" ],
-        "DrawBoardImages": [ "image4.jpg" ],
-        "Documents": [ "document4.pdf" ]
+        "AttendeeName": [ "sowmya", "momc", "Yennam" ]
       },
       {
         "Name": "Client Presentation",
         "StartDateTime": "2024-05-25T13:00:00",
         "EndDateTime": "2024-05-25T15:00:00",
-        "AttendeeEmail": [ "user2@example.com", "client@example.com" ],
-        "AttendeeName": [ "user2", "client" ],
-        "DrawBoardImages": [ "image5.jpg", "image6.jpg" ],
-        "Documents": [ "document5.pdf" ]
+        "AttendeeEmail": [ "momcproject@gmail.com", "sowm141906@gmail.com", "19n81a0427@gmail.com" ],
+        "AttendeeName": [ "MOMC", "Sowmya","Bhavani" ]
       }
     ]
   },
   {
     "Id": "3",
-    "Email": "user3@example.com",
-    "Meetings": [
-      {
-        "Name": "Product Demo",
-        "StartDateTime": "2024-05-23T11:00:00",
-        "EndDateTime": "2024-05-23T12:00:00",
-        "AttendeeEmail": [ "user3@example.com", "productmanager@example.com" ],
-        "AttendeeName": [ "user3", "productmanager" ],
-        "DrawBoardImages": [ "image7.jpg" ],
-        "Documents": [ "document7.pdf", "document8.docx" ]
-      }
-    ]
+    "Email": "momcproject@gmail.com",
+    "PassKey": "vsdj tcpd uese nwah\r\n"
+    //"Meetings": [
+    //  {
+    //    "Name": "Client Presentation",
+    //    "StartDateTime": "2024-05-25T13:00:00",
+    //    "EndDateTime": "2024-05-25T15:00:00",
+    //    "AttendeeEmail": [ "19n81a0427@gmail.com", "sowm141906@gmail.com" ],
+    //    "AttendeeName": [ "Dheeraj", "Yennam" ]
+    //  }
+    //]
   },
   {
     "Id": "4",
     "Email": "19n81a0427@gmail.com",
+    "PassKey": "yhhv srcj xgay bhio\r\n",
     "Meetings": [
       {
         "Name": "Project Meeting",
         "StartDateTime": "2024-05-21T14:00:00",
         "EndDateTime": "2024-05-21T15:00:00",
-        "AttendeeEmail": [ "304sowmya.yennam@gmail.com", "momcproject@gmail.com", "sowm141906@gmail.com" ],
-        "AttendeeName": [ "sowmya", "momc", "sowmn" ],
-        "DrawBoardImages": [ "image4.jpg" ],
-        "Documents": [ "document4.pdf" ]
+        "AttendeeEmail": [ "304sowmya.yennam@gmail.com", "dheerajreddyramasani@gmail.com", "sowm141906@gmail.com" ],
+        "AttendeeName": [ "sowmya", "Dheeraj", "Yennam" ]
       },
       {
         "Name": "Client Presentation",
         "StartDateTime": "2024-05-25T13:00:00",
         "EndDateTime": "2024-05-25T15:00:00",
-        "AttendeeEmail": [ "user2@example.com", "client@example.com" ],
-        "AttendeeName": [ "user2", "client" ],
-        "DrawBoardImages": [ "image5.jpg", "image6.jpg" ],
-        "Documents": [ "document5.pdf" ]
+        "AttendeeEmail": [ "304sowmya.yennam@gmail.com", "dheerajreddyramasani@gmail.com" ],
+        "AttendeeName": [ "Sowmya", "Dheeraj" ]
       }
     ]
   }

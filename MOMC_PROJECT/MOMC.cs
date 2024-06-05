@@ -9,7 +9,6 @@ namespace MOMC_PROJECT
     public partial class MOMC : Form
     {
         public static string toEmail { get; set; }
-        public static string toEmailId { get; set; }
         public static List<MeetingData> meetingDataList;
         string otp;
         private int otpCountDown;
@@ -20,8 +19,7 @@ namespace MOMC_PROJECT
         }
         private void OnLoad()
         {
-            // Initialize the timer
-            timer1.Interval = 1000; // 1 second interval
+            timer1.Interval = 1000;
             timer1.Tick += timer1_Tick;
             panel2.Visible = true;
             panel3.Visible = false;
@@ -31,11 +29,15 @@ namespace MOMC_PROJECT
             btn_verifyotp.Enabled = false;
             btn_verifyotp.BackColor = Color.LightGray;
             btn_verifyotp.ForeColor = Color.Gray;
-            label4.Text = "02:00";
+            label7.Text = "";
+            label4.Text = "01:30";
+            label8.Text = "";
+            label9.Text = "";
             string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"D:\UI\Minutes of Meeting\MOMC_PROJECT\Data.json");
             string jsonData = System.IO.File.ReadAllText(filePath);
             meetingDataList = JsonConvert.DeserializeObject<List<MeetingData>>(jsonData);
         }
+
         private bool IsInternetConnected()
         {
             try
@@ -53,24 +55,37 @@ namespace MOMC_PROJECT
                 return false;
             }
         }
-        private void btn_sendotp_Click(object sender, EventArgs e)
+        private async void btn_sendotp_Click(object sender, EventArgs e)
         {
             if (!IsInternetConnected())
             {
-                MessageBox.Show("Please connect to the internet and try again.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                DisplayLabelText("Please connect to the internet and try again.", 8000, Color.Red, label8);
                 return;
             }
-            else
+
+            if (string.IsNullOrWhiteSpace(tb_email.Text))
             {
-                label7.Text = $"We've Sent an OTP to your email- {tb_email.Text}";
-                toEmail = tb_email.Text.Trim().ToLower();
-                string fromEmail = "19n81a05c9.sowmya@gmail.com";
-                string password = "tkki grgd aapo uavx\r\n";
-                string subject = "Your One-Time Password (OTP) for MOMC";
-                otp = GenerateOTP();
-                string body = $"Hi\n\nPlease find below your requested OTP:\n{otp}\n\n" +
-                $"Please note that this OTP is valid only for particular time after requesting\n\n\n" +
-                $"In case the OTP expires you can request it again by clicking on 'Resend OTP' button on MOMC";
+                DisplayLabelText("Please Enter Email", 8000, Color.Red, label8);
+                return;
+            }
+            string enteredEmail = tb_email.Text.Trim().ToLower();
+            toEmail = enteredEmail;
+            var userData = meetingDataList.FirstOrDefault(data => data.Email.ToLower() == enteredEmail);
+            if (userData == null)
+            {
+                DisplayLabelText("Email Not Found", 8000, Color.Red, label8);
+                return;
+            }
+            DisplayLabelText("Sending OTP...", Timeout.Infinite, Color.Red, label8); // Use Timeout.Infinite for duration
+
+            string fromEmail = "19n81a05c9.sowmya@gmail.com";
+            string password = "tkki grgd aapo uavx\r\n";
+            string subject = "Your One-Time Password (OTP) for MOMC";
+            otp = GenerateOTP();
+            string body = $"Hi\n\nPlease find below your requested OTP:\n{otp}\n\n" +
+                          $"Please note that this OTP is valid only for a particular time after requesting.\n\n\n" +
+                          $"In case the OTP expires, you can request it again by clicking on 'Resend OTP' button on MOMC";
+
             var smtpClient = new SmtpClient("smtp.gmail.com")
             {
                 Port = 587,
@@ -80,65 +95,59 @@ namespace MOMC_PROJECT
 
             var mailMessage = new MailMessage
             {
-                From = new MailAddress(fromEmail),
+                From = new MailAddress("19n81a05c9.sowmya@gmail.com"),
                 Subject = subject,
                 Body = body,
                 IsBodyHtml = false,
             };
-            mailMessage.To.Add(toEmail);
+            mailMessage.To.Add(enteredEmail);
             try
             {
-                smtpClient.Send(mailMessage);
-                DialogResult result = MessageBox.Show("OTP sent successfully!", "Success", MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
-                if (result == DialogResult.Cancel)
+                await smtpClient.SendMailAsync(mailMessage); // Send mail asynchronously
+                DisplayLabelText("OTP sent successfully!", 8000, Color.Green, label8);
+                label7.Text = $"We have sent an OTP to your entered email - {fromEmail}";
+                System.Windows.Forms.Timer navigationTimer = new System.Windows.Forms.Timer();
+                navigationTimer.Interval = 500;
+                navigationTimer.Tick += (timerSender, timerArgs) =>
                 {
-                    panel2.Visible = true;
-                    panel3.Visible = false;
-                }
-                if (result == DialogResult.OK)
-                {
+                    navigationTimer.Stop();
                     panel2.Visible = false;
                     panel3.Visible = true;
-                    otpCountDown = 180;
+                    otpCountDown = 90;
                     StartOtpTimer();
-                    tb_email.Enabled = true;
-
-                    btn_sendotp.Enabled = false;
-                    btn_sendotp.BackColor = Color.LightGray;
-                    btn_sendotp.ForeColor = Color.Gray;
-
-                    btn_verifyotp.Enabled = true;
-                    btn_verifyotp.BackColor = Color.Green;
-                    btn_verifyotp.ForeColor = Color.White;
-
-                    btn_resendotp.Enabled = false;
-                    btn_resendotp.BackColor = Color.LightGray;
-                    btn_resendotp.ForeColor = Color.Gray;
-                }
+                };
+                navigationTimer.Start();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to send OTP: {ex.Message}");
-            }
+                DisplayLabelText($"Failed to send OTP. Check Your Network Connection and TryAgain", 8000, Color.Red, label8);
             }
         }
 
-        private bool IsValidEmail(string email)
+        private void DisplayLabelText(string text, int duration, Color fontColor, Label labelToUpdate)
         {
-            try
+            labelToUpdate.Text = text;
+            labelToUpdate.ForeColor = fontColor;
+            if (duration != Timeout.Infinite) // Check if the duration is not infinite
             {
-                var addr = new MailAddress(email);
-                return addr.Address == email;
-            }
-            catch
-            {
-                return false;
+                System.Windows.Forms.Timer labelTimer = new System.Windows.Forms.Timer();
+                labelTimer.Interval = duration;
+                labelTimer.Tick += (timerSender, timerArgs) =>
+                {
+                    labelTimer.Stop();
+                    labelToUpdate.Text = "";
+                };
+                labelTimer.Start();
             }
         }
+
+
         private void StartOtpTimer()
         {
             label4.Visible = true;
-            label4.Text = $"time left: {otpCountDown}s";
+            int minutes = (otpCountDown / 60);
+            int seconds = (otpCountDown % 60);
+            label4.Text = $"time left: {minutes:D2}:{seconds:D2}";
             btn_resendotp.Enabled = false;
             btn_resendotp.BackColor = Color.LightGray;
             btn_resendotp.ForeColor = Color.Gray;
@@ -151,9 +160,21 @@ namespace MOMC_PROJECT
             string enteredCode = tb_otp.Text.Trim();
             try
             {
+                if (string.IsNullOrEmpty(enteredCode))
+                {
+                    DisplayLabelText("Please enter the OTP.", 8000, Color.Red, label9);
+                    return;
+                }
+
+                if (enteredCode.Length != 6)
+                {
+                    DisplayLabelText("OTP must contain 6 digits.", 8000, Color.Red, label9);
+                    return;
+                }
+
                 if (enteredCode == otp.ToString())
                 {
-                    MessageBox.Show("Verification Successful!", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    DisplayLabelText("Verification Successful!", 8000, Color.Green, label9);
                     timer1.Stop();
                     var meetingsForEmail = GetMeetingsForEmail(toEmail);
                     panel1.Controls.Clear();
@@ -164,12 +185,12 @@ namespace MOMC_PROJECT
                 }
                 else
                 {
-                    MessageBox.Show("Invalid Verification Code. Please try again.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    DisplayLabelText("Invalid Verification Code. Please try again.", 8000, Color.Red, label9);
                 }
             }
             catch (Exception ex)
             {
-
+                DisplayLabelText($"An error occurred: {ex.Message}", 8000, Color.Red, label9);
             }
         }
         private List<string> GetMeetingsForEmail(string email)
@@ -180,25 +201,27 @@ namespace MOMC_PROJECT
                 .Select(m => m.Name)
                 .ToList();
         }
-        private void btn_resendotp_Click(object sender, EventArgs e)
+        private async void btn_resendotp_Click(object sender, EventArgs e)
         {
             if (!IsInternetConnected())
             {
-                MessageBox.Show("Please connect to the internet and try again.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                DisplayLabelText("Please connect to the internet and try again.", 8000, Color.Red, label9);
                 return;
             }
-            otp = null;
-            panel2.Visible = false;
-            panel3.Visible = true;
-            label7.Text = $"We've Sent an OTP to your email- {tb_email.Text}";
-            toEmail = tb_email.Text.Trim();
+
+            // Change label9 text to indicate sending
+            DisplayLabelText("Sending OTP...", Timeout.Infinite, Color.Red, label9); // Use Timeout.Infinite for duration
+
+            string enteredEmail = tb_email.Text.Trim().ToLower();
+            toEmail = enteredEmail;
             string fromEmail = "19n81a05c9.sowmya@gmail.com";
             string password = "tkki grgd aapo uavx\r\n";
             string subject = "Your One-Time Password (OTP) for MOMC";
             otp = GenerateOTP();
             string body = $"Hi\n\nPlease find below your requested OTP:\n{otp}\n\n" +
-                $"Please note that this OTP is valid only for particular time after requesting\n\n\n" +
-                $"In case the OTP expires you can request it again by clicking on 'Resend OTP' button on MOMC";
+                          $"Please note that this OTP is valid only for a particular time after requesting.\n\n\n" +
+                          $"In case the OTP expires, you can request it again by clicking on 'Resend OTP' button on MOMC";
+
             var smtpClient = new SmtpClient("smtp.gmail.com")
             {
                 Port = 587,
@@ -208,48 +231,35 @@ namespace MOMC_PROJECT
 
             var mailMessage = new MailMessage
             {
-                From = new MailAddress(fromEmail),
+                From = new MailAddress("19n81a05c9.sowmya@gmail.com"),
                 Subject = subject,
                 Body = body,
                 IsBodyHtml = false,
             };
-            mailMessage.To.Add(toEmail);
-
+            mailMessage.To.Add(enteredEmail);
             try
             {
-                smtpClient.Send(mailMessage);
-                DialogResult result = MessageBox.Show("OTP sent successfully!", "Success", MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
-                if (result == DialogResult.Cancel)
+                await smtpClient.SendMailAsync(mailMessage); // Send mail asynchronously
+                DisplayLabelText("OTP sent successfully!", 8000, Color.Green, label9);
+                label7.Text = $"We have sent an OTP to your -{fromEmail} ";
+                System.Windows.Forms.Timer navigationTimer = new System.Windows.Forms.Timer();
+                navigationTimer.Interval = 500;
+                navigationTimer.Tick += (timerSender, timerArgs) =>
                 {
-                    panel2.Visible = false;
-                    panel3.Visible = false;
-                }
-                if (result == DialogResult.OK)
-                {
+                    navigationTimer.Stop();
                     panel2.Visible = false;
                     panel3.Visible = true;
-                    otpCountDown = 180;
+                    otpCountDown = 90;
                     StartOtpTimer();
-                    //tb_email.Enabled = true;
-
-                    //btn_sendotp.Enabled = false;
-                    //btn_sendotp.BackColor = Color.LightGray;
-                    //btn_sendotp.ForeColor = Color.Gray;
-
-                    btn_verifyotp.Enabled = true;
-                    btn_verifyotp.BackColor = Color.Green;
-                    btn_verifyotp.ForeColor = Color.White;
-
-                    btn_resendotp.Enabled = false;
-                    btn_resendotp.BackColor = Color.LightGray;
-                    btn_resendotp.ForeColor = Color.Gray;
-                }
+                };
+                navigationTimer.Start();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to send OTP: {ex.Message}");
+                DisplayLabelText($"Failed to send OTP. Check Your Network Connection and TryAgain", 8000, Color.Red, label8);
             }
         }
+
         public static string GenerateOTP(int length = 6)
         {
             const string chars = "0123456789";
@@ -265,7 +275,6 @@ namespace MOMC_PROJECT
                 return result.ToString();
             }
         }
-
         private void button1_Click_1(object sender, EventArgs e)
         {
             panel2.Visible = true;
@@ -275,7 +284,6 @@ namespace MOMC_PROJECT
             btn_sendotp.ForeColor = Color.White;
             timer1.Stop();
         }
-
         private void timer1_Tick(object sender, EventArgs e)
         {
             if (otpCountDown > 0)
@@ -287,6 +295,9 @@ namespace MOMC_PROJECT
                 btn_resendotp.Enabled = false;
                 btn_resendotp.BackColor = Color.LightGray;
                 btn_resendotp.ForeColor = Color.Gray;
+                btn_verifyotp.Enabled = true;
+                btn_verifyotp.BackColor = Color.Green;
+                btn_verifyotp.ForeColor = Color.White;
             }
             else
             {
@@ -297,15 +308,30 @@ namespace MOMC_PROJECT
                 btn_resendotp.Enabled = true;
                 btn_resendotp.BackColor = Color.Green;
                 btn_resendotp.ForeColor = Color.White;
-                MessageBox.Show("OTP has expired. Please request a new one.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                DisplayLabelText("OTP has expired. Please request a new one.", 8000, Color.Red, label9);
             }
         }
-
+        private void tb_otp_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
+            {
+                DisplayLabelText("Please enter only digits (0-9).", 8000, Color.Red, label9);
+                e.Handled = true;
+            }
+        }
         private void button2_Click(object sender, EventArgs e)
         {
             MeetingsInfo_ComposeEmail m = new MeetingsInfo_ComposeEmail();
             panel1.Controls.Clear();
             panel1.Controls.Add(m);
+        }
+
+        private void MOMC_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (MessageBox.Show("Are you sure you want to exit the application?", "Exit", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.No)
+            {
+                e.Cancel = true;
+            }
         }
     }
 }

@@ -13,6 +13,8 @@ namespace MOMC_PROJECT
         {
             public string Id { get; set; }
             public string Email { get; set; }
+            public string PassKey { get; set; }
+
             public List<Meeting> Meetings { get; set; }
         }
 

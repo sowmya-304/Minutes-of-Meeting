@@ -33,6 +33,7 @@
             panel1 = new Panel();
             button2 = new Button();
             panel3 = new Panel();
+            label9 = new Label();
             label6 = new Label();
             button1 = new Button();
             label4 = new Label();
@@ -42,6 +43,7 @@
             btn_verifyotp = new Button();
             btn_resendotp = new Button();
             panel2 = new Panel();
+            label8 = new Label();
             pictureBox1 = new PictureBox();
             label5 = new Label();
             label1 = new Label();
@@ -61,12 +63,10 @@
             panel1.Controls.Add(button2);
             panel1.Controls.Add(panel3);
             panel1.Controls.Add(panel2);
-            panel1.Dock = DockStyle.Fill;
             panel1.Location = new Point(0, 0);
             panel1.Name = "panel1";
             panel1.Size = new Size(1350, 702);
             panel1.TabIndex = 0;
-           // panel1.Paint += panel1_Paint;
             // 
             // button2
             // 
@@ -81,6 +81,7 @@
             // panel3
             // 
             panel3.BackColor = Color.White;
+            panel3.Controls.Add(label9);
             panel3.Controls.Add(label6);
             panel3.Controls.Add(button1);
             panel3.Controls.Add(label4);
@@ -89,10 +90,20 @@
             panel3.Controls.Add(tb_otp);
             panel3.Controls.Add(btn_verifyotp);
             panel3.Controls.Add(btn_resendotp);
-            panel3.Location = new Point(425, 131);
+            panel3.Location = new Point(418, 129);
             panel3.Name = "panel3";
             panel3.Size = new Size(502, 420);
             panel3.TabIndex = 12;
+            // 
+            // label9
+            // 
+            label9.AutoSize = true;
+            label9.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            label9.Location = new Point(46, 245);
+            label9.Name = "label9";
+            label9.Size = new Size(20, 21);
+            label9.TabIndex = 9;
+            label9.Text = "l1";
             // 
             // label6
             // 
@@ -112,7 +123,7 @@
             button1.Location = new Point(34, 362);
             button1.Name = "button1";
             button1.Size = new Size(84, 42);
-            button1.TabIndex = 14;
+            button1.TabIndex = 6;
             button1.Text = "<<Back";
             button1.UseVisualStyleBackColor = false;
             button1.Click += button1_Click_1;
@@ -121,7 +132,7 @@
             // 
             label4.AutoSize = true;
             label4.Font = new Font("Segoe UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label4.Location = new Point(129, 237);
+            label4.Location = new Point(88, 211);
             label4.Name = "label4";
             label4.Size = new Size(43, 17);
             label4.TabIndex = 7;
@@ -136,7 +147,7 @@
             label7.Name = "label7";
             label7.Size = new Size(435, 67);
             label7.TabIndex = 13;
-            label7.Text = "label5";
+            label7.Text = " ";
             label7.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // label3
@@ -157,7 +168,8 @@
             tb_otp.Name = "tb_otp";
             tb_otp.PlaceholderText = "Enter One - Time Password";
             tb_otp.Size = new Size(208, 29);
-            tb_otp.TabIndex = 4;
+            tb_otp.TabIndex = 3;
+            tb_otp.KeyPress += tb_otp_KeyPress;
             // 
             // btn_verifyotp
             // 
@@ -167,7 +179,7 @@
             btn_verifyotp.Location = new Point(100, 280);
             btn_verifyotp.Name = "btn_verifyotp";
             btn_verifyotp.Size = new Size(107, 39);
-            btn_verifyotp.TabIndex = 2;
+            btn_verifyotp.TabIndex = 4;
             btn_verifyotp.Text = "Verify OTP";
             btn_verifyotp.UseVisualStyleBackColor = false;
             btn_verifyotp.Click += btn_verifyotp_Click;
@@ -180,7 +192,7 @@
             btn_resendotp.Location = new Point(251, 280);
             btn_resendotp.Name = "btn_resendotp";
             btn_resendotp.Size = new Size(151, 39);
-            btn_resendotp.TabIndex = 8;
+            btn_resendotp.TabIndex = 5;
             btn_resendotp.Text = "Resend OTP";
             btn_resendotp.UseVisualStyleBackColor = false;
             btn_resendotp.Click += btn_resendotp_Click;
@@ -188,16 +200,27 @@
             // panel2
             // 
             panel2.BackColor = Color.White;
+            panel2.Controls.Add(label8);
             panel2.Controls.Add(pictureBox1);
             panel2.Controls.Add(label5);
             panel2.Controls.Add(label1);
             panel2.Controls.Add(label2);
             panel2.Controls.Add(tb_email);
             panel2.Controls.Add(btn_sendotp);
-            panel2.Location = new Point(435, 134);
+            panel2.Location = new Point(418, 129);
             panel2.Name = "panel2";
             panel2.Size = new Size(506, 420);
             panel2.TabIndex = 11;
+            // 
+            // label8
+            // 
+            label8.AutoSize = true;
+            label8.Font = new Font("Segoe UI Semibold", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            label8.Location = new Point(61, 277);
+            label8.Name = "label8";
+            label8.Size = new Size(20, 21);
+            label8.TabIndex = 8;
+            label8.Text = "l1";
             // 
             // pictureBox1
             // 
@@ -247,17 +270,17 @@
             tb_email.Name = "tb_email";
             tb_email.PlaceholderText = "Enter Email";
             tb_email.Size = new Size(268, 29);
-            tb_email.TabIndex = 3;
+            tb_email.TabIndex = 1;
             // 
             // btn_sendotp
             // 
             btn_sendotp.BackColor = Color.Green;
             btn_sendotp.Font = new Font("Segoe UI", 12F, FontStyle.Bold, GraphicsUnit.Point, 0);
             btn_sendotp.ForeColor = Color.White;
-            btn_sendotp.Location = new Point(204, 296);
+            btn_sendotp.Location = new Point(204, 326);
             btn_sendotp.Name = "btn_sendotp";
             btn_sendotp.Size = new Size(109, 39);
-            btn_sendotp.TabIndex = 1;
+            btn_sendotp.TabIndex = 2;
             btn_sendotp.Text = "Continue";
             btn_sendotp.UseVisualStyleBackColor = false;
             btn_sendotp.Click += btn_sendotp_Click;
@@ -275,6 +298,7 @@
             Name = "MOMC";
             Text = "MOMC";
             WindowState = FormWindowState.Maximized;
+            FormClosing += MOMC_FormClosing;
             panel1.ResumeLayout(false);
             panel3.ResumeLayout(false);
             panel3.PerformLayout();
@@ -305,5 +329,7 @@
         private Label label6;
         private PictureBox pictureBox1;
         private Button button2;
+        private Label label9;
+        private Label label8;
     }
 }

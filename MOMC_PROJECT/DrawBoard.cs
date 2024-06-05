@@ -9,6 +9,7 @@ using System.Net.Mail;
 using System.Diagnostics;
 using System.Windows.Forms;
 using System.Collections.Generic;
+using System.Drawing.Drawing2D;
 namespace MOMC_PROJECT
 {
     public partial class DrawBoard : UserControl
@@ -21,6 +22,7 @@ namespace MOMC_PROJECT
         private bool paint = false;
         Pen erase = new Pen(Color.White, 10);
         private int index;
+        int x, y, sx, sy, cx, cy;
         ColorDialog cd = new ColorDialog();
         Color new_color;
         //Image
@@ -33,6 +35,7 @@ namespace MOMC_PROJECT
         private System.Drawing.Image selectedIconImage; // Initialize with a default value
         private bool isShapeDrawing;
         private Point ShapeStartPoint;
+        private Point shapeEndPoint;
         private System.Drawing.Rectangle currentShapeRect;
         private List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>> shapes = new List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>();
         //select and delete 
@@ -63,6 +66,18 @@ namespace MOMC_PROJECT
         private Stack<Bitmap> undoStack1 = new Stack<Bitmap>();
         private Stack<Bitmap> redoStack2 = new Stack<Bitmap>();
 
+        private enum DrawingMode
+        {
+            None,
+            Circle,
+            Rectangle,
+            Line,
+            Diamond,
+            Arrow,
+
+        }
+
+        private DrawingMode currentDrawingMode = DrawingMode.None;
 
 
 
@@ -70,6 +85,8 @@ namespace MOMC_PROJECT
         public DrawBoard()
         {
             InitializeComponent();
+            ellipse.BackgroundImageLayout = ImageLayout.Zoom;
+
             ScreenLoad();
             btn_undo.Click += btn_undo_Click;
             btn_redo.Click += btn_redo_Click;
@@ -158,39 +175,56 @@ namespace MOMC_PROJECT
         {
             paint = true;
             py = e.Location;
+            cx = e.X; cy = e.Y;
             if (selectedImage != null)
             {
                 isImageDrawing = true;
                 ImagestartPoint = e.Location;
             }
-            if (selectedIconImage != null)
-            {
-                isShapeDrawing = true;
-                ShapeStartPoint = e.Location;
-            }
+            //if (selectedIconImage != null)
+            //{
+            //    isShapeDrawing = true;
+            //    ShapeStartPoint = e.Location;
+            //}
             if (isSelecting)
             {
                 isDragging = true;
                 startPoint = e.Location;
                 selectionRectangle = System.Drawing.Rectangle.Empty;
             }
+            //if (currentDrawingMode != DrawingMode.None)
+            //{
+            //    ShapeStartPoint = e.Location;
+            //    shapeEndPoint = e.Location;
+            //}
         }
         private void pic_MouseMove(object sender, MouseEventArgs e)
         {
             if (paint)
             {
-                px = e.Location;
+                //px = e.Location;
                 if (index == 1)
                 {
+                    px = e.Location;
                     g.DrawLine(pen, px, py);
+                    py = px;
                 }
-                else if (index == 2)
+                if (index == 2)
                 {
+                    px = e.Location;
                     g.DrawLine(erase, px, py);
+                    py = px;
                 }
-                py = px;
-                pic.Refresh();
+                // py = px;
+                // pic.Refresh();
+
             }
+            pic.Refresh();
+            x = e.X; y = e.Y;
+            sx = cx - cx;
+            sy = e.Y - cy;
+
+
             if (isImageDrawing && selectedImage != null)
             {
                 Point currentPoint = e.Location;
@@ -218,6 +252,11 @@ namespace MOMC_PROJECT
                 endPoint = e.Location;
                 selectionRectangle = GetShapeBounds(startPoint, endPoint);
                 pic.Invalidate(); // Triggers the Paint event
+            }
+            if (e.Button == MouseButtons.Left && currentDrawingMode != DrawingMode.None) //new for shapes
+            {
+                shapeEndPoint = e.Location;
+                pic.Invalidate();
             }
             if (pic.ClientRectangle.Contains(e.Location))
             {
@@ -249,6 +288,7 @@ namespace MOMC_PROJECT
                 {
                     Cursor = CreateCursor(selectedIconImage);
                 }
+
             }
             else
             {
@@ -259,7 +299,50 @@ namespace MOMC_PROJECT
         private void pic_MouseUp(object sender, MouseEventArgs e)
         {
             paint = false;
-            if (isImageDrawing && selectedImage != null)
+            sx = x - cx; sy = y - cy;
+            if (index == 3)
+            {
+
+                g.DrawEllipse(pen, cx, cy, sx, sy);
+            }
+            if (index == 4)
+            {
+                g.DrawRectangle(pen, cx, cy, sx, sy);
+            }
+            if (index == 5)
+            {
+                g.DrawLine(pen, cx, cy, x, y);
+
+            }
+            if (index == 6) // Diamond button
+            {
+                g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+                Point[] diamondPoints = new Point[]
+                {
+            new Point(cx, cy + sy / 2),
+            new Point(cx + sx / 2, cy),
+            new Point(cx + sx, cy + sy / 2),
+            new Point(cx + sx / 2, cy + sy)
+                };
+
+                g.DrawPolygon(pen, diamondPoints);
+            }
+            if (index == 7) // Arrow button
+            {
+                // Draw arrow
+                using (GraphicsPath arrowPath = new GraphicsPath())
+                {
+                    // Define arrow shape
+                    arrowPath.AddLine(ShapeStartPoint, shapeEndPoint);
+                    pen.EndCap = System.Drawing.Drawing2D.LineCap.ArrowAnchor;
+
+                    // Draw arrow
+                    g.DrawPath(pen, arrowPath);
+                }
+
+            }
+                if (isImageDrawing && selectedImage != null)
             {
                 isImageDrawing = false;
                 images.Add(new Tuple<System.Drawing.Image, System.Drawing.Rectangle>(selectedImage, currentImageRect));
@@ -283,46 +366,9 @@ namespace MOMC_PROJECT
                 Cursor = Cursors.Default;
                 pic.Invalidate();
             }
+            currentDrawingMode = DrawingMode.None;
+            pic.Invalidate();
             SaveState();
-            //paint = false;
-            //if (isImageDrawing && selectedImage != null)
-            //{
-            //    isImageDrawing = false;
-            //    images.Add(new Tuple<System.Drawing.Image, System.Drawing.Rectangle>(selectedImage, currentImageRect));
-            //    selectedImage = null; // Reset selected image
-            //    Cursor = Cursors.Default; // Change cursor back to default
-            //    pic.Invalidate();
-            //}
-            //if (isShapeDrawing && selectedIconImage != null)
-            //{
-            //    isShapeDrawing = false;
-            //    shapes.Add(new Tuple<System.Drawing.Image, System.Drawing.Rectangle>(selectedIconImage, currentShapeRect));
-            //    selectedIconImage = null; // Reset selected icon image
-            //    Cursor = Cursors.Default; // Change cursor back to default
-            //    pic.Invalidate();
-            //}
-            //if (isDragging && isSelecting)
-            //{
-            //    endPoint = e.Location;
-            //    selectionRectangle = GetShapeBounds(startPoint, endPoint);
-            //    isDragging = false;
-            //    Cursor = Cursors.Default;
-            //    pic.Invalidate(); // Refresh to show the final selection rectangle
-            //}
-            //Cursor cursor = Cursors.Default;
-            //if (isImageDrawing && selectedImage != null)
-            //{
-            //    isImageDrawing = false;
-            //    // Add the drawn image to the currentDrawing list
-            //    AddDrawingAction(selectedImage, currentImageRect);
-            //    // Reset selected image and cursor
-            //    selectedImage = null;
-            //    Cursor = Cursors.Default;
-            //    pic.Invalidate();
-            //}
-            //SaveState();
-            //btn_undo.Enabled = true;
-            //btn_redo.Enabled = false;
 
 
         }
@@ -375,6 +421,7 @@ namespace MOMC_PROJECT
                     e.Graphics.DrawRectangle(selectionPen, selectionRectangle);
                 }
             }
+
             // Draw all images stored in the list
             foreach (var imageRect in images)
             {
@@ -400,8 +447,86 @@ namespace MOMC_PROJECT
                 e.Graphics.DrawRectangle(Pens.Blue, currentShapeRect);
                 e.Graphics.DrawImage(selectedIconImage, currentShapeRect);
             }
+
+            // Draw shapes based on currentDrawingMode
+            if (currentDrawingMode != DrawingMode.None)
+            {
+                if (currentDrawingMode == DrawingMode.Circle)
+                {
+                    int width = Math.Abs(shapeEndPoint.X - ShapeStartPoint.X);
+                    int height = Math.Abs(shapeEndPoint.Y - ShapeStartPoint.Y);
+                    int diameter = Math.Min(width, height);
+                    e.Graphics.DrawEllipse(Pens.Black, ShapeStartPoint.X, ShapeStartPoint.Y, diameter, diameter);
+                }
+                else if (currentDrawingMode == DrawingMode.Rectangle)
+                {
+                    int width = Math.Abs(shapeEndPoint.X - ShapeStartPoint.X);
+                    int height = Math.Abs(shapeEndPoint.Y - ShapeStartPoint.Y);
+                    e.Graphics.DrawRectangle(Pens.Black, ShapeStartPoint.X, ShapeStartPoint.Y, width, height);
+                }
+                else if (currentDrawingMode == DrawingMode.Line)
+                {
+                    e.Graphics.DrawLine(Pens.Black, ShapeStartPoint, shapeEndPoint);
+                }
+                
+            }
             Cursor cursor = Cursors.Default;
             SaveStateToUndoStack();
+            //if (isSelecting && selectionRectangle != System.Drawing.Rectangle.Empty)
+            //{
+            //    using (Pen selectionPen = new Pen(Color.Blue))
+            //    {
+            //        selectionPen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+            //        e.Graphics.DrawRectangle(selectionPen, selectionRectangle);
+            //    }
+            //}
+            //// Draw all images stored in the list
+            //foreach (var imageRect in images)
+            //{
+            //    e.Graphics.DrawImage(imageRect.Item1, imageRect.Item2);
+            //}
+
+            //// If currently drawing, draw the current image rectangle
+            //if (isImageDrawing && selectedImage != null)
+            //{
+            //    e.Graphics.DrawRectangle(Pens.Blue, currentImageRect);
+            //    e.Graphics.DrawImage(selectedImage, currentImageRect);
+            //}
+
+            //// Draw all shapes stored in the list
+            //foreach (var shapeRect in shapes)
+            //{
+            //    e.Graphics.DrawImage(shapeRect.Item1, shapeRect.Item2);
+            //}
+
+            //// If currently drawing a shape, draw the current shape rectangle
+            //if (isShapeDrawing && selectedIconImage != null)
+            //{
+            //    e.Graphics.DrawRectangle(Pens.Blue, currentShapeRect);
+            //    e.Graphics.DrawImage(selectedIconImage, currentShapeRect);
+            //}
+            //if (currentDrawingMode != DrawingMode.None)
+            //{
+            //    if (currentDrawingMode == DrawingMode.Circle)
+            //    {
+            //        int width = Math.Abs(shapeEndPoint.X - ShapeStartPoint.X);
+            //        int height = Math.Abs(shapeEndPoint.Y - ShapeStartPoint.Y);
+            //        int diameter = Math.Min(width, height);
+            //        e.Graphics.DrawEllipse(Pens.Black, ShapeStartPoint.X, ShapeStartPoint.Y, diameter, diameter);
+            //    }
+            //    else if (currentDrawingMode == DrawingMode.Rectangle)
+            //    {
+            //        int width = Math.Abs(shapeEndPoint.X - ShapeStartPoint.X);
+            //        int height = Math.Abs(shapeEndPoint.Y - ShapeStartPoint.Y);
+            //        e.Graphics.DrawRectangle(Pens.Black, ShapeStartPoint.X, ShapeStartPoint.Y, width, height);
+            //    }
+            //    else if (currentDrawingMode == DrawingMode.Line)
+            //    {
+            //        e.Graphics.DrawLine(Pens.Black, ShapeStartPoint, shapeEndPoint);
+            //    }
+            //}
+            //Cursor cursor = Cursors.Default;
+            //SaveStateToUndoStack();
         }
 
         private void btn_clear_Click(object sender, EventArgs e)
@@ -692,133 +817,73 @@ namespace MOMC_PROJECT
                 IconImage = iconImage;
             }
         }
-        private void btn_shape_Click(object sender, EventArgs e)
+        private void btn_shape_Click(object sender, EventArgs e)  //
         {
 
             index = 0;
             Cursor cursor = Cursors.Default;
             panel4.Visible = true;
+            ellipse.Click += ellipse_Click;
+            rectangle.Click += rectangle_Click;
+            Line.Click += Line_Click;
             //    // Clear the panel before adding buttons and images
-            panel4.Controls.Clear();
+            //panel4.Controls.Clear();
+            //panel4.Controls.Add(ellipse); 
+            //panel4.Controls.Add(rectangle);
+            //panel4.Controls.Add(Line);
 
-            //    // Define the dimensions of the grid
-            //    int rowCount = 8;
-            //    int colCount = 8;
-            //    int cellWidth = 30; // Adjust as needed
-            //    int cellHeight = 30; // Adjust as needed
 
-            // Create an array of FontAwesome icons
-            //IconChar[] icons = new IconChar[]
+            //         IconChar[] icons = new IconChar[]
             //{
-            //    IconChar.Square,IconChar.Circle, IconChar.Star,
-            //    IconChar.Heart, IconChar.Bell,
-            //    IconChar.Check, IconChar.Times, IconChar.Plus,
-            //    IconChar.Minus, IconChar.ArrowUp, IconChar.ArrowDown,
-            //    IconChar.ArrowLeft, IconChar.ArrowRight, IconChar.Pause,
-            //    IconChar.Play, IconChar.Stop, IconChar.FastForward,
-            //    IconChar.StepForward, IconChar.Music, IconChar.Video,
-            //    IconChar.Image, IconChar.Camera, IconChar.Film,
-            //    IconChar.Bolt, IconChar.Lightbulb, IconChar.Cloud,
-            //    IconChar.Sun, IconChar.Moon, IconChar.Wind,
-            //    IconChar.Fire, IconChar.Water, IconChar.Snowflake,
-            //    IconChar.Tree, IconChar.Leaf,IconChar.Globe,
-            //    IconChar.Map, IconChar.Compass,
-            //    IconChar.Flag, IconChar.Cog, IconChar.Tools,
-            //    IconChar.Hammer, IconChar.Wrench, IconChar.Screwdriver,
-            //    IconChar.Lock, IconChar.Unlock, IconChar.Key,
-            //    IconChar.Home, IconChar.Building, IconChar.Car,
-            //    IconChar.Bicycle, IconChar.Bus, IconChar.Train,
-            //    IconChar.Plane, IconChar.Ship, IconChar.Subway,
-            //    IconChar.Truck, IconChar.Horse, IconChar.Dog,
-            //    IconChar.Cat, IconChar.Fish, IconChar.Dove,
-            //    IconChar.Dragon, IconChar.Frog, IconChar.Paw
+            //       IconChar.Line,IconChar.Square, IconChar.Minus, IconChar.Star, IconChar.Ellipsis,IconChar.TriangleCircleSquare,
+            //        IconChar.StarHalfAlt, IconChar.StarHalf,  IconChar.ArrowUp,
+            //        IconChar.ArrowDown, IconChar.ArrowLeft, IconChar.ArrowRight,
+            //        IconChar.CaretUp, IconChar.CaretDown, IconChar.CaretLeft,
+            //        IconChar.CaretRight, IconChar.ChevronUp, IconChar.ChevronDown,
+
+            //        IconChar.ChevronLeft, IconChar.ChevronRight, IconChar.LongArrowUp,
+            //        IconChar.LongArrowDown, IconChar.LongArrowLeft, IconChar.LongArrowRight
             //};
 
-            //int iconIndex = 0;
-            //int totalIcons = icons.Length;
+            //         // Set the dimensions of the grid
+            //         int rowCount = 5;
+            //         int colCount = 5;
+            //         int cellWidth = 50; // Adjust as 
+            //         int cellHeight = 50; // Adjust as needed
 
-            //for (int row = 0; row < rowCount; row++)
-            //{
-            //    for (int col = 0; col < colCount; col++)
-            //    {
-            //        IconButton btn = new IconButton();
-            //        btn.Width = cellWidth;
-            //        btn.Height = cellHeight;
-            //        btn.Top = row * cellHeight;
-            //        btn.Left = col * cellWidth;
-            //        btn.IconChar = icons[iconIndex % totalIcons];
-            //        btn.IconColor = Color.Black;
-            //        btn.IconSize = 20;
-            //        btn.Text = "";
-            //        btn.FlatStyle = FlatStyle.Flat;
-            //        btn.FlatAppearance.BorderSize = 0;
-            //        btn.Click += IconButton_Click; // Add click event handler
-            //        panel4.Controls.Add(btn);
-            //        iconIndex++;
-            //    }
-            //}
+            //         int iconIndex = 0;
+            //         int totalIcons = icons.Length;
 
-
-
-            IconChar[] icons = new IconChar[]
-   {
-      IconChar.Line,IconChar.Square, IconChar.Minus, IconChar.Star, IconChar.Ellipsis,IconChar.TriangleCircleSquare,
-       IconChar.StarHalfAlt, IconChar.StarHalf,  IconChar.ArrowUp,
-       IconChar.ArrowDown, IconChar.ArrowLeft, IconChar.ArrowRight,
-       IconChar.CaretUp, IconChar.CaretDown, IconChar.CaretLeft,
-       IconChar.CaretRight, IconChar.ChevronUp, IconChar.ChevronDown,
-
-       IconChar.ChevronLeft, IconChar.ChevronRight, IconChar.LongArrowUp,
-       IconChar.LongArrowDown, IconChar.LongArrowLeft, IconChar.LongArrowRight
-   };
-
-            // Set the dimensions of the grid
-            int rowCount = 5;
-            int colCount = 5;
-            int cellWidth = 50; // Adjust as needed
-            int cellHeight = 50; // Adjust as needed
-
-            int iconIndex = 0;
-            int totalIcons = icons.Length;
-
-            for (int row = 0; row < rowCount; row++)
-            {
-                for (int col = 0; col < colCount; col++)
-                {
-                    if (iconIndex < totalIcons)
-                    {
-                        IconButton btn = new IconButton();
-                        btn.Width = cellWidth;
-                        btn.Height = cellHeight;
-                        btn.Top = row * cellHeight;
-                        btn.Left = col * cellWidth;
-                        btn.IconChar = icons[iconIndex];
-                        btn.IconColor = Color.Black;
-                        btn.IconSize = 20;
-                        btn.Text = "";
-                        btn.FlatStyle = FlatStyle.Flat;
-                        btn.FlatAppearance.BorderSize = 0;
-                        btn.Click += IconButton_Click; // Add click event handler
-                        panel4.Controls.Add(btn);
-                        iconIndex++;
-                    }
-                }
-            }
+            //         for (int row = 0; row < rowCount; row++)
+            //         {
+            //             for (int col = 0; col < colCount; col++)
+            //             {
+            //                 if (iconIndex < totalIcons)
+            //                 {
+            //                     IconButton btn = new IconButton();
+            //                     btn.Width = cellWidth;
+            //                     btn.Height = cellHeight;
+            //                     btn.Top = row * cellHeight;
+            //                     btn.Left = col * cellWidth;
+            //                     btn.IconChar = icons[iconIndex];
+            //                     btn.IconColor = Color.Black;
+            //                     btn.IconSize = 20;
+            //                     btn.Text = "";
+            //                     btn.FlatStyle = FlatStyle.Flat;
+            //                     btn.FlatAppearance.BorderSize = 0;
+            //                     btn.Click += IconButton_Click; // Add click event handler
+            //                     panel4.Controls.Add(btn);
+            //                     iconIndex++;
+            //                 }
+            //             }
+            //         }
         }
+
+
+
 
         private void btn_select_Click(object sender, EventArgs e)
         {
-            //Cursor = Cursors.Cross;
-
-            //isSelecting = !isSelecting; // Toggle the selection mode
-            //if (!isSelecting)
-            //{
-            //    selectionRectangle = System.Drawing.Rectangle.Empty; // Clear the selection rectangle if deselecting
-            //    pic.Invalidate(); // Refresh the PictureBox to update the display
-            //}
-            //selectedIcon = IconChar.None; // Disable drawing icons when selecting
-            //index = 0;
-
 
             Cursor = Cursors.Cross;
 
@@ -837,22 +902,54 @@ namespace MOMC_PROJECT
         private void btn_delete_Click(object sender, EventArgs e)
         {
 
+            //    if (selectionRectangle == System.Drawing.Rectangle.Empty)
+            //    {
+
+            //        List<int> itemsToRemove = new List<int>();
+
+            //        // Iterate over the list in reverse order to safely remove items
+            //        for (int i = itemsToRemove.Count - 1; i >= 0; i--)
+            //        {
+            //            images.RemoveAt(itemsToRemove[i]);
+            //        }
+
+            //        selectionRectangle = System.Drawing.Rectangle.Empty; // Clear the selection rectangle
+            //        pic.Invalidate(); // Refresh the PictureBox to update the display
+            //    }
+            //    isSelecting = false; // Disable selection mode
+
+            //}
             if (selectionRectangle != System.Drawing.Rectangle.Empty)
             {
-
-                List<int> itemsToRemove = new List<int>();
-
-                // Iterate over the list in reverse order to safely remove items
-                for (int i = itemsToRemove.Count - 1; i >= 0; i--)
+                if (selectionRectangle != System.Drawing.Rectangle.Empty)
                 {
-                    images.RemoveAt(itemsToRemove[i]);
+                    // Find the images intersecting with the selection area
+                    List<int> itemsToRemove = new List<int>();
+                    for (int i = 0; i < images.Count; i++)
+                    {
+                        // Access the rectangle directly from the tuple
+                        if (selectionRectangle.IntersectsWith(images[i].Item2))
+                        {
+                            itemsToRemove.Add(i);
+                        }
+                    }
+
+                    // Iterate over the list in reverse order to safely remove items
+                    for (int i = itemsToRemove.Count - 1; i >= 0; i--)
+                    {
+                        images.RemoveAt(itemsToRemove[i]);
+                    }
+
+                    // Clear the selection rectangle
+                    selectionRectangle = System.Drawing.Rectangle.Empty;
+
+                    // Refresh the PictureBox to update the display
+                    pic.Invalidate();
                 }
 
-                selectionRectangle = System.Drawing.Rectangle.Empty; // Clear the selection rectangle
-                pic.Invalidate(); // Refresh the PictureBox to update the display
+                // Disable selection mode
+                isSelecting = false;
             }
-            isSelecting = false; // Disable selection mode
-
         }
 
         //public static List<String> attachments = new List<String>();
@@ -1077,7 +1174,7 @@ namespace MOMC_PROJECT
                 int newY = row * (buttonHeight + removeButtonGap);
                 buttonPanels[i].Location = new Point(newX, newY);
             }
-        }   
+        }
         private void btn_SaveClose_Click(object sender, EventArgs e)
         {
             using (SaveFileDialog saveFileDialog = new SaveFileDialog())
@@ -1122,7 +1219,7 @@ namespace MOMC_PROJECT
                 }
             }
         }
-      
+
         private void btnAddSlide_Click(object sender, EventArgs e)
         {
             pic.Visible = true;
@@ -1142,7 +1239,6 @@ namespace MOMC_PROJECT
             }
             int totalSlides = slides.Count;
             int currentSlideNumber = currentSlideIndex + 1; // Adding 1 to make it human-readable (1-indexed)
-
             // Update the label text
             label1.Text = $"{currentSlideNumber}/{totalSlides}";
         }
@@ -1518,14 +1614,14 @@ namespace MOMC_PROJECT
 
         }
 
-      
+
         private void Closebutton_Click(object sender, EventArgs e)
         {
             //DialogResult result = MessageBox.Show("Are you sure you want to close the page?", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             DialogResult result = MessageBox.Show("Are you sure you want to close the page?", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
             // If the user clicks "Yes", close the form
-            if(result == DialogResult.Yes)
+            if (result == DialogResult.Yes)
             {
                 panel1.Controls.Clear();
                 MeetingsInfo_ComposeEmail meetingsInfo_ComposeEmail = new MeetingsInfo_ComposeEmail();
@@ -1533,8 +1629,52 @@ namespace MOMC_PROJECT
                 panel1.BackColor = SystemColors.Control;
                 panel1.Controls.Add(meetingsInfo_ComposeEmail);
             }
-     
-           
+
+
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void ellipse_Click(object sender, EventArgs e)
+        {
+
+            index = 3;
+            //currentDrawingMode = DrawingMode.Circle;
+
+        }
+
+        private void rectangle_Click(object sender, EventArgs e)
+        {
+            index = 4;
+            // currentDrawingMode = DrawingMode.Rectangle;
+
+        }
+
+        private void Line_Click(object sender, EventArgs e)
+        {
+            index = 5;
+            //currentDrawingMode = DrawingMode.Line;
+
+        }
+
+
+        private void picbox_color_picker_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Diamond_Click(object sender, EventArgs e)
+        {
+            index = 6;
+
+        }
+
+        private void Arrow_Click(object sender, EventArgs e)
+        {
+            index= 7;
         }
     }
 }

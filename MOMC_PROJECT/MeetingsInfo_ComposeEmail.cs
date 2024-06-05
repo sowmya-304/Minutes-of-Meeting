@@ -1,21 +1,11 @@
-﻿using FontAwesome.Sharp;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
+﻿using Newtonsoft.Json;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
-using System.Diagnostics.Eventing.Reader;
-using System.Drawing;
-using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using static MOMC_PROJECT.MOM_Prop;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.ListView;
 
 namespace MOMC_PROJECT
 {
@@ -28,7 +18,7 @@ namespace MOMC_PROJECT
         private List<MeetingData> meetingDataList;
         public static List<string> attachments;
         public static string selected_meeting_name = "";
-        private ComboBox comboBox1; // Declare comboBox1 at the class level
+        private ComboBox comboBox1;
         private ComboBox comboBox3;
         private Stack<string> undoStack = new Stack<string>();
         private Stack<string> redoStack = new Stack<string>();
@@ -40,7 +30,7 @@ namespace MOMC_PROJECT
         {
             InitializeComponent();
             attachments = new List<string>();
-            currentText = richTextBox3.Text; // Initialize current text
+            currentText = richTextBox3.Text;
             OnLoad();
             PopulateMeetingsComboBox();
             AttachMouseDownEventHandler(this);
@@ -74,9 +64,8 @@ namespace MOMC_PROJECT
         {
             try
             {
-                int maxWidth = panel5.ClientSize.Width / 6; // Divide by 2 to allow for multiple buttons
+                int maxWidth = panel5.ClientSize.Width / 6;
                 int maxHeight = panel5.ClientSize.Height;
-                // Determine the smaller dimension to maintain the button's aspect ratio
                 int buttonSize = Math.Min(maxWidth, maxHeight);
                 Button button = new Button
                 {
@@ -85,7 +74,6 @@ namespace MOMC_PROJECT
                     Text = bulletChar.ToString(),
                     TextAlign = ContentAlignment.TopCenter,
                 };
-                // Adjust font size based on button size
                 button.Font = new Font(button.Font.FontFamily, buttonSize / 3, button.Font.Style);
                 button.Click += btn_mail_bullets_Click;
                 panel5.Controls.Add(button);
@@ -322,7 +310,17 @@ namespace MOMC_PROJECT
         {
             var meeting_names = meetingDataList.Where(t => t.Email.Equals(MOMC.toEmail)).SelectMany(t => t.Meetings.Select(m => m.Name)).ToList();
             cb_emailmeetings.Items.Clear();
-            cb_emailmeetings.Items.AddRange(meeting_names.ToArray());
+            if (meeting_names.Count > 0)
+            {
+                cb_emailmeetings.Items.AddRange(meeting_names.ToArray());
+            }
+            else
+            {
+                label15.Text = "There are no meetings created using logged in email address";
+                label15.ForeColor = Color.Red;
+                panel2.Visible = false;
+                panel3.Visible = false;
+            }
         }
         private void linkLabel2_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
@@ -372,7 +370,7 @@ namespace MOMC_PROJECT
                     // loadDescription();
                 }
             }
-         //   SaveDataToStructure();
+            //   SaveDataToStructure();
             string s = cb_emailmeetings.Text;
             LoadDataFromStructure(s);
         }
@@ -443,26 +441,33 @@ namespace MOMC_PROJECT
                 //message.Body = richTextBox3.Text;
                 StringBuilder body = new StringBuilder();
                 // Convert DataGridView content to HTML table
-                body.AppendLine("<table border='1'>");
-                // Add table headers
-                body.AppendLine("<tr>");
-                foreach (DataGridViewColumn column in dataGridView1.Columns)
+                if (dataGridView1 != null)
                 {
-                    body.AppendLine("<th>" + column.HeaderText + "</th>");
-                }
-                body.AppendLine("</tr>");
-                // Add table rows
-                foreach (DataGridViewRow row in dataGridView1.Rows)
-                {
+                    body.AppendLine("<table border='1'>");
+                    // Add table headers
                     body.AppendLine("<tr>");
-                    foreach (DataGridViewCell cell in row.Cells)
+                    foreach (DataGridViewColumn column in dataGridView1.Columns)
                     {
-                        body.AppendLine("<td>" + cell.Value.ToString() + "</td>");
+                        body.AppendLine("<th>" + column.HeaderText + "</th>");
                     }
                     body.AppendLine("</tr>");
-                }
-                body.AppendLine("</table>");
+                    // Add table rows
+                    foreach (DataGridViewRow row in dataGridView1.Rows)
+                    {
+                        body.AppendLine("<tr>");
+                        foreach (DataGridViewCell cell in row.Cells)
+                        {
+                            /* if (row.Cells[1].Value ! = null)
+                             {
+                                 body.AppendLine("<td>" + cell.Value.ToString() + "</td>");
+                             }*/
+                            body.AppendLine("<td>" + cell.Value.ToString() + "</td>");
 
+                        }
+                        body.AppendLine("</tr>");
+                    }
+                    body.AppendLine("</table>");
+                }
                 // Append the content of richTextBox3 to the body
                 body.AppendLine(richTextBox3.Rtf);
                 message.Body = body.ToString();
@@ -479,11 +484,13 @@ namespace MOMC_PROJECT
                 smtpClient.Credentials = new NetworkCredential(senderEmail, senderPassword);
                 smtpClient.Send(message);
                 label13.Text = "Sent";
+                label13.ForeColor = Color.Green;
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.StackTrace + ex.Message);
                 label13.Text = "Failed to send email.Check Your Internet Connection";
+                label13.ForeColor= Color.Red;
             }
         }
         private void btn_mail_format_Click(object sender, EventArgs e)
@@ -511,7 +518,7 @@ namespace MOMC_PROJECT
                 {
                     panel11.Visible = false;
                 }
-                if(dataGridView1!= null)
+                if (dataGridView1 != null)
                 {
                     button16.Enabled = false;
                 }
@@ -520,7 +527,7 @@ namespace MOMC_PROJECT
                     button16.Enabled = true;
                 }
                 panel7.Visible = false;
-              //  panel11.Visible = false;
+                //  panel11.Visible = false;
                 panel8.Visible = true;
             }
             catch (Exception ex)
@@ -1221,7 +1228,7 @@ namespace MOMC_PROJECT
                 {
                     Multiselect = true,
                     Filter = "All Files|*.*" // Allow all file types
-                 //  Filter = "JPEG Image|*.jpg|JPEG Image|*.jpeg|PNG Image|*.png"
+                                             //  Filter = "JPEG Image|*.jpg|JPEG Image|*.jpeg|PNG Image|*.png"
                 };
 
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
@@ -1473,7 +1480,7 @@ namespace MOMC_PROJECT
                     undoStack.Push(currentText); // Store previous state for undo
                     currentText = richTextBox3.Text; // Update current text
                     redoStack.Clear(); // Clear redo stack
-                   // UpdateUndoRedoButtons();
+                                       // UpdateUndoRedoButtons();
                 }
             }
             catch (Exception ex)
@@ -1508,6 +1515,7 @@ namespace MOMC_PROJECT
                 label13.Visible = false;
                 panel5.Visible = false;
                 button7.Visible = false;
+                label15.Visible = false;
             }
             catch (Exception ex)
             {
@@ -1779,7 +1787,7 @@ namespace MOMC_PROJECT
                     // Additional validation to remove bullet point if only bullet point exists in the line
                     if (lineIndex >= 0 && lineIndex < richTextBox3.Lines.Length)
                     {
-                       
+
                         string currentLineText = richTextBox3.Lines[lineIndex];
 
                         // Check if the line contains only the bullet point and no other text
@@ -1790,7 +1798,7 @@ namespace MOMC_PROJECT
                             richTextBox3.SelectedText = "";
 
                             // Set previousBullet to null
-                         //  previousBullet = null;
+                            //  previousBullet = null;
                         }
                     }
                 }
@@ -1808,7 +1816,7 @@ namespace MOMC_PROJECT
                 if (panel10.Visible)
                 {
                     if (e.KeyCode == Keys.Back)
-                      {
+                    {
                         // Get the current cursor position
                         /* int currentPosition = richTextBox3.SelectionStart;
                          // If the cursor is at the starting line, prevent further backspace action
@@ -1823,7 +1831,7 @@ namespace MOMC_PROJECT
                         {
                             // Select the text from the start of line 10 to the current position
                             int startOfLine10 = richTextBox3.GetFirstCharIndexFromLine(10);
-                         //   richTextBox3.SelectionStart = startOfLine10;
+                            //   richTextBox3.SelectionStart = startOfLine10;
                             richTextBox3.SelectionLength = currentPosition - startOfLine10;
                             richTextBox3.Text = "";
                             for (int i = 0; i < 10; i++)
@@ -1831,8 +1839,8 @@ namespace MOMC_PROJECT
                                 richTextBox3.AppendText(Environment.NewLine);
                             }
                             richTextBox3.SelectionStart = 10;
-                          //  int selectionStart = richTextBox3.SelectionStart;
-                         //   richTextBox3.Select(10, 10);
+                            //  int selectionStart = richTextBox3.SelectionStart;
+                            //   richTextBox3.Select(10, 10);
                             e.Handled = true;
                             return;
                         }
@@ -1846,7 +1854,7 @@ namespace MOMC_PROJECT
                 if (panel10.Visible)
                 {
                     if ((e.Control && e.KeyCode == Keys.A))
-                     {
+                    {
 
                         /* int currentPosition = richTextBox3.SelectionStart;
                          if (dataGridView1 != null && currentPosition <= richTextBox3.GetFirstCharIndexFromLine(10))
@@ -1866,11 +1874,11 @@ namespace MOMC_PROJECT
                         return;
                     }
                 }
-               /* else
-                {
-                    e.Handled = false;
-                    return;
-                }*/
+                /* else
+                 {
+                     e.Handled = false;
+                     return;
+                 }*/
             }
             catch (Exception ex)
             {
@@ -2161,7 +2169,7 @@ namespace MOMC_PROJECT
         {
             SaveDataToStructure();
         }
-      
+
         // view / hide table
         private void button7_Click(object sender, EventArgs e)
         {
@@ -2171,7 +2179,7 @@ namespace MOMC_PROJECT
                 {
                     panel10.Visible = false;
                     panel11.Visible = false;
-                  //  button16.Enabled = false;
+                    //  button16.Enabled = false;
                     string currentText = richTextBox3.Text;
 
                     // Split the text into lines
@@ -2218,7 +2226,7 @@ namespace MOMC_PROJECT
                     richTextBox3.Focus();
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
