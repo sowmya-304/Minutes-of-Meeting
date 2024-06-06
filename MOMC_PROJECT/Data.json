@@ -6,15 +6,15 @@
     "Meetings": [
       {
         "Name": "Project Kickoff Meeting",
-        "StartDateTime": "2024-05-20T09:00:00",
-        "EndDateTime": "2024-05-20T11:00:00",
+        "StartDateTime": "2024-05-20 09:00:00",
+        "EndDateTime": "2024-05-20 11:00:00",
         "AttendeeEmail": [ "304sowmya.yennam@gmail.com", "momcproject@gmail.com", "sowm141906@gmail.com" ],
         "AttendeeName": [ "sowmya", "MOMC", "Sow" ]
       },
       {
         "Name": "Weekly Status Meeting",
-        "StartDateTime": "2024-05-22T10:00:00",
-        "EndDateTime": "2024-05-22T11:00:00",
+        "StartDateTime": "2024-05-22 10:00:00",
+        "EndDateTime": "2024-05-22 11:00:00",
         "AttendeeEmail": [ "304sowmya.yennam@gmail.com", "momcproject@gmail.com" ],
         "AttendeeName": [ "sowmya", "MOMC" ]
       }
@@ -27,8 +27,8 @@
     "Meetings": [
       {
         "Name": "Team Sync Meeting",
-        "StartDateTime": "2024-05-21T14:00:00",
-        "EndDateTime": "2024-05-21T15:00:00",
+        "StartDateTime": "2024-05-21 14:00:00",
+        "EndDateTime": "2024-05-21 15:00:00",
         "AttendeeEmail": [ "304sowmya.yennam@gmail.com", "momcproject@gmail.com", "sowm141906@gmail.com" ],
         "AttendeeName": [ "sowmya", "momc", "Yennam" ]
       },
@@ -43,27 +43,13 @@
   },
   {
     "Id": "3",
-    "Email": "momcproject@gmail.com",
-    "PassKey": "vsdj tcpd uese nwah\r\n"
-    //"Meetings": [
-    //  {
-    //    "Name": "Client Presentation",
-    //    "StartDateTime": "2024-05-25T13:00:00",
-    //    "EndDateTime": "2024-05-25T15:00:00",
-    //    "AttendeeEmail": [ "19n81a0427@gmail.com", "sowm141906@gmail.com" ],
-    //    "AttendeeName": [ "Dheeraj", "Yennam" ]
-    //  }
-    //]
-  },
-  {
-    "Id": "4",
     "Email": "19n81a0427@gmail.com",
     "PassKey": "yhhv srcj xgay bhio\r\n",
     "Meetings": [
       {
         "Name": "Project Meeting",
-        "StartDateTime": "2024-05-21T14:00:00",
-        "EndDateTime": "2024-05-21T15:00:00",
+        "StartDateTime": "2024-05-21 14:00:00",
+        "EndDateTime": "2024-05-21 15:00:00",
         "AttendeeEmail": [ "304sowmya.yennam@gmail.com", "dheerajreddyramasani@gmail.com", "sowm141906@gmail.com" ],
         "AttendeeName": [ "sowmya", "Dheeraj", "Yennam" ]
       },
@@ -71,6 +57,27 @@
         "Name": "Client Presentation",
         "StartDateTime": "2024-05-25T13:00:00",
         "EndDateTime": "2024-05-25T15:00:00",
+        "AttendeeEmail": [ "304sowmya.yennam@gmail.com", "dheerajreddyramasani@gmail.com" ],
+        "AttendeeName": [ "Sowmya", "Dheeraj" ]
+      }
+    ]
+  },
+  {
+    "Id": "4",
+    "Email": "udaysaius9602@gmail.com",
+    "PassKey": "ohvi jlki hbes ukdb\r\n",
+    "Meetings": [
+      {
+        "Name": "Project Meeting",
+        "StartDateTime": "2024-05-21 14:00:00",
+        "EndDateTime": "2024-05-21 15:00:00",
+        "AttendeeEmail": [ "304sowmya.yennam@gmail.com", "dheerajreddyramasani@gmail.com", "sowm141906@gmail.com" ],
+        "AttendeeName": [ "sowmya", "Dheeraj", "Yennam" ]
+      },
+      {
+        "Name": "Client Presentation",
+        "StartDateTime": "2024-05-25 13:00:00",
+        "EndDateTime": "2024-05-25 15:00:00",
         "AttendeeEmail": [ "304sowmya.yennam@gmail.com", "dheerajreddyramasani@gmail.com" ],
         "AttendeeName": [ "Sowmya", "Dheeraj" ]
       }

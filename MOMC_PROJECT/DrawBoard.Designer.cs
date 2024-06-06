@@ -41,12 +41,11 @@
             btnNextSlide = new Button();
             panel2 = new Panel();
             panel6 = new Panel();
-            label4 = new Label();
-            ellipse = new Button();
-            Arrow = new Button();
-            rectangle = new Button();
-            Diamond = new Button();
             Line = new Button();
+            Diamond = new Button();
+            ellipse = new Button();
+            rectangle = new Button();
+            label4 = new Label();
             Closebutton = new Button();
             panel5 = new Panel();
             label2 = new Label();
@@ -229,85 +228,74 @@
             // 
             // panel6
             // 
-            panel6.BackColor = Color.White;
-            panel6.Controls.Add(label4);
-            panel6.Controls.Add(ellipse);
-            panel6.Controls.Add(Arrow);
-            panel6.Controls.Add(rectangle);
-            panel6.Controls.Add(Diamond);
+            panel6.BackColor = Color.Black;
             panel6.Controls.Add(Line);
+            panel6.Controls.Add(Diamond);
+            panel6.Controls.Add(ellipse);
+            panel6.Controls.Add(rectangle);
+            panel6.Controls.Add(label4);
             panel6.Font = new Font("Arial", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
             panel6.ForeColor = Color.White;
-            panel6.Location = new Point(213, 6);
+            panel6.Location = new Point(259, 6);
             panel6.Name = "panel6";
-            panel6.Size = new Size(299, 80);
+            panel6.Size = new Size(224, 80);
             panel6.TabIndex = 30;
             // 
-            // label4
+            // Line
             // 
-            label4.AutoSize = true;
-            label4.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
-            label4.ForeColor = Color.Black;
-            label4.Location = new Point(110, 56);
-            label4.Name = "label4";
-            label4.Size = new Size(60, 21);
-            label4.TabIndex = 19;
-            label4.Text = "Shapes";
+            Line.BackColor = Color.Transparent;
+            Line.Image = (Image)resources.GetObject("Line.Image");
+            Line.Location = new Point(171, 5);
+            Line.Name = "Line";
+            Line.Size = new Size(48, 54);
+            Line.TabIndex = 29;
+            Line.UseVisualStyleBackColor = false;
+            Line.Click += Line_Click;
+            // 
+            // Diamond
+            // 
+            Diamond.BackColor = Color.Transparent;
+            Diamond.Image = (Image)resources.GetObject("Diamond.Image");
+            Diamond.Location = new Point(116, 6);
+            Diamond.Name = "Diamond";
+            Diamond.Size = new Size(52, 53);
+            Diamond.TabIndex = 30;
+            Diamond.UseVisualStyleBackColor = false;
+            Diamond.Click += Diamond_Click;
             // 
             // ellipse
             // 
             ellipse.BackColor = Color.Transparent;
             ellipse.Image = (Image)resources.GetObject("ellipse.Image");
-            ellipse.Location = new Point(0, 1);
+            ellipse.Location = new Point(3, 5);
             ellipse.Name = "ellipse";
-            ellipse.Size = new Size(57, 55);
+            ellipse.Size = new Size(55, 54);
             ellipse.TabIndex = 27;
             ellipse.UseVisualStyleBackColor = false;
             ellipse.Click += ellipse_Click;
-            // 
-            // Arrow
-            // 
-            Arrow.BackColor = Color.Transparent;
-            Arrow.Image = (Image)resources.GetObject("Arrow.Image");
-            Arrow.Location = new Point(247, 5);
-            Arrow.Name = "Arrow";
-            Arrow.Size = new Size(48, 23);
-            Arrow.TabIndex = 31;
-            Arrow.UseVisualStyleBackColor = false;
-            Arrow.Click += Arrow_Click;
             // 
             // rectangle
             // 
             rectangle.BackColor = Color.Transparent;
             rectangle.Image = (Image)resources.GetObject("rectangle.Image");
-            rectangle.Location = new Point(68, 1);
+            rectangle.Location = new Point(61, 5);
             rectangle.Name = "rectangle";
             rectangle.Size = new Size(52, 54);
             rectangle.TabIndex = 28;
             rectangle.UseVisualStyleBackColor = false;
             rectangle.Click += rectangle_Click;
             // 
-            // Diamond
+            // label4
             // 
-            Diamond.BackColor = Color.Transparent;
-            Diamond.Image = (Image)resources.GetObject("Diamond.Image");
-            Diamond.Location = new Point(188, 1);
-            Diamond.Name = "Diamond";
-            Diamond.Size = new Size(52, 56);
-            Diamond.TabIndex = 30;
-            Diamond.UseVisualStyleBackColor = false;
-            Diamond.Click += Diamond_Click;
-            // 
-            // Line
-            // 
-            Line.BackColor = Color.Transparent;
-            Line.Image = (Image)resources.GetObject("Line.Image");
-            Line.Location = new Point(133, 2);
-            Line.Name = "Line";
-            Line.Size = new Size(48, 52);
-            Line.TabIndex = 29;
-            Line.UseVisualStyleBackColor = false;
-            Line.Click += Line_Click;
+            label4.AutoSize = true;
+            label4.BackColor = Color.Transparent;
+            label4.Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            label4.ForeColor = Color.White;
+            label4.Location = new Point(83, 58);
+            label4.Name = "label4";
+            label4.Size = new Size(60, 21);
+            label4.TabIndex = 19;
+            label4.Text = "Shapes";
             // 
             // Closebutton
             // 
@@ -393,9 +381,9 @@
             btnRemoveSlide.FlatAppearance.MouseOverBackColor = Color.FromArgb(255, 255, 128);
             btnRemoveSlide.Image = (Image)resources.GetObject("btnRemoveSlide.Image");
             btnRemoveSlide.ImageAlign = ContentAlignment.TopCenter;
-            btnRemoveSlide.Location = new Point(50, 4);
+            btnRemoveSlide.Location = new Point(67, 4);
             btnRemoveSlide.Name = "btnRemoveSlide";
-            btnRemoveSlide.Size = new Size(58, 80);
+            btnRemoveSlide.Size = new Size(61, 80);
             btnRemoveSlide.TabIndex = 2;
             btnRemoveSlide.Text = "Remove Slide";
             btnRemoveSlide.TextAlign = ContentAlignment.BottomCenter;
@@ -408,9 +396,9 @@
             btn_color.Cursor = Cursors.Hand;
             btn_color.Image = (Image)resources.GetObject("btn_color.Image");
             btn_color.ImageAlign = ContentAlignment.TopCenter;
-            btn_color.Location = new Point(109, 5);
+            btn_color.Location = new Point(131, 5);
             btn_color.Name = "btn_color";
-            btn_color.Size = new Size(50, 80);
+            btn_color.Size = new Size(63, 80);
             btn_color.TabIndex = 3;
             btn_color.Text = "Color";
             btn_color.TextAlign = ContentAlignment.BottomCenter;
@@ -426,7 +414,7 @@
             btnAddSlide.ImageAlign = ContentAlignment.TopCenter;
             btnAddSlide.Location = new Point(3, 4);
             btnAddSlide.Name = "btnAddSlide";
-            btnAddSlide.Size = new Size(47, 80);
+            btnAddSlide.Size = new Size(61, 80);
             btnAddSlide.TabIndex = 1;
             btnAddSlide.Text = "New Slide";
             btnAddSlide.TextAlign = ContentAlignment.BottomCenter;
@@ -509,9 +497,9 @@
             // pic_color
             // 
             pic_color.BackColor = Color.White;
-            pic_color.Location = new Point(518, 4);
+            pic_color.Location = new Point(489, 4);
             pic_color.Name = "pic_color";
-            pic_color.Size = new Size(107, 28);
+            pic_color.Size = new Size(136, 28);
             pic_color.TabIndex = 6;
             pic_color.UseVisualStyleBackColor = false;
             pic_color.Click += pic_color_Click;
@@ -520,9 +508,9 @@
             // 
             picbox_color_picker.Cursor = Cursors.Hand;
             picbox_color_picker.Image = Properties.Resources.color_palette;
-            picbox_color_picker.Location = new Point(518, 38);
+            picbox_color_picker.Location = new Point(489, 38);
             picbox_color_picker.Name = "picbox_color_picker";
-            picbox_color_picker.Size = new Size(107, 45);
+            picbox_color_picker.Size = new Size(136, 45);
             picbox_color_picker.SizeMode = PictureBoxSizeMode.StretchImage;
             picbox_color_picker.TabIndex = 5;
             picbox_color_picker.TabStop = false;
@@ -535,9 +523,9 @@
             btn_fill.Cursor = Cursors.Hand;
             btn_fill.Image = (Image)resources.GetObject("btn_fill.Image");
             btn_fill.ImageAlign = ContentAlignment.TopCenter;
-            btn_fill.Location = new Point(160, 5);
+            btn_fill.Location = new Point(196, 5);
             btn_fill.Name = "btn_fill";
-            btn_fill.Size = new Size(47, 80);
+            btn_fill.Size = new Size(58, 80);
             btn_fill.TabIndex = 4;
             btn_fill.Text = "Fill";
             btn_fill.TextAlign = ContentAlignment.BottomCenter;
@@ -658,14 +646,13 @@
         private Panel panel5;
         private Label label2;
         private Label label3;
-        private Panel panel4;
         private Button Closebutton;
-        private Button Arrow;
-        private Button rectangle;
-        private Button Line;
-        private Button ellipse;
         private Panel panel6;
-        private Label label4;
+        private Button Line;
         private Button Diamond;
+        private Button ellipse;
+        private Button rectangle;
+        private Label label4;
+        private Panel panel4;
     }
 }

@@ -10,11 +10,12 @@ using System.Diagnostics;
 using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Drawing.Drawing2D;
+using Microsoft.VisualBasic.ApplicationServices;
 namespace MOMC_PROJECT
 {
     public partial class DrawBoard : UserControl
     {
-
+        private AttachmentStore attachmentStore = new AttachmentStore();
         Bitmap bm;
         Graphics g;
         private Point px, py;
@@ -65,6 +66,22 @@ namespace MOMC_PROJECT
 
         private Stack<Bitmap> undoStack1 = new Stack<Bitmap>();
         private Stack<Bitmap> redoStack2 = new Stack<Bitmap>();
+
+
+        public class Slide
+        {
+            public string Name { get; set; }
+            public List<System.Drawing.Image> Images { get; set; } = new List<System.Drawing.Image>();
+            public List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>> Shapes { get; set; } = new List<Tuple<System.Drawing.Image, System.Drawing.Rectangle>>();
+
+            public Slide(string name)
+            {
+                Name = name;
+            }
+        }
+        private List<string> persistentAttachments = new List<string>();
+        public List<string> Attachments { get; set; }
+
 
         private enum DrawingMode
         {
@@ -328,21 +345,21 @@ namespace MOMC_PROJECT
 
                 g.DrawPolygon(pen, diamondPoints);
             }
-            if (index == 7) // Arrow button
-            {
-                // Draw arrow
-                using (GraphicsPath arrowPath = new GraphicsPath())
-                {
-                    // Define arrow shape
-                    arrowPath.AddLine(ShapeStartPoint, shapeEndPoint);
-                    pen.EndCap = System.Drawing.Drawing2D.LineCap.ArrowAnchor;
+            //if (index == 7) // Arrow button
+            //{
+            //    // Draw arrow
+            //    using (GraphicsPath arrowPath = new GraphicsPath())
+            //    {
+            //        // Define arrow shape
+            //        arrowPath.AddLine(ShapeStartPoint, shapeEndPoint);
+            //        pen.EndCap = System.Drawing.Drawing2D.LineCap.ArrowAnchor;
 
-                    // Draw arrow
-                    g.DrawPath(pen, arrowPath);
-                }
+            //        // Draw arrow
+            //        g.DrawPath(pen, arrowPath);
+            //    }
 
-            }
-                if (isImageDrawing && selectedImage != null)
+            //}
+            if (isImageDrawing && selectedImage != null)
             {
                 isImageDrawing = false;
                 images.Add(new Tuple<System.Drawing.Image, System.Drawing.Rectangle>(selectedImage, currentImageRect));
@@ -468,7 +485,7 @@ namespace MOMC_PROJECT
                 {
                     e.Graphics.DrawLine(Pens.Black, ShapeStartPoint, shapeEndPoint);
                 }
-                
+
             }
             Cursor cursor = Cursors.Default;
             SaveStateToUndoStack();
@@ -660,21 +677,37 @@ namespace MOMC_PROJECT
 
         private void btn_image_Click(object sender, EventArgs e)
         {
-            index = 0;
-            Cursor cursor = Cursors.Default;
             using (OpenFileDialog openFileDialog = new OpenFileDialog())
             {
                 openFileDialog.Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif";
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    selectedImage = System.Drawing.Image.FromFile(openFileDialog.FileName);
-                    isImageSelected = true;
-                    if (selectedImage != null)
+                    System.Drawing.Image selectedImage = System.Drawing.Image.FromFile(openFileDialog.FileName);
+                    if (selectedImage != null && currentSlideIndex >= 0 && currentSlideIndex < slides.Count)
                     {
-                        Cursor = CreateCursor(selectedImage);
+                        // Add the selected image to the current slide
+                        slides[currentSlideIndex].Images.Add(selectedImage);
+
+                        // Update the display to show the new image
+                        DisplayCurrentSlide();
                     }
                 }
             }
+            //index = 0;
+            //Cursor cursor = Cursors.Default;
+            //using (OpenFileDialog openFileDialog = new OpenFileDialog())
+            //{
+            //    openFileDialog.Filter = "Image Files|*.jpg;*.jpeg;*.png;*.bmp;*.gif";
+            //    if (openFileDialog.ShowDialog() == DialogResult.OK)
+            //    {
+            //        selectedImage = System.Drawing.Image.FromFile(openFileDialog.FileName);
+            //        isImageSelected = true;
+            //        if (selectedImage != null)
+            //        {
+            //            Cursor = CreateCursor(selectedImage);
+            //        }
+            //    }
+            //}
         }
         private Cursor CreateCursor(System.Drawing.Image iconImage)
         {
@@ -902,66 +935,51 @@ namespace MOMC_PROJECT
         private void btn_delete_Click(object sender, EventArgs e)
         {
 
-            //    if (selectionRectangle == System.Drawing.Rectangle.Empty)
-            //    {
-
-            //        List<int> itemsToRemove = new List<int>();
-
-            //        // Iterate over the list in reverse order to safely remove items
-            //        for (int i = itemsToRemove.Count - 1; i >= 0; i--)
-            //        {
-            //            images.RemoveAt(itemsToRemove[i]);
-            //        }
-
-            //        selectionRectangle = System.Drawing.Rectangle.Empty; // Clear the selection rectangle
-            //        pic.Invalidate(); // Refresh the PictureBox to update the display
-            //    }
-            //    isSelecting = false; // Disable selection mode
-
-            //}
             if (selectionRectangle != System.Drawing.Rectangle.Empty)
             {
-                if (selectionRectangle != System.Drawing.Rectangle.Empty)
+                using (Graphics g = Graphics.FromImage(bm))
                 {
-                    // Find the images intersecting with the selection area
-                    List<int> itemsToRemove = new List<int>();
-                    for (int i = 0; i < images.Count; i++)
-                    {
-                        // Access the rectangle directly from the tuple
-                        if (selectionRectangle.IntersectsWith(images[i].Item2))
-                        {
-                            itemsToRemove.Add(i);
-                        }
-                    }
-
-                    // Iterate over the list in reverse order to safely remove items
-                    for (int i = itemsToRemove.Count - 1; i >= 0; i--)
-                    {
-                        images.RemoveAt(itemsToRemove[i]);
-                    }
-
-                    // Clear the selection rectangle
-                    selectionRectangle = System.Drawing.Rectangle.Empty;
-
-                    // Refresh the PictureBox to update the display
-                    pic.Invalidate();
+                    g.FillRectangle(Brushes.White, selectionRectangle);
                 }
+                selectionRectangle = System.Drawing.Rectangle.Empty;
+                //if (selectionRectangle != System.Drawing.Rectangle.Empty)
+                //{
+                //    // Find the images intersecting with the selection area
+                //    List<int> itemsToRemove = new List<int>();
+                //    for (int i = 0; i < images.Count; i++)
+                //    {
+                //        // Access the rectangle directly from the tuple
+                //        if (selectionRectangle.IntersectsWith(images[i].Item2))
+                //        {
+                //            itemsToRemove.Add(i);
+                //        }
+                //    }
+
+                //    // Iterate over the list in reverse order to safely remove items
+                //    for (int i = itemsToRemove.Count - 1; i >= 0; i--)
+                //    {
+                //        images.RemoveAt(itemsToRemove[i]);
+                //    }
+
+                //    // Clear the selection rectangle
+                //    selectionRectangle = System.Drawing.Rectangle.Empty;
+
+                // Refresh the PictureBox to update the display
+                pic.Invalidate();
+                // }
 
                 // Disable selection mode
                 isSelecting = false;
             }
         }
-
         //public static List<String> attachments = new List<String>();
         //private List<Panel> buttonPanels = new List<Panel>();===
-        private List<string> attachments = new List<string>();
+        public static List<string> attachments = new List<string>();
         private List<Panel> buttonPanels = new List<Panel>();
         private int buttonHeight;
 
         private void btn_uplaod_Click(object sender, EventArgs e)
         {
-
-
             OpenFileDialog openFileDialog = new OpenFileDialog();
             openFileDialog.Multiselect = true;
             openFileDialog.Filter = "All Files (*.*)|*.*";
@@ -979,13 +997,9 @@ namespace MOMC_PROJECT
             if (mc != null)
             {
                 Panel panel5DW = mc.Panel5DW;
-
                 if (panel5DW != null)
                 {
-                    panel5DW.Controls.Clear();
-                    buttonPanels.Clear();
                     panel5DW.AutoScroll = true;
-
                     int buttonWidth = 200;
                     int buttonHeight = 50;
                     int fileButtonGap = 20;
@@ -1054,21 +1068,18 @@ namespace MOMC_PROJECT
                                 MessageBox.Show($"Error opening file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             }
                         };
-
                         panel5DW.Controls.Add(buttonPanel);
                         buttonPanels.Add(buttonPanel);
                         fileCount++;
                     }
                 }
-
-
                 panel1.Controls.Clear();
                 panel1.Dock = DockStyle.Fill;
                 panel1.BackColor = SystemColors.Control;
                 panel1.Controls.Add(mc);
             }
         }
-        private void AttachFilesToPanel2(string filePath)
+        public void AttachFilesToPanel2(string filePaths)
         {
             MeetingsInfo_ComposeEmail mc = new MeetingsInfo_ComposeEmail();
             if (mc != null)
@@ -1077,8 +1088,6 @@ namespace MOMC_PROJECT
 
                 if (panel5DW != null)
                 {
-                    panel5DW.Controls.Clear();
-                    buttonPanels.Clear();
                     panel5DW.AutoScroll = true;
 
                     int buttonWidth = 200;
@@ -1088,82 +1097,200 @@ namespace MOMC_PROJECT
                     int maxButtonsPerRow = (panel5DW.Width) / (buttonWidth + fileButtonGap);
                     int fileCount = 0;
 
-                    //  foreach (string filePath in filePath)
-                    // {
-                    attachments.Add(filePath);
-                    int rowIndex = fileCount / maxButtonsPerRow;
-                    int colIndex = fileCount % maxButtonsPerRow;
-                    int x = colIndex * (buttonWidth + fileButtonGap);
-                    int y = rowIndex * (buttonHeight + removeButtonGap);
+                    // Get all files in the directory specified by folderPath
+                    string[] filesInDirectory = System.IO.Directory.GetFiles("C:\\Users\\sowmyay\\Pictures\\Screenshots\\SelectedMeetingName");
 
-                    Panel buttonPanel = new Panel
+                    // Add each file path to the static AttachmentStore
+                    foreach (string filePath in filesInDirectory)
                     {
-                        Size = new Size(buttonWidth, buttonHeight),
-                        Location = new Point(x, y),
-                        BorderStyle = BorderStyle.FixedSingle
-                    };
+                       AttachmentStore.Attachments.Add(filePath);
+                    }
 
-                    PictureBox iconPictureBox = new PictureBox
+                    // Iterate over each file path in the list
+                    foreach (string filePath in attachments)
                     {
-                        Size = new Size(32, 32),
-                        Location = new Point(10, (buttonHeight - 32) / 2),
-                        Image = System.Drawing.Icon.ExtractAssociatedIcon(filePath).ToBitmap(),
-                        SizeMode = PictureBoxSizeMode.StretchImage
-                    };
-                    buttonPanel.Controls.Add(iconPictureBox);
+                        // Calculate position for the button panel
+                        int rowIndex = fileCount / maxButtonsPerRow;
+                        int colIndex = fileCount % maxButtonsPerRow;
+                        int x = colIndex * (buttonWidth + fileButtonGap);
+                        int y = rowIndex * (buttonHeight + removeButtonGap);
 
-                    Label fileInfoLabel = new Label
-                    {
-                        AutoSize = true,
-                        Location = new Point(iconPictureBox.Right + 10, (buttonHeight - 32) / 2),
-                        Text = $"{System.IO.Path.GetFileName(filePath)} ({new FileInfo(filePath).Length / 1024} KB)",
-                        MaximumSize = new Size(buttonWidth - (iconPictureBox.Right + 40), buttonHeight)
-                    };
-                    buttonPanel.Controls.Add(fileInfoLabel);
-
-                    System.Windows.Forms.Button removeButton = new System.Windows.Forms.Button
-                    {
-                        Text = "X",
-                        Size = new Size(20, 20),
-                        Location = new Point(buttonWidth - 30, (buttonHeight - 20) / 2)
-                    };
-                    removeButton.Click += (btnSender, btnE) =>
-                    {
-                        int indexToRemove = buttonPanels.IndexOf(buttonPanel);
-                        buttonPanels.RemoveAt(indexToRemove);
-                        panel5DW.Controls.Remove(buttonPanel);
-                        attachments.RemoveAt(indexToRemove);
-                        UpdateButtonPanelLocations(panel5DW, maxButtonsPerRow, buttonWidth, fileButtonGap, removeButtonGap);
-                        fileCount--;
-                    };
-                    buttonPanel.Controls.Add(removeButton);
-
-                    buttonPanel.Click += (panelSender, panelE) =>
-                    {
-                        try
+                        // Create and configure button panel
+                        Panel buttonPanel = new Panel
                         {
-                            Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show($"Error opening file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        }
-                    };
+                            Size = new Size(buttonWidth, buttonHeight),
+                            Location = new Point(x, y),
+                            BorderStyle = BorderStyle.FixedSingle
+                        };
 
-                    panel5DW.Controls.Add(buttonPanel);
-                    buttonPanels.Add(buttonPanel);
-                    fileCount++;
-                    //}
+                        // Add PictureBox, label, remove button, and event handlers to button panel
+                        PictureBox iconPictureBox = new PictureBox
+                        {
+                            Size = new Size(32, 32),
+                            Location = new Point(10, (buttonHeight - 32) / 2),
+                            Image = System.Drawing.Icon.ExtractAssociatedIcon(filePath).ToBitmap(),
+                            SizeMode = PictureBoxSizeMode.StretchImage
+                        };
+                        buttonPanel.Controls.Add(iconPictureBox);
+
+                        Label fileInfoLabel = new Label
+                        {
+                            AutoSize = true,
+                            Location = new Point(iconPictureBox.Right + 10, (buttonHeight - 32) / 2),
+                            Text = $"{System.IO.Path.GetFileName(filePath)} ({new FileInfo(filePath).Length / 1024} KB)",
+                            MaximumSize = new Size(buttonWidth - (iconPictureBox.Right + 40), buttonHeight)
+                        };
+                        buttonPanel.Controls.Add(fileInfoLabel);
+
+                        System.Windows.Forms.Button removeButton = new System.Windows.Forms.Button
+                        {
+                            Text = "X",
+                            Size = new Size(20, 20),
+                            Location = new Point(buttonWidth - 30, (buttonHeight - 20) / 2)
+                        };
+                        removeButton.Click += (btnSender, btnE) =>
+                        {
+                            int indexToRemove = buttonPanels.IndexOf(buttonPanel);
+                            buttonPanels.RemoveAt(indexToRemove);
+                            panel5DW.Controls.Remove(buttonPanel);
+                            AttachmentStore.Attachments.RemoveAt(indexToRemove);
+                            UpdateButtonPanelLocations(panel5DW, maxButtonsPerRow, buttonWidth, fileButtonGap, removeButtonGap);
+                            fileCount--;
+                        };
+                        buttonPanel.Controls.Add(removeButton);
+
+                        buttonPanel.Click += (panelSender, panelE) =>
+                        {
+                            try
+                            {
+                                Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show($"Error opening file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            }
+                        };
+                        panel5DW.Controls.Add(buttonPanel);
+                        buttonPanels.Add(buttonPanel);
+                        fileCount++;
+                    }
                 }
-                panel1.Controls.Clear();
-                panel1.Dock = DockStyle.Fill;
-                panel1.BackColor = SystemColors.Control;
-                panel1.Controls.Add(mc);
             }
+
+            //MeetingsInfo_ComposeEmail mc = new MeetingsInfo_ComposeEmail();
+            //if (mc != null)
+            //{
+            //    Panel panel5DW = mc.Panel5DW;
+
+            //    if (panel5DW != null)
+            //    {
+            //        panel5DW.AutoScroll = true;
+
+            //        int buttonWidth = 200;
+            //        int buttonHeight = 50;
+            //        int fileButtonGap = 20;
+            //        int removeButtonGap = 0;
+            //        int maxButtonsPerRow = (panel5DW.Width) / (buttonWidth + fileButtonGap);
+            //        int fileCount = 0;
+            //       //  attachments.Add(filePaths);
+            //        AttachmentStore.Attachments.Add(filePaths);
+            //        // Iterate over each file path in the list
+            //        foreach (string filePath in AttachmentStore.Attachments)
+            //            {
+            //            // Calculate position for the button panel
+            //            int rowIndex = fileCount / maxButtonsPerRow;
+            //            int colIndex = fileCount % maxButtonsPerRow;
+            //            int x = colIndex * (buttonWidth + fileButtonGap);
+            //            int y = rowIndex * (buttonHeight + removeButtonGap);
+            //            // Create and configure button panel
+            //            Panel buttonPanel = new Panel
+            //            {
+            //                Size = new Size(buttonWidth, buttonHeight),
+            //                Location = new Point(x, y),
+            //                BorderStyle = BorderStyle.FixedSingle
+            //            };
+
+            //            // Add PictureBox, label, remove button, and event handlers to button panel
+            //            PictureBox iconPictureBox = new PictureBox
+            //            {
+            //                Size = new Size(32, 32),
+            //                Location = new Point(10, (buttonHeight - 32) / 2),
+            //                Image = System.Drawing.Icon.ExtractAssociatedIcon(filePath).ToBitmap(),
+            //                SizeMode = PictureBoxSizeMode.StretchImage
+            //            };
+            //            buttonPanel.Controls.Add(iconPictureBox);
+
+            //            Label fileInfoLabel = new Label
+            //            {
+            //                AutoSize = true,
+            //                Location = new Point(iconPictureBox.Right + 10, (buttonHeight - 32) / 2),
+            //                Text = $"{System.IO.Path.GetFileName(filePath)} ({new FileInfo(filePath).Length / 1024} KB)",
+            //                MaximumSize = new Size(buttonWidth - (iconPictureBox.Right + 40), buttonHeight)
+            //            };
+            //            buttonPanel.Controls.Add(fileInfoLabel);
+
+            //            System.Windows.Forms.Button removeButton = new System.Windows.Forms.Button
+            //            {
+            //                Text = "X",
+            //                Size = new Size(20, 20),
+            //                Location = new Point(buttonWidth - 30, (buttonHeight - 20) / 2)
+            //            };
+            //            removeButton.Click += (btnSender, btnE) =>
+            //            {
+            //                int indexToRemove = buttonPanels.IndexOf(buttonPanel);
+            //                buttonPanels.RemoveAt(indexToRemove);
+            //                panel5DW.Controls.Remove(buttonPanel);
+            //                attachments.RemoveAt(indexToRemove);
+            //                UpdateButtonPanelLocations(panel5DW, maxButtonsPerRow, buttonWidth, fileButtonGap, removeButtonGap);
+            //                fileCount--;
+            //            };
+            //            buttonPanel.Controls.Add(removeButton);
+
+            //            buttonPanel.Click += (panelSender, panelE) =>
+            //            {
+            //                try
+            //                {
+            //                    Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
+            //                }
+            //                catch (Exception ex)
+            //                {
+            //                    MessageBox.Show($"Error opening file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            //                }
+            //            };
+            //            panel5DW.Controls.Add(buttonPanel);
+            //            buttonPanels.Add(buttonPanel);
+            //            fileCount++;
+            //        }
+            //    }
+            //    // Add mc to panel1
+            //   /* panel1.Controls.Clear();
+            //    panel1.Dock = DockStyle.Fill;
+            //    panel1.BackColor = SystemColors.Control;
+            //    panel1.Controls.Add(mc);*/
+            //}      
         }
+        //private void LoadAttachments()
+        //{
+        //    MeetingsInfo_ComposeEmail mc = new MeetingsInfo_ComposeEmail();
+        //    if (mc != null)
+        //    {
+        //        Panel panel5DW = mc.Panel5DW;
+        //        if (panel5DW != null)
+        //        {
+        //            panel5DW.Controls.Clear(); // Clear existing controls
+        //            buttonPanels.Clear(); // Clear buttonPanels list
 
+        //            // Loop through persistent attachments and attach them to panel5DW
+        //            foreach (string filePath in persistentAttachments)
+        //            {
+        //                AttachFilesToPanel2(filePath); // Pass panel5DW to AttachFilesToPanel2
+        //            }
+        //        }
 
-
+        //        Draw d = new Draw();
+        //        d.Close();
+        //    } 
+        //}
         private void UpdateButtonPanelLocations(Panel panel5DW, int maxButtonsPerRow, int buttonWidth, int fileButtonGap, int removeButtonGap)
         {
             for (int i = 0; i < buttonPanels.Count; i++)
@@ -1177,11 +1304,15 @@ namespace MOMC_PROJECT
         }
         private void btn_SaveClose_Click(object sender, EventArgs e)
         {
+            MeetingsInfo_ComposeEmail mc = new MeetingsInfo_ComposeEmail();
             using (SaveFileDialog saveFileDialog = new SaveFileDialog())
             {
                 // Set the file filter to allow saving as JPEG, JPG, or PNG
                 saveFileDialog.Filter = "JPEG Image|*.jpg|JPEG Image|*.jpeg|PNG Image|*.png";
-
+                Slide currentSlide = slides[currentSlideIndex];
+                string displayName = string.IsNullOrEmpty(currentSlide.Name) ? "Unnamed Slide" : currentSlide.Name;
+                // Set the initial file name in the save file dialog
+                saveFileDialog.FileName = displayName;
                 // Display the dialog and wait for the user's response
                 DialogResult result = saveFileDialog.ShowDialog();
 
@@ -1190,6 +1321,14 @@ namespace MOMC_PROJECT
                 {
                     // Get the selected filename
                     string fileName = saveFileDialog.FileName;
+
+                    // Use the selected meeting name as the new folder name
+                    string meetingName = "SelectedMeetingName"; // Replace with the actual selected meeting name
+                    string newFolderPath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(fileName), meetingName);
+                    if (!System.IO.Directory.Exists(newFolderPath))
+                    {
+                        System.IO.Directory.CreateDirectory(newFolderPath);
+                    }
 
                     // Create a new bitmap with the same size as the PictureBox
                     Bitmap combinedImage = new Bitmap(pic.Width, pic.Height);
@@ -1212,12 +1351,58 @@ namespace MOMC_PROJECT
                             g.DrawImage(shape.Item1, shape.Item2);
                         }
                     }
-
-                    // Save the combined image to the selected location
-                    combinedImage.Save(fileName);
-                    AttachFilesToPanel2(fileName);
+                    // Save the combined image to the new folder
+                    string newFilePath = System.IO.Path.Combine(newFolderPath, System.IO.Path.GetFileName(fileName));
+                    combinedImage.Save(newFilePath);
+                    AttachFilesToPanel2(newFilePath);
+                    MessageBox.Show("Saved and Uploaded successfully");
                 }
             }
+            //MeetingsInfo_ComposeEmail mc = new MeetingsInfo_ComposeEmail();
+            //using (SaveFileDialog saveFileDialog = new SaveFileDialog())
+            //{
+            //    // Set the file filter to allow saving as JPEG, JPG, or PNG
+            //    saveFileDialog.Filter = "JPEG Image|*.jpg|JPEG Image|*.jpeg|PNG Image|*.png";
+            //    Slide currentSlide = slides[currentSlideIndex];
+            //    string displayName = string.IsNullOrEmpty(currentSlide.Name) ? "Unnamed Slide" : currentSlide.Name;
+            //    // Set the initial file name in the save file dialog
+            //    saveFileDialog.FileName = displayName;
+            //    // Display the dialog and wait for the user's response
+            //    DialogResult result = saveFileDialog.ShowDialog();
+
+            //    // If the user clicks "Save"
+            //    if (result == DialogResult.OK)
+            //    {
+            //        // Get the selected filename
+            //        string fileName = saveFileDialog.FileName;
+
+            //        // Create a new bitmap with the same size as the PictureBox
+            //        Bitmap combinedImage = new Bitmap(pic.Width, pic.Height);
+
+            //        // Get the graphics object of the combined image
+            //        using (Graphics g = Graphics.FromImage(combinedImage))
+            //        {
+            //            // Draw the background image from the PictureBox
+            //            g.DrawImage(pic.Image, Point.Empty);
+
+            //            // Draw the images stored in the list
+            //            foreach (var imageRect in images)
+            //            {
+            //                g.DrawImage(imageRect.Item1, imageRect.Item2);
+            //            }
+
+            //            // Draw the shapes/icons on top of the background image
+            //            foreach (var shape in shapes)
+            //            {
+            //                g.DrawImage(shape.Item1, shape.Item2);
+            //            }
+            //        }
+            //        // Save the combined image to the selected location
+            //        combinedImage.Save(fileName);
+            //        AttachFilesToPanel2(fileName );
+            //        MessageBox.Show("Saved and Uploaded successfully");
+            //    }
+            //}
         }
 
         private void btnAddSlide_Click(object sender, EventArgs e)
@@ -1297,6 +1482,39 @@ namespace MOMC_PROJECT
         }
         private void DisplayCurrentSlide()
         {
+            //if (currentSlideIndex >= 0 && currentSlideIndex < slides.Count)
+            //{
+            //    var currentSlide = slides[currentSlideIndex];
+
+            //    // Create a new bitmap to draw on
+            //   // Bitmap slideBitmap = new Bitmap(pic.Width, pic.Height);
+            //    g.Clear(Color.White);
+
+            //    using (Graphics g = Graphics.FromImage(slideBitmap))
+            //    {
+            //        // Draw the images stored in the current slide
+            //        foreach (var image in currentSlide.Images)
+            //        {
+            //            // For simplicity, draw images at the top-left corner. Adjust as needed.
+            //            g.DrawImage(image, 0, 0);
+            //        }
+
+            //        // Draw the shapes stored in the current slide
+            //        foreach (var shape in currentSlide.Shapes)
+            //        {
+            //            g.DrawImage(shape.Item1, shape.Item2);
+            //        }
+            //    }
+
+            //    // Set the PictureBox image to the combined image
+            //    pic.Image = bm;
+            //    pic.Invalidate(); // Refresh the PictureBox to show the updated content
+            //}
+            //else
+            //{
+            //    g.Clear(Color.White);
+            //    pic.Image = bm;
+            //}
             if (currentSlideIndex >= 0 && slides.Count > 0)
             {
                 var slide = slides[currentSlideIndex];
@@ -1563,8 +1781,6 @@ namespace MOMC_PROJECT
         {
 
         }
-
-
         public void btn_undo_Click(object sender, EventArgs e)
         {
             Undo();
@@ -1617,18 +1833,31 @@ namespace MOMC_PROJECT
 
         private void Closebutton_Click(object sender, EventArgs e)
         {
-            //DialogResult result = MessageBox.Show("Are you sure you want to close the page?", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             DialogResult result = MessageBox.Show("Are you sure you want to close the page?", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
-            // If the user clicks "Yes", close the form
             if (result == DialogResult.Yes)
             {
-                panel1.Controls.Clear();
-                MeetingsInfo_ComposeEmail meetingsInfo_ComposeEmail = new MeetingsInfo_ComposeEmail();
-                panel1.Dock = DockStyle.Fill;
-                panel1.BackColor = SystemColors.Control;
-                panel1.Controls.Add(meetingsInfo_ComposeEmail);
+              //  MeetingsInfo_ComposeEmail m = new MeetingsInfo_ComposeEmail();
+                //panel1.Controls.Clear();
+               // panel1.Visible = false;
+                //LoadAttachments();
             }
+            //MeetingsInfo_ComposeEmail mc = new MeetingsInfo_ComposeEmail();
+            //if (mc != null)
+            //{
+
+            //    //DialogResult result = MessageBox.Show("Are you sure you want to close the page?", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            //    DialogResult result = MessageBox.Show("Are you sure you want to close the page?", "Confirmation", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            //    // If the user clicks "Yes", close the form
+            //    if (result == DialogResult.Yes)
+            //    {
+
+            //        panel1.Controls.Clear();
+            //        MeetingsInfo_ComposeEmail meetingsInfo_ComposeEmail = new MeetingsInfo_ComposeEmail();
+            //        panel1.Dock = DockStyle.Fill;
+            //        panel1.BackColor = SystemColors.Control;
+            //        panel1.Controls.Add(meetingsInfo_ComposeEmail);
+
+            //    }
 
 
         }
@@ -1674,7 +1903,7 @@ namespace MOMC_PROJECT
 
         private void Arrow_Click(object sender, EventArgs e)
         {
-            index= 7;
+           // index= 7;
         }
     }
 }

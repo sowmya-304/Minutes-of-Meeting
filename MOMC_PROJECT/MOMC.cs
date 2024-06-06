@@ -105,7 +105,7 @@ namespace MOMC_PROJECT
             {
                 await smtpClient.SendMailAsync(mailMessage); // Send mail asynchronously
                 DisplayLabelText("OTP sent successfully!", 8000, Color.Green, label8);
-                label7.Text = $"We have sent an OTP to your entered email - {fromEmail}";
+                label7.Text = $"We have sent an OTP to your entered email - {toEmail}";
                 System.Windows.Forms.Timer navigationTimer = new System.Windows.Forms.Timer();
                 navigationTimer.Interval = 500;
                 navigationTimer.Tick += (timerSender, timerArgs) =>
@@ -241,7 +241,7 @@ namespace MOMC_PROJECT
             {
                 await smtpClient.SendMailAsync(mailMessage); // Send mail asynchronously
                 DisplayLabelText("OTP sent successfully!", 8000, Color.Green, label9);
-                label7.Text = $"We have sent an OTP to your -{fromEmail} ";
+                label7.Text = $"We have sent an OTP to your -{toEmail} ";
                 System.Windows.Forms.Timer navigationTimer = new System.Windows.Forms.Timer();
                 navigationTimer.Interval = 500;
                 navigationTimer.Tick += (timerSender, timerArgs) =>

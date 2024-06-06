@@ -1,10 +1,13 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.ComponentModel;
 using System.Data;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Mail;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Windows.Forms;
 using static MOMC_PROJECT.MOM_Prop;
 
 namespace MOMC_PROJECT
@@ -15,8 +18,11 @@ namespace MOMC_PROJECT
         {
             get { return panel5DW; }
         }
+
         private List<MeetingData> meetingDataList;
         public static List<string> attachments;
+        public List<string> Attachments { get; set; }
+
         public static string selected_meeting_name = "";
         private ComboBox comboBox1;
         private ComboBox comboBox3;
@@ -36,6 +42,7 @@ namespace MOMC_PROJECT
             AttachMouseDownEventHandler(this);
             InitializeBulletButtons();
             IntializeTableLayoutPanel();
+
         }
         private void InitializeBulletButtons()
         {
@@ -239,7 +246,6 @@ namespace MOMC_PROJECT
                         }
                     }
                 }
-
                 // Store the current bullet character as the previous bullet character
                 previousBullet = bulletChar;
 
@@ -253,8 +259,6 @@ namespace MOMC_PROJECT
                 Console.WriteLine(ex.Message);
             }
         }
-
-
         private void InitializeDataGridView()
         {
             try
@@ -272,6 +276,7 @@ namespace MOMC_PROJECT
                 dataGridView1.AllowUserToDeleteRows = true;
                 dataGridView1.AllowUserToOrderColumns = false;
                 dataGridView1.MultiSelect = false;
+                dataGridView1.AllowUserToAddRows = false;
                 dataGridView1.EditMode = DataGridViewEditMode.EditOnKeystrokeOrF2;
                 panel10.Controls.Add(dataGridView1);
                 // Create columns
@@ -326,10 +331,26 @@ namespace MOMC_PROJECT
         {
             try
             {
-                panel1.Controls.Clear();
-                DrawBoard db = new DrawBoard();
-                panel1.Dock = DockStyle.Fill;
-                panel1.Controls.Add(db);
+
+                this.Enabled = false;
+                Draw d = new Draw();
+                DrawBoard drawBoard = new DrawBoard();
+                d.ShowDialog();
+                this.Enabled = true;
+                if (this.Enabled = true)
+                {
+                    string[] filesInDirectory = System.IO.Directory.GetFiles("C:\\Users\\sowmyay\\Pictures\\Screenshots\\SelectedMeetingName");
+
+                    // Add each file path to the static AttachmentStore
+                    foreach (string filePath in AttachmentStore.Attachments)
+                    {
+                        drawBoard.AttachFilesToPanel2(filePath);
+                    }
+                }
+                //  panel13.Controls.Clear();
+                // DrawBoard db = new DrawBoard();
+                /* panel13.Dock = DockStyle.Fill;
+                 panel13.Controls.Add(db);*/
             }
             catch (Exception ex)
             {
@@ -338,41 +359,56 @@ namespace MOMC_PROJECT
         }
         private void cb_emailmeetings_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string selectedMeetingName = cb_emailmeetings.SelectedItem.ToString();
-
-            if (selectedMeetingName != null && meetingDataList != null)
+            try
             {
-                var selectedMeeting = meetingDataList.SelectMany(md => md.Meetings).FirstOrDefault(m => m.Name == selectedMeetingName);
-                if (selectedMeeting != null)
+                button3.Enabled = true;
+                btn_sendmail.Enabled = true;
+                string selectedMeetingName = cb_emailmeetings.SelectedItem.ToString();
+
+                if (selectedMeetingName != null && meetingDataList != null)
                 {
-                    textBox1.Text = selectedMeetingName;
-                    textBox2.Text = selectedMeeting.StartDateTime.ToString();
-                    textBox3.Text = selectedMeeting.EndDateTime.ToString();
-                    textBox4.Text = (selectedMeeting.EndDateTime - selectedMeeting.StartDateTime).ToString();
-                    textBox5.Text = MOMC.toEmail;
-                    richTextBox1.Text = null;
-                    foreach (var attendeeEmail in selectedMeeting.AttendeeEmail)
+                    var selectedMeeting = meetingDataList.SelectMany(md => md.Meetings).FirstOrDefault(m => m.Name == selectedMeetingName);
+                    if (selectedMeeting != null)
                     {
-                        richTextBox1.Text += attendeeEmail + Environment.NewLine;
+                        textBox1.Text = selectedMeetingName;
+                        textBox2.Text = selectedMeeting.StartDateTime.ToString();
+                        textBox3.Text = selectedMeeting.EndDateTime.ToString();
+                        textBox4.Text = (selectedMeeting.EndDateTime - selectedMeeting.StartDateTime).ToString();
+                        textBox5.Text = MOMC.toEmail;
+                        richTextBox1.Text = null;
+                        foreach (var attendeeEmail in selectedMeeting.AttendeeEmail)
+                        {
+                            richTextBox1.Text += attendeeEmail + Environment.NewLine;
+                        }
+                        richTextBox2.Text = $"Minutes of Meeting: {textBox1.Text} - {textBox3.Text}" + "\n";
+                        richTextBox3.Text = $"Minutes of Meeting Mail: {textBox1.Text} " + "\n" +
+                                            $"Meeting Start Time: {textBox2.Text}" + "\n" +
+                                            $"Meeting End Time: {textBox3.Text}" + "\n" +
+                                            $"Meeting Duration: {selectedMeeting.EndDateTime - selectedMeeting.StartDateTime}" + "\n";
+                        clb_attendees.Items.Clear();
+                        foreach (var attendee in selectedMeeting.AttendeeEmail)
+                        {
+                            clb_attendees.Items.Add(attendee, true);
+                        }
+                        panel4.Controls.Clear();
+                        //    int selectedIndex = cb_emailmeetings.SelectedIndex;
+                        // loadDescription();
+                        undoStack.Clear();
+                        redoStack.Clear();
                     }
-                    richTextBox2.Text = $"Minutes of Meeting: {textBox1.Text} - {textBox3.Text}";
-                    richTextBox3.Text = $"Minutes of Meeting Mail: {textBox1.Text} " +
-                                        $"Meeting Start Time: {textBox2.Text}" +
-                                        $"Meeting End Time: {textBox3.Text}" +
-                                        $"Meeting Duration: {selectedMeeting.EndDateTime - selectedMeeting.StartDateTime}";
-                    clb_attendees.Items.Clear();
-                    foreach (var attendee in selectedMeeting.AttendeeEmail)
+                    string s = cb_emailmeetings.Text;
+                    if (s != null)
                     {
-                        clb_attendees.Items.Add(attendee, true);
+                        LoadDataFromStructure(s);
                     }
-                    panel4.Controls.Clear();
-                    //    int selectedIndex = cb_emailmeetings.SelectedIndex;
-                    // loadDescription();
                 }
             }
+            catch (Exception ex)
+            {
+                Console.Write(ex.Message);
+            }
             //   SaveDataToStructure();
-            string s = cb_emailmeetings.Text;
-            LoadDataFromStructure(s);
+
         }
         public void loadDescription()
         {
@@ -387,8 +423,69 @@ namespace MOMC_PROJECT
             }
         }
         // 
+
+        private void clb_attendees_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            // Only proceed if trying to uncheck an item
+            if (e.NewValue == CheckState.Unchecked)
+            {
+                // Check if at least one item is checked, excluding the item being unchecked
+                int checkedItemsCount = clb_attendees.CheckedItems.Count;
+
+                // Include the current item being unchecked in the count if it's already checked
+                if (clb_attendees.GetItemCheckState(e.Index) == CheckState.Checked)
+                {
+                    checkedItemsCount--;
+                }
+
+                if (checkedItemsCount <= 0) // This means no items will be checked after unchecking this one
+                {
+                    label17.Visible = true;
+                    label17.Text = "At least one item should be checked";
+                    label17.ForeColor = Color.Red;
+
+                    // Start the timer to hide the label after 8 seconds
+                    hideLabelTimer.Start();
+
+                    e.NewValue = CheckState.Checked; // Cancel the uncheck action
+                }
+            }
+        }
+        private void HideLabelTimer_Tick(object sender, EventArgs e)
+        {
+            // Hide the label and stop the timer
+            label17.Visible = false;
+            hideLabelTimer.Stop();
+        }
         private void clb_attendees_SelectedIndexChanged(object sender, EventArgs e)
         {
+            //try
+            //{
+            //    string selectedMeetingName = cb_emailmeetings.SelectedItem?.ToString();
+
+            //    if (selectedMeetingName != null && meetingDataList != null)
+            //    {
+            //        var selectedMeeting = meetingDataList
+            //            .SelectMany(md => md.Meetings)
+            //            .FirstOrDefault(m => m.Name == selectedMeetingName);
+
+            //        if (selectedMeeting != null)
+            //        {
+            //            richTextBox1.Clear(); // Clear existing content
+
+            //            // Iterate through all items in the checked list box
+            //            foreach (var itemIndex in clb_attendees.CheckedIndices)
+            //            {
+            //                int index = (int)itemIndex;
+            //                richTextBox1.AppendText(selectedMeeting.AttendeeEmail[index] + Environment.NewLine);
+            //            }
+            //        }
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    Console.WriteLine(ex.Message);
+            //}
             try
             {
                 string selectedMeetingName = cb_emailmeetings.SelectedItem?.ToString();
@@ -417,6 +514,11 @@ namespace MOMC_PROJECT
                 Console.WriteLine(ex.Message);
             }
         }
+        private string RemoveSpecialCharacters(string str)
+        {
+            // Replace special characters with empty string
+            return Regex.Replace(str, @"[^\w\.@-]", "");
+        }
         private void btn_sendmail_Click(object sender, EventArgs e)
         {
             try
@@ -424,74 +526,148 @@ namespace MOMC_PROJECT
                 label13.Visible = true;
                 label13.Text = "Sending...";
                 label13.Refresh();
-                MailMessage message = new MailMessage();
-                SmtpClient smtpClient = new SmtpClient("smtp.gmail.com", 587);
-                string senderEmail = MOMC.toEmail;
-                string senderPassword = "tkki grgd aapo uavx\r\n";
-                message.From = new MailAddress(senderEmail);
-                // Add all email addresses from richTextBox1 to the To list of the email
-                foreach (string email in richTextBox1.Lines)
-                {
-                    if (!string.IsNullOrWhiteSpace(email))
-                    {
-                        message.To.Add(email);
-                    }
-                }
-                message.Subject = richTextBox2.Text;
-                //message.Body = richTextBox3.Text;
-                StringBuilder body = new StringBuilder();
-                // Convert DataGridView content to HTML table
-                if (dataGridView1 != null)
-                {
-                    body.AppendLine("<table border='1'>");
-                    // Add table headers
-                    body.AppendLine("<tr>");
-                    foreach (DataGridViewColumn column in dataGridView1.Columns)
-                    {
-                        body.AppendLine("<th>" + column.HeaderText + "</th>");
-                    }
-                    body.AppendLine("</tr>");
-                    // Add table rows
-                    foreach (DataGridViewRow row in dataGridView1.Rows)
-                    {
-                        body.AppendLine("<tr>");
-                        foreach (DataGridViewCell cell in row.Cells)
-                        {
-                            /* if (row.Cells[1].Value ! = null)
-                             {
-                                 body.AppendLine("<td>" + cell.Value.ToString() + "</td>");
-                             }*/
-                            body.AppendLine("<td>" + cell.Value.ToString() + "</td>");
 
-                        }
-                        body.AppendLine("</tr>");
-                    }
-                    body.AppendLine("</table>");
-                }
-                // Append the content of richTextBox3 to the body
-                body.AppendLine(richTextBox3.Rtf);
-                message.Body = body.ToString();
-                // Attach files
-                foreach (string filePath in attachments)
+                // Load JSON data from file
+                string jsonFilePath = "D:\\UI\\Minutes of Meeting\\MOMC_PROJECT\\Data.json";
+                string jsonText = File.ReadAllText(jsonFilePath);
+                JArray data = JArray.Parse(jsonText);
+                Console.WriteLine(data.ToString());
+                // Get sender's email
+                string senderEmail = MOMC.toEmail;
+
+                // Find sender's password based on email
+                string senderPassword = GetSenderPassword(data, senderEmail);
+
+                // Proceed only if sender password is found
+                if (!string.IsNullOrEmpty(senderPassword))
                 {
-                    if (File.Exists(filePath))
+                    MailMessage message = new MailMessage();
+                    message.IsBodyHtml = true;
+
+                    SmtpClient smtpClient = new SmtpClient("smtp.gmail.com", 587);
+                    message.From = new MailAddress(senderEmail);
+
+                    // Add recipients from richTextBox1
+                    foreach (string email in richTextBox1.Lines)
                     {
-                        message.Attachments.Add(new Attachment(filePath));
+                        if (!string.IsNullOrWhiteSpace(email))
+                        {
+                            message.To.Add(email);
+                        }
                     }
+                    // message.Subject = richTextBox2.Text;
+                    string subject = richTextBox2.Text;
+                    // Remove any special characters or restrict the length if necessary
+                    subject = RemoveSpecialCharacters(subject);
+                    subject = subject.Substring(0, Math.Min(subject.Length, 255)); // Example: Limit subject length to 255 characters
+                    message.Subject = subject;
+
+                    StringBuilder body = new StringBuilder();
+                    // Convert DataGridView content to HTML table
+
+                    if (dataGridView1 != null)
+                    {
+                        body.AppendLine("<table border='1'>");
+                        foreach (DataGridViewRow row in dataGridView1.Rows)
+                        {
+                            body.AppendLine("<tr>");
+                            int cellCount = row.Cells.Count;
+                            for (int i = 0; i < cellCount; i++) // Iterate until the second-to-last cell
+                            {
+                                DataGridViewCell cell = row.Cells[i];
+                                if (cell.Value != null && !string.IsNullOrEmpty(cell.Value.ToString())) // Check if the cell value is not null or empty
+                                {
+                                    body.AppendLine("<td>" + cell.Value.ToString() + "</td>");
+                                }
+                                else
+                                {
+                                    label13.Text = "Please fill in all cells in table before sending the email.";
+                                    label13.ForeColor = Color.Red;
+                                    //  MessageBox.Show("One or more cells contain empty values. Please fill in all cells before sending the email.");
+                                    return; // Return from the method if an empty cell is found
+                                }
+                            }
+
+                            body.AppendLine("</tr>");
+                        }
+
+                        body.AppendLine("</table>");
+                    }
+                    // Append the content of richTextBox3 to the body
+                    // Append the content of richTextBox3 to the body
+                    string rtfText = richTextBox3.Rtf;
+                    string plainText = ConvertRtfToPlainText(rtfText);
+                    body.AppendLine(plainText);
+
+                    //body.AppendLine(richTextBox3.Rtf);
+                    message.Body = body.ToString();
+
+                    // Attach files
+                    if (attachments != null)
+                    {
+                        foreach (string filePath in attachments)
+                        {
+                            if (File.Exists(filePath))
+                            {
+                                message.Attachments.Add(new Attachment(filePath));
+                            }
+                        }
+                    }
+                    if (AttachmentStore.Attachments != null)
+                    {
+                        foreach (string f in AttachmentStore.Attachments)
+                        {
+                            if (File.Exists(f))
+                            {
+                                message.Attachments.Add(new Attachment(f));
+                            }
+                        }
+                    }
+                    smtpClient.EnableSsl = true;
+                    smtpClient.UseDefaultCredentials = false;
+                    smtpClient.Credentials = new NetworkCredential(senderEmail, senderPassword);
+                    smtpClient.Send(message);
+                    label13.Text = "Sent";
+                    label13.ForeColor = Color.Green;
                 }
-                smtpClient.EnableSsl = true;
-                smtpClient.UseDefaultCredentials = false;
-                smtpClient.Credentials = new NetworkCredential(senderEmail, senderPassword);
-                smtpClient.Send(message);
-                label13.Text = "Sent";
-                label13.ForeColor = Color.Green;
+                else
+                {
+                    label13.Text = "Failed to send email. Sender password not found.";
+                    label13.ForeColor = Color.Red;
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.StackTrace + ex.Message);
-                label13.Text = "Failed to send email.Check Your Internet Connection";
-                label13.ForeColor= Color.Red;
+                label13.Text = "Failed to send email. Check your Internet Connection.";
+                label13.ForeColor = Color.Red;
             }
+        }
+        public static string ConvertRtfToPlainText(string rtfText)
+        {
+            if (string.IsNullOrEmpty(rtfText))
+                return string.Empty;
+
+            using (System.Windows.Forms.RichTextBox rtBox = new System.Windows.Forms.RichTextBox())
+            {
+                rtBox.Rtf = rtfText;
+                return rtBox.Text;
+            }
+        }
+
+        private string GetSenderPassword(JArray data, string senderEmail)
+        {
+            foreach (JObject obj in data)
+            {
+                if (obj["Email"].ToString() == senderEmail)
+                {
+                    return obj["PassKey"].ToString().Trim();
+                }
+            }
+            //  Console.WriteLine("Sender Email: " + senderEmail);
+            // Console.WriteLine("JSON Data: " + data.ToString());
+
+            return null;
         }
         private void btn_mail_format_Click(object sender, EventArgs e)
         {
@@ -1505,22 +1681,31 @@ namespace MOMC_PROJECT
         {
 
         }
+        private System.Windows.Forms.Timer hideLabelTimer;
 
         private void MeetingsInfo_ComposeEmail_Load_2(object sender, EventArgs e)
         {
             try
             {
+                //  panel13.Visible = false;
+                button3.Enabled = false;
+                btn_sendmail.Enabled = false;
                 panel10.Visible = false;
                 panel11.Visible = false;
                 label13.Visible = false;
                 panel5.Visible = false;
                 button7.Visible = false;
                 label15.Visible = false;
+                label17.Visible = false;
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
+            // Initialize the timer
+            hideLabelTimer = new System.Windows.Forms.Timer();
+            hideLabelTimer.Interval = 5000; // 8000 milliseconds = 8 seconds
+            hideLabelTimer.Tick += HideLabelTimer_Tick;
         }
 
         private void contextMenuStrip1_Opening(object sender, CancelEventArgs e)
@@ -1607,12 +1792,18 @@ namespace MOMC_PROJECT
                         break; // Stop removing lines if a non-empty line is encountered
                     }
                 }
-
                 // Join the remaining lines back into a single string
                 string newText = string.Join("\n", lines.Where(line => line != null));
-
                 // Set the new text as the text of RichTextBox3
                 richTextBox3.Text = newText;
+                undoStack.Clear();
+                redoStack.Clear();
+                dataGridViewData.Clear();
+                string s = cb_emailmeetings.Text;
+                if (s != null)
+                {
+                    SaveDataToStructure();
+                }
             }
             catch (Exception ex)
             {
@@ -1634,12 +1825,14 @@ namespace MOMC_PROJECT
         {
             try
             {
+                dataGridView1.AllowUserToAddRows = true;
                 // Insert a new row above the selected row
                 if (dataGridView1.SelectedCells.Count > 0)
                 {
                     int rowIndex = dataGridView1.SelectedCells[0].RowIndex;
                     dataGridView1.Rows.Insert(rowIndex, 1);
                 }
+                dataGridView1.AllowUserToAddRows = false;
             }
             catch (Exception ex)
             {
@@ -1651,6 +1844,7 @@ namespace MOMC_PROJECT
         {
             try
             {
+                dataGridView1.AllowUserToAddRows = true;
                 // Check if the last row is an uncommitted new row
                 if (dataGridView1.AllowUserToAddRows && dataGridView1.NewRowIndex != -1)
                 {
@@ -1676,6 +1870,7 @@ namespace MOMC_PROJECT
                         dataGridView1.Rows.Insert(rowIndex + 1, 1);
                     }
                 }
+                dataGridView1.AllowUserToAddRows = false;
             }
             catch (Exception ex)
             {
@@ -1724,39 +1919,7 @@ namespace MOMC_PROJECT
         }
         private void richTextBox3_KeyPress(object sender, KeyPressEventArgs e)
         {
-            /*  try
-              {
-                  if (e.KeyChar == (char)Keys.Enter)
-                  {
-                      // Get the current line index
-                      int selectionStart = richTextBox3.SelectionStart;
-                      int lineIndex = richTextBox3.GetLineFromCharIndex(selectionStart);
-                      // Check if the line index is valid
-                      if (lineIndex >= 0 && lineIndex < richTextBox3.Lines.Length)
-                      {
-                          int lineStart = richTextBox3.GetFirstCharIndexFromLine(lineIndex);
-                          int lineLength = richTextBox3.Lines[lineIndex].Length;
-                          // Get the previous line text
-                          string previousLineText = "";
-                          if (lineIndex > 0)
-                          {
-                              previousLineText = richTextBox3.Lines[lineIndex - 1];
-                          }
-                          // Check if the previous line already has a bullet point
-                          if (previousLineText.TrimStart().StartsWith(previousBullet))
-                          {
-                              // Insert the bullet point at the beginning of the new line
-                              richTextBox3.Select(lineStart, 0);
-                              richTextBox3.SelectionFont = new Font(richTextBox3.Font.FontFamily, richTextBox3.Font.Size); // Set font size for bullet point
-                              richTextBox3.SelectedText = previousBullet + " ";
-                          }
-                      }
-                  }
-              }
-              catch (Exception ex)
-              {
-                  Console.WriteLine(ex.Message);
-              }*/
+
             try
             {
                 if (e.KeyChar == (char)Keys.Enter)
@@ -1774,7 +1937,6 @@ namespace MOMC_PROJECT
                         {
                             previousLineText = richTextBox3.Lines[lineIndex - 1];
                         }
-
                         // Check if the previous line already has a bullet point
                         if (previousLineText.TrimStart().StartsWith(previousBullet))
                         {
@@ -1782,12 +1944,13 @@ namespace MOMC_PROJECT
                             richTextBox3.Select(lineStart, 0);
                             richTextBox3.SelectionFont = new Font(richTextBox3.Font.FontFamily, richTextBox3.Font.Size); // Set font size for bullet point
                             richTextBox3.SelectedText = previousBullet + " ";
+                            richTextBox3.SelectionStart = lineStart + previousBullet.Length + 1; // +1 for the space after the bullet point
+                            richTextBox3.SelectionLength = 0;
                         }
                     }
                     // Additional validation to remove bullet point if only bullet point exists in the line
                     if (lineIndex >= 0 && lineIndex < richTextBox3.Lines.Length)
                     {
-
                         string currentLineText = richTextBox3.Lines[lineIndex];
 
                         // Check if the line contains only the bullet point and no other text
@@ -1808,7 +1971,6 @@ namespace MOMC_PROJECT
                 Console.WriteLine(ex.Message);
             }
         }
-
         private void richTextBox3_KeyDown(object sender, KeyEventArgs e)
         {
             try
@@ -1874,19 +2036,53 @@ namespace MOMC_PROJECT
                         return;
                     }
                 }
-                /* else
-                 {
-                     e.Handled = false;
-                     return;
-                 }*/
+                if (e.KeyCode == Keys.Tab)
+                {
+                    return;
+                }
+                /*  if (e.Control && e.KeyCode == Keys.A)
+                  {
+                      e.SuppressKeyPress = true; // Suppress the default Ctrl+A behavior
+
+                      // Save the current selection
+                      int selectionStart = richTextBox3.SelectionStart;
+                      int selectionLength = richTextBox3.SelectionLength;
+
+                      // Select all text in the RichTextBox
+                      richTextBox3.SelectAll();
+
+                      // Get the selected text
+                      string selectedText = richTextBox3.SelectedText;
+
+                      // Filter out bullet points
+                      string filteredText = FilterText(selectedText);
+
+                      // Restore the original selection
+                      richTextBox3.Select(selectionStart, selectionLength);
+
+                      // Copy the filtered text to the clipboard
+                      Clipboard.SetText(filteredText);
+                  }*/
+
+
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
         }
-        private DataTable meetingTable = new DataTable();
+        private string FilterText(string text)
+        {
+            // Define bullet points to exclude
+            char[] bulletPoints = { '●', '◆', '☐', '★', '✔', '➤' };
 
+            // Remove bullet points from the selected text
+            string filteredText = new string(text.Where(c => !bulletPoints.Contains(c)).ToArray());
+
+            return filteredText;
+        }
+
+        private DataTable meetingTable = new DataTable();
         private void button3_Click(object sender, EventArgs e)
         {
             try
@@ -1903,7 +2099,17 @@ namespace MOMC_PROJECT
                 {
                     p.TransferDataFromForm1(dataGridView1);
                 }
-                p.Attachments = new List<string>(attachments);
+                if (attachments != null)
+                {
+                    p.Attachments = new List<string>(attachments);
+                }
+                if (AttachmentStore.Attachments != null)
+                {
+                    p.Attachments.AddRange(AttachmentStore.Attachments);
+                }
+                // p.Attachments = new List<string>(attachmentStore.Attachments);
+                // Set attachments to the PreviewMailScreen
+
                 // Show the dynamic form
                 p.ShowDialog();
                 // Re-enable the main form when the dynamic form is closed
@@ -2051,9 +2257,6 @@ namespace MOMC_PROJECT
                 Console.WriteLine(ex.Message);
             }
         }
-        private void btn_mail_numberings_Click(object sender, EventArgs e)
-        {
-        }
         private void richTextBox3_MouseLeave(object sender, EventArgs e)
         {
             if (Control.ModifierKeys == Keys.Control)
@@ -2061,6 +2264,7 @@ namespace MOMC_PROJECT
                 ((HandledMouseEventArgs)e).Handled = false;
             }
         }
+
         private void richTextBox3_SelectionChanged(object sender, EventArgs e)
         {
             if (richTextBox3.SelectionFont != null)
@@ -2087,82 +2291,185 @@ namespace MOMC_PROJECT
                     }
                 }
             }
+
         }
         private Dictionary<string, string> emailData = new Dictionary<string, string>(); // Dictionary to store subject and description
         List<ProjectData> projectDataList = new List<ProjectData>();
+        List<string[]> dataGridViewData = new List<string[]>();
+        /*       private void SaveDataToStructure()
+               {
+                   try
+                   {
+                       string projectName = cb_emailmeetings.Text;
+                       string subject = richTextBox2.Text;
+                      string description = richTextBox3.Rtf;
+                       if (dataGridView1 != null)
+                       {
+                           // Iterate through the DataGridView rows and store data
+                           foreach (DataGridViewRow row in dataGridView1.Rows)
+                           {
+                               bool hasEmptyCell = false; // Flag to track if any cell is empty in the current row
+                               List<string> rowData = new List<string>();
+                               foreach (DataGridViewCell cell in row.Cells)
+                               {
+                                   string cellValue = cell.Value?.ToString() ?? "";
+                                   rowData.Add(cellValue);
+                                   if (string.IsNullOrEmpty(cellValue))
+                                   {
+                                       hasEmptyCell = true;
+                                   }
+                               }
+                               if (hasEmptyCell)
+                               {
+                                   label13.Text = "Please fill in all cells in table before sending the email.";
+                                   label13.ForeColor = Color.Red;
+                                   return; 
+                               }
+
+                               dataGridViewData.Add(rowData.ToArray());
+                           }
+                       }
+                       // Create a new ProjectData object and add it to the list
+                       ProjectData projectData = new ProjectData(projectName, subject, description, dataGridViewData);
+                       projectDataList.Add(projectData);
+                   }
+                   catch(Exception ex)
+                   {
+                       Console.WriteLine(ex.Message);
+                   }
+               }*/
         private void SaveDataToStructure()
         {
-            string projectName = cb_emailmeetings.Text;
-            string subject = richTextBox2.Text;
-            string description = richTextBox3.Rtf;
-            List<string[]> dataGridViewData = new List<string[]>();
-            if (dataGridView1 != null)
+            try
             {
-                // Iterate through the DataGridView rows and store data
-                foreach (DataGridViewRow row in dataGridView1.Rows)
+                string projectName = cb_emailmeetings.Text;
+                string subject = richTextBox2.Text;
+                string description = richTextBox3.Rtf;
+
+                // Check if a project with the same name already exists
+                ProjectData existingProject = projectDataList.FirstOrDefault(p => p.projectName == projectName);
+
+                if (existingProject != null)
                 {
-                    List<string> rowData = new List<string>();
-                    foreach (DataGridViewCell cell in row.Cells)
+                    // Update existing project data
+                    existingProject.Subject = subject;
+                    existingProject.Description = description;
+                    existingProject.DataGridViewData = dataGridViewData; // Update DataGridViewData if necessary
+                }
+                else
+                {
+                    if (dataGridView1 != null)
                     {
-                        rowData.Add(cell.Value?.ToString() ?? "");
+                        // Iterate through the DataGridView rows and store data
+                        foreach (DataGridViewRow row in dataGridView1.Rows)
+                        {
+                            bool hasEmptyCell = false; // Flag to track if any cell is empty in the current row
+                            List<string> rowData = new List<string>();
+                            foreach (DataGridViewCell cell in row.Cells)
+                            {
+                                string cellValue = cell.Value?.ToString() ?? "";
+                                rowData.Add(cellValue);
+                                if (string.IsNullOrEmpty(cellValue))
+                                {
+                                    hasEmptyCell = true;
+                                }
+                            }
+                            if (hasEmptyCell)
+                            {
+                                label13.Text = "Please fill in all cells in table before sending the email.";
+                                label13.ForeColor = Color.Red;
+                                return;
+                            }
+
+                            dataGridViewData.Add(rowData.ToArray());
+                        }
                     }
-                    dataGridViewData.Add(rowData.ToArray());
+
+                    // Create a new ProjectData object and add it to the list
+                    ProjectData projectData = new ProjectData(projectName, subject, description, dataGridViewData);
+                    projectDataList.Add(projectData);
                 }
             }
-            // Create a new ProjectData object and add it to the list
-            ProjectData projectData = new ProjectData(projectName, subject, description, dataGridViewData);
-            projectDataList.Add(projectData);
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
+
         public void LoadDataFromStructure(string projectName)
         {
-            // Find the ProjectData object where the projectName matches the specified project name
-            ProjectData projectData = projectDataList.FirstOrDefault(p => p.projectName == projectName);
-            if (projectData != null)
+            try
             {
-                if (dataGridView1 != null)
-                {
-                    dataGridView1.Dispose();
-                }
+                // Find the ProjectData object where the projectName matches the specified project name
+                ProjectData projectData = projectDataList.FirstOrDefault(p => p.projectName == projectName);
                 if (projectData != null)
                 {
-                    richTextBox2.Text = projectData.Subject;
-                    richTextBox3.Rtf = projectData.Description;
-                    if (projectData.DataGridViewData != null)
+                    if (dataGridView1 != null)
                     {
-                        InitializeDataGridView();
-                        if (dataGridView1 != null)
+                        dataGridView1.Dispose();
+                    }
+                    if (projectData != null)
+                    {
+                        richTextBox2.Text = projectData.Subject;
+                        if (projectData.DataGridViewData != null)
                         {
-                            dataGridView1.Rows.Clear();
-
-                            // Add data from the ProjectData object to the DataGridView
-                            foreach (string[] rowData in projectData.DataGridViewData)
+                            richTextBox3.Rtf = projectData.Description;
+                        }
+                        else
+                        {
+                            string[] lines = richTextBox3.Lines;
+                            if (lines.Length > 10)
                             {
-                                dataGridView1.Rows.Add(rowData);
+                                richTextBox3.Rtf = string.Join(Environment.NewLine, lines.Skip(10));
                             }
-                            if (dataGridView1.Rows.Count > 0)
+                        }
+                        if (projectData.DataGridViewData != null)
+                        {
+                            InitializeDataGridView();
+                            if (dataGridView1 != null)
                             {
-                                panel10.Visible = true;
-                                button16.Enabled = false;
-                                panel11.Visible = true;
-                                button7.Visible = true;
+                                dataGridView1.Rows.Clear();
+                                if (dataGridView1.Rows.Count == 0) // Check if dataGridView1 is empty
+                                {
+                                    foreach (string[] rowData in projectData.DataGridViewData)
+                                    {
+                                        dataGridView1.Rows.Add(rowData);
+                                    }
+                                }
+                                if (dataGridView1.Rows.Count > 0)
+                                {
+                                    panel10.Visible = true;
+                                    button16.Enabled = false;
+                                    panel11.Visible = true;
+                                    button7.Visible = true;
+                                }
                             }
                         }
                     }
+                    if (projectData.DataGridViewData == null)
+                    {
+                        panel10.Visible = false;
+                        button16.Enabled = true;
+                        panel11.Visible = false;
+                        button7.Visible = false;
+                        /* string[] lines = richTextBox3.Lines;
+                         if (lines.Length > 10)
+                         {
+                             richTextBox3.Text = string.Join(Environment.NewLine, lines.Skip(10));
+                         }*/
+                    }
                 }
-                if (projectData.DataGridViewData == null)
+                else
                 {
                     panel10.Visible = false;
-                    button16.Enabled = true;
                     panel11.Visible = false;
                     button7.Visible = false;
+                    button16.Enabled = true;
                 }
             }
-            else
+            catch (Exception ex)
             {
-                panel10.Visible = false;
-                panel11.Visible = false;
-                button7.Visible = false;
-                button16.Enabled = true;
+                Console.WriteLine(ex.Message);
             }
         }
         private void button6_Click(object sender, EventArgs e)
@@ -2199,7 +2506,6 @@ namespace MOMC_PROJECT
                             break; // Stop removing lines if a non-empty line is encountered
                         }
                     }
-
                     // Join the remaining lines back into a single string
                     string newText = string.Join("\n", lines.Where(line => line != null));
 
@@ -2231,10 +2537,31 @@ namespace MOMC_PROJECT
                 Console.WriteLine(ex.Message);
             }
         }
-
         internal void AttachFile(string filePath)
         {
             throw new NotImplementedException();
         }
+
+        private void label16_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void button5_Click_1(object sender, EventArgs e)
+        {
+            try
+            {
+                this.Enabled = false;
+                DrawBoard d = new DrawBoard();
+                d.Show();
+                this.Enabled = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
     }
+
 }

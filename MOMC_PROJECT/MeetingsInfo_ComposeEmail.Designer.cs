@@ -35,6 +35,7 @@
             button4 = new Button();
             label12 = new Label();
             panel3 = new Panel();
+            label16 = new Label();
             panel5 = new Panel();
             panel8 = new Panel();
             panel11 = new Panel();
@@ -43,8 +44,6 @@
             button16 = new Button();
             button15 = new Button();
             label14 = new Label();
-            linkLabel3 = new LinkLabel();
-            button5 = new Button();
             panel9 = new Panel();
             panel10 = new Panel();
             panel12 = new Panel();
@@ -76,6 +75,7 @@
             label9 = new Label();
             label8 = new Label();
             panel2 = new Panel();
+            label17 = new Label();
             clb_attendees = new CheckedListBox();
             label7 = new Label();
             textBox4 = new TextBox();
@@ -99,6 +99,7 @@
             insertBelowToolStripMenuItem = new ToolStripMenuItem();
             insertRightToolStripMenuItem = new ToolStripMenuItem();
             insertLeftToolStripMenuItem = new ToolStripMenuItem();
+            iconSplitButton1 = new FontAwesome.Sharp.IconSplitButton();
             panel1.SuspendLayout();
             panel3.SuspendLayout();
             panel8.SuspendLayout();
@@ -161,11 +162,10 @@
             // 
             // panel3
             // 
+            panel3.Controls.Add(label16);
             panel3.Controls.Add(panel5);
             panel3.Controls.Add(panel8);
             panel3.Controls.Add(label14);
-            panel3.Controls.Add(linkLabel3);
-            panel3.Controls.Add(button5);
             panel3.Controls.Add(panel9);
             panel3.Controls.Add(panel10);
             panel3.Controls.Add(richTextBox3);
@@ -185,6 +185,16 @@
             panel3.Name = "panel3";
             panel3.Size = new Size(1366, 432);
             panel3.TabIndex = 3;
+            // 
+            // label16
+            // 
+            label16.AutoSize = true;
+            label16.Font = new Font("Arial", 11.25F, FontStyle.Bold);
+            label16.Location = new Point(20, 340);
+            label16.Name = "label16";
+            label16.Size = new Size(175, 18);
+            label16.TabIndex = 30;
+            label16.Text = "Drawboard Attachments";
             // 
             // panel5
             // 
@@ -288,28 +298,6 @@
             label14.Size = new Size(95, 18);
             label14.TabIndex = 29;
             label14.Text = "Attachments";
-            // 
-            // linkLabel3
-            // 
-            linkLabel3.AutoSize = true;
-            linkLabel3.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            linkLabel3.Location = new Point(8, 319);
-            linkLabel3.Name = "linkLabel3";
-            linkLabel3.Size = new Size(181, 18);
-            linkLabel3.TabIndex = 28;
-            linkLabel3.TabStop = true;
-            linkLabel3.Text = "Attach DrawBoard Image";
-            linkLabel3.LinkClicked += linkLabel3_LinkClicked;
-            // 
-            // button5
-            // 
-            button5.Location = new Point(46, 340);
-            button5.Name = "button5";
-            button5.Size = new Size(75, 23);
-            button5.TabIndex = 27;
-            button5.Text = "button5";
-            button5.UseVisualStyleBackColor = true;
-            button5.Click += button5_Click;
             // 
             // panel9
             // 
@@ -629,12 +617,12 @@
             // 
             linkLabel2.AutoSize = true;
             linkLabel2.Font = new Font("Arial", 11.25F, FontStyle.Bold);
-            linkLabel2.Location = new Point(3, 366);
+            linkLabel2.Location = new Point(41, 364);
             linkLabel2.Name = "linkLabel2";
-            linkLabel2.Size = new Size(181, 18);
+            linkLabel2.Size = new Size(117, 18);
             linkLabel2.TabIndex = 16;
             linkLabel2.TabStop = true;
-            linkLabel2.Text = "Attach DrawBoard Image";
+            linkLabel2.Text = "Use Drawboard";
             linkLabel2.LinkClicked += linkLabel2_LinkClicked;
             // 
             // label11
@@ -681,6 +669,7 @@
             // 
             // panel2
             // 
+            panel2.Controls.Add(label17);
             panel2.Controls.Add(clb_attendees);
             panel2.Controls.Add(label7);
             panel2.Controls.Add(textBox4);
@@ -697,6 +686,16 @@
             panel2.Size = new Size(1366, 210);
             panel2.TabIndex = 2;
             // 
+            // label17
+            // 
+            label17.AutoSize = true;
+            label17.Font = new Font("Arial", 11.25F, FontStyle.Bold);
+            label17.Location = new Point(974, 116);
+            label17.Name = "label17";
+            label17.Size = new Size(110, 18);
+            label17.TabIndex = 12;
+            label17.Text = "Meeting Name";
+            // 
             // clb_attendees
             // 
             clb_attendees.Font = new Font("Arial", 11.25F, FontStyle.Bold);
@@ -705,6 +704,7 @@
             clb_attendees.Name = "clb_attendees";
             clb_attendees.Size = new Size(276, 84);
             clb_attendees.TabIndex = 10;
+            clb_attendees.ItemCheck += clb_attendees_ItemCheck;
             clb_attendees.SelectedIndexChanged += clb_attendees_SelectedIndexChanged;
             // 
             // label7
@@ -891,6 +891,18 @@
             insertLeftToolStripMenuItem.Text = "Insert Left";
             insertLeftToolStripMenuItem.Click += insertLeftToolStripMenuItem_Click;
             // 
+            // iconSplitButton1
+            // 
+            iconSplitButton1.Flip = FontAwesome.Sharp.FlipOrientation.Normal;
+            iconSplitButton1.IconChar = FontAwesome.Sharp.IconChar.None;
+            iconSplitButton1.IconColor = Color.Black;
+            iconSplitButton1.IconFont = FontAwesome.Sharp.IconFont.Auto;
+            iconSplitButton1.IconSize = 48;
+            iconSplitButton1.Name = "iconSplitButton1";
+            iconSplitButton1.Rotation = 0D;
+            iconSplitButton1.Size = new Size(23, 23);
+            iconSplitButton1.Text = "iconSplitButton1";
+            // 
             // MeetingsInfo_ComposeEmail
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -918,7 +930,7 @@
 
         #endregion
 
-        private Panel panel1;
+        public Panel panel1;
         private Panel panel3;
         private Panel panel2;
         private Label label2;
@@ -979,13 +991,14 @@
         private Label label12;
         private Button button4;
         private Label label13;
-        private Button button5;
         private Label label14;
         private Panel panel5;
         private Button button6;
         private Button button7;
         private Label label15;
-        private LinkLabel linkLabel3;
         private RichTextBox richTextBox3;
+        private Label label16;
+        private FontAwesome.Sharp.IconSplitButton iconSplitButton1;
+        private Label label17;
     }
 }

@@ -40,7 +40,6 @@ namespace MOMC_PROJECT
             dataGridView1.Enabled = false;
             dataGridView1.EditMode = DataGridViewEditMode.EditOnKeystrokeOrF2;
         }
-
         private void panel2_Paint(object sender, PaintEventArgs e)
         {
 
@@ -49,13 +48,14 @@ namespace MOMC_PROJECT
         {
             try
             {
+              
+
                 label6.Text = FromEmailAddress;
                 label7.Text = Subject;
                 richTextBox1.Text = string.Join(", ", ToEmailAddresses);
                 richTextBox3.Rtf = Body;
                 // Clear listView1 items before adding new ones
                 listView1.Items.Clear();
-
                 // Ensure that Attachments and listBox1 are not null
                 if (Attachments != null)
                 {
@@ -93,6 +93,7 @@ namespace MOMC_PROJECT
         }
         public void TransferDataFromForm1(DataGridView sourceGridView)
         {
+          
             /* try
              {
                  if (dataGridView1.Columns.Count == 0)
@@ -227,6 +228,12 @@ namespace MOMC_PROJECT
         {
             try
             {
+                if (dataGridView1.Rows.Count==0)
+                {
+                    panel3.Visible = false;
+                    return;
+                }
+               
                 if (panel3.Visible)
                 {
                     panel3.Visible = false;
