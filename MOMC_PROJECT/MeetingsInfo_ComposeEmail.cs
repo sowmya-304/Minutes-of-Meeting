@@ -20,7 +20,9 @@ namespace MOMC_PROJECT
         }
 
         private List<MeetingData> meetingDataList;
-        public static List<string> attachments;
+
+        public static List<string> attachments = new List<string>();
+        public static List<string> drawboardAttachments = new List<string>();
         public List<string> Attachments { get; set; }
 
         public static string selected_meeting_name = "";
@@ -35,7 +37,7 @@ namespace MOMC_PROJECT
         public MeetingsInfo_ComposeEmail()
         {
             InitializeComponent();
-            attachments = new List<string>();
+
             currentText = richTextBox3.Text;
             OnLoad();
             PopulateMeetingsComboBox();
@@ -331,20 +333,23 @@ namespace MOMC_PROJECT
         {
             try
             {
-
                 this.Enabled = false;
                 Draw d = new Draw();
                 DrawBoard drawBoard = new DrawBoard();
                 d.ShowDialog();
                 this.Enabled = true;
-                if (this.Enabled = true)
+                if (AttachmentStore.Attachments != null)
                 {
-                    string[] filesInDirectory = System.IO.Directory.GetFiles("C:\\Users\\sowmyay\\Pictures\\Screenshots\\SelectedMeetingName");
-
-                    // Add each file path to the static AttachmentStore
+                    panel5DW.Controls.Clear();
+                    int buttonWidth = 200;
+                    int buttonHeight = 50;
+                    int fileButtonGap = 20;
+                    int removeButtonGap = 0;
+                    int maxButtonsPerRow = panel5DW.Width / (buttonWidth + fileButtonGap);
+                    int fileCount = AttachmentStore.Attachments.Count;
                     foreach (string filePath in AttachmentStore.Attachments)
                     {
-                        drawBoard.AttachFilesToPanel2(filePath);
+                        AddFileButton1(filePath, fileCount, buttonWidth, buttonHeight, fileButtonGap, removeButtonGap, maxButtonsPerRow);
                     }
                 }
                 //  panel13.Controls.Clear();
@@ -361,6 +366,8 @@ namespace MOMC_PROJECT
         {
             try
             {
+                btn_mail_insert.Enabled = true;
+                linkLabel2.Enabled = true;
                 button3.Enabled = true;
                 btn_sendmail.Enabled = true;
                 string selectedMeetingName = cb_emailmeetings.SelectedItem.ToString();
@@ -380,7 +387,7 @@ namespace MOMC_PROJECT
                         {
                             richTextBox1.Text += attendeeEmail + Environment.NewLine;
                         }
-                        richTextBox2.Text = $"Minutes of Meeting: {textBox1.Text} - {textBox3.Text}" + "\n";
+                        richTextBox2.Text = $"Minutes of Meeting: {textBox1.Text} - {textBox3.Text}";
                         richTextBox3.Text = $"Minutes of Meeting Mail: {textBox1.Text} " + "\n" +
                                             $"Meeting Start Time: {textBox2.Text}" + "\n" +
                                             $"Meeting End Time: {textBox3.Text}" + "\n" +
@@ -396,11 +403,11 @@ namespace MOMC_PROJECT
                         undoStack.Clear();
                         redoStack.Clear();
                     }
-                    string s = cb_emailmeetings.Text;
-                    if (s != null)
+                    if (selectedMeetingName != null &&textBox1.Text!=null)
                     {
-                        LoadDataFromStructure(s);
+                        LoadDataFromStructure(selectedMeetingName);
                     }
+
                 }
             }
             catch (Exception ex)
@@ -517,7 +524,8 @@ namespace MOMC_PROJECT
         private string RemoveSpecialCharacters(string str)
         {
             // Replace special characters with empty string
-            return Regex.Replace(str, @"[^\w\.@-]", "");
+             return Regex.Replace(str, @"[^w.@]", " ");
+            //return Regex.Replace(str, @"[@]", " ");
         }
         private void btn_sendmail_Click(object sender, EventArgs e)
         {
@@ -555,16 +563,13 @@ namespace MOMC_PROJECT
                             message.To.Add(email);
                         }
                     }
-                    // message.Subject = richTextBox2.Text;
-                    string subject = richTextBox2.Text;
-                    // Remove any special characters or restrict the length if necessary
-                    subject = RemoveSpecialCharacters(subject);
-                    subject = subject.Substring(0, Math.Min(subject.Length, 255)); // Example: Limit subject length to 255 characters
-                    message.Subject = subject;
-
+                      message.Subject = richTextBox2.Text;
+                    //string subject = richTextBox2.Text;
+                   /* subject = RemoveSpecialCharacters(subject);
+                    subject = subject.Substring(0, Math.Min(subject.Length, 255));
+                    message.Subject = subject;*/
                     StringBuilder body = new StringBuilder();
                     // Convert DataGridView content to HTML table
-
                     if (dataGridView1 != null)
                     {
                         body.AppendLine("<table border='1'>");
@@ -594,14 +599,12 @@ namespace MOMC_PROJECT
                         body.AppendLine("</table>");
                     }
                     // Append the content of richTextBox3 to the body
-                    // Append the content of richTextBox3 to the body
                     string rtfText = richTextBox3.Rtf;
                     string plainText = ConvertRtfToPlainText(rtfText);
                     body.AppendLine(plainText);
 
                     //body.AppendLine(richTextBox3.Rtf);
                     message.Body = body.ToString();
-
                     // Attach files
                     if (attachments != null)
                     {
@@ -1447,7 +1450,7 @@ namespace MOMC_PROJECT
                     foreach (string filePath in attachments)
                     {
                         AddFileButton(filePath, fileCount, buttonWidth, buttonHeight, fileButtonGap, removeButtonGap, maxButtonsPerRow);
-                        fileCount++;
+                        fileCount++;       
                     }
 
                     // Add new attachments
@@ -1479,36 +1482,44 @@ namespace MOMC_PROJECT
         }
         private void AddFileButton(string filePath, int fileCount, int buttonWidth, int buttonHeight, int fileButtonGap, int removeButtonGap, int maxButtonsPerRow)
         {
-            int rowIndex = fileCount / maxButtonsPerRow;
-            int colIndex = fileCount % maxButtonsPerRow;
-            int x = colIndex * (buttonWidth + fileButtonGap);
-            int y = rowIndex * (buttonHeight + removeButtonGap);
-            Panel buttonPanel = CreateFileButtonPanel(filePath, fileCount, buttonWidth, buttonHeight, fileButtonGap, removeButtonGap, maxButtonsPerRow);
-
-            int newRow = buttonPanels.Count / maxButtonsPerRow;
-            int newCol = buttonPanels.Count % maxButtonsPerRow;
-
-            int newX = newCol * (buttonWidth + fileButtonGap);
-            int newY = newRow * (buttonHeight + removeButtonGap);
-
-            if ((newCol + 1) * (buttonWidth + fileButtonGap) > panel4.Width)
+            try
             {
-                panel4.HorizontalScroll.Value += buttonWidth + fileButtonGap;
-            }
+                int rowIndex = fileCount / maxButtonsPerRow;
+                int colIndex = fileCount % maxButtonsPerRow;
+                int x = colIndex * (buttonWidth + fileButtonGap);
+                int y = rowIndex * (buttonHeight + removeButtonGap);
+                Panel buttonPanel = CreateFileButtonPanel(filePath, fileCount, buttonWidth, buttonHeight, fileButtonGap, removeButtonGap, maxButtonsPerRow);
 
-            if (newCol > 0)
+                int newRow = buttonPanels.Count / maxButtonsPerRow;
+                int newCol = buttonPanels.Count % maxButtonsPerRow;
+
+                int newX = newCol * (buttonWidth + fileButtonGap);
+                int newY = newRow * (buttonHeight + removeButtonGap);
+
+                if ((newCol + 1) * (buttonWidth + fileButtonGap) > panel4.Width)
+                {
+                    panel4.HorizontalScroll.Value += buttonWidth + fileButtonGap;
+                }
+
+                if (newCol > 0)
+                {
+                    int previousButtonIndex = buttonPanels.Count - 1;
+                    int previousButtonX = buttonPanels[previousButtonIndex].Location.X;
+                    int previousButtonWidth = buttonPanels[previousButtonIndex].Width;
+                    newX = previousButtonX + previousButtonWidth + fileButtonGap;
+                }
+
+                buttonPanel.Location = new Point(newX, newY);
+                panel4.Controls.Add(buttonPanel);
+                buttonPanels.Add(buttonPanel);
+            }
+            catch(Exception ex)
             {
-                int previousButtonIndex = buttonPanels.Count - 1;
-                int previousButtonX = buttonPanels[previousButtonIndex].Location.X;
-                int previousButtonWidth = buttonPanels[previousButtonIndex].Width;
-                newX = previousButtonX + previousButtonWidth + fileButtonGap;
+                Console.WriteLine(ex.Message);
             }
-
-            buttonPanel.Location = new Point(newX, newY);
-            panel4.Controls.Add(buttonPanel);
-            buttonPanels.Add(buttonPanel);
         }
 
+       
         private Panel CreateFileButtonPanel(string filePath, int index, int buttonWidth, int buttonHeight, int fileButtonGap, int removeButtonGap, int maxButtonsPerRow)
         {
             Panel buttonPanel = new Panel
@@ -1517,56 +1528,62 @@ namespace MOMC_PROJECT
                 Location = new Point(index % maxButtonsPerRow * (buttonWidth + fileButtonGap), index / maxButtonsPerRow * (buttonHeight + removeButtonGap)),
                 BorderStyle = BorderStyle.FixedSingle
             };
-
-            PictureBox iconPictureBox = new PictureBox();
-            iconPictureBox.Size = new Size(32, 32);
-            iconPictureBox.Location = new Point(10, (buttonHeight - iconPictureBox.Height) / 2);
-            iconPictureBox.Image = System.Drawing.Icon.ExtractAssociatedIcon(filePath).ToBitmap();
-            iconPictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
-            buttonPanel.Controls.Add(iconPictureBox);
-            Label fileInfoLabel = new Label();
-            fileInfoLabel.AutoSize = true;
-            fileInfoLabel.Location = new Point(iconPictureBox.Right + 10, (buttonHeight - fileInfoLabel.Height) / 2);
-            fileInfoLabel.Text = $"{Path.GetFileName(filePath)} ({new FileInfo(filePath).Length / 1024} KB)";
-            int maxLabelWidth = buttonWidth - (iconPictureBox.Right + 40);
-            fileInfoLabel.MaximumSize = new Size(maxLabelWidth, buttonHeight);
-            buttonPanel.Controls.Add(fileInfoLabel);
-
-            System.Windows.Forms.Button removeButton = new System.Windows.Forms.Button();
-            removeButton.Text = "X";
-            removeButton.Size = new Size(20, 20);
-            removeButton.Location = new Point(buttonWidth - 30, (buttonHeight - removeButton.Height) / 2);
-            removeButton.Click += (btnSender, btnE) =>
+            try
             {
-                int indexToRemove = buttonPanels.IndexOf(buttonPanel);
-                if (indexToRemove >= 0 && indexToRemove < buttonPanels.Count)
+                PictureBox iconPictureBox = new PictureBox();
+                iconPictureBox.Size = new Size(32, 32);
+                iconPictureBox.Location = new Point(10, (buttonHeight - iconPictureBox.Height) / 2);
+                iconPictureBox.Image = System.Drawing.Icon.ExtractAssociatedIcon(filePath).ToBitmap();
+                iconPictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
+                buttonPanel.Controls.Add(iconPictureBox);
+                Label fileInfoLabel = new Label();
+                fileInfoLabel.AutoSize = true;
+                fileInfoLabel.Location = new Point(iconPictureBox.Right + 10, (buttonHeight - fileInfoLabel.Height) / 2);
+                fileInfoLabel.Text = $"{Path.GetFileName(filePath)} ({new FileInfo(filePath).Length / 1024} KB)";
+                int maxLabelWidth = buttonWidth - (iconPictureBox.Right + 40);
+                fileInfoLabel.MaximumSize = new Size(maxLabelWidth, buttonHeight);
+                buttonPanel.Controls.Add(fileInfoLabel);
+
+                System.Windows.Forms.Button removeButton = new System.Windows.Forms.Button();
+                removeButton.Text = "X";
+                removeButton.Size = new Size(20, 20);
+                removeButton.Location = new Point(buttonWidth - 30, (buttonHeight - removeButton.Height) / 2);
+                removeButton.Click += (btnSender, btnE) =>
                 {
-                    buttonPanels.RemoveAt(indexToRemove);
-                    attachments.RemoveAt(indexToRemove);
-                    panel4.Controls.Remove(buttonPanel);
-                    for (int i = indexToRemove; i < buttonPanels.Count; i++)
+                    int indexToRemove = buttonPanels.IndexOf(buttonPanel);
+                    if (indexToRemove >= 0 && indexToRemove < buttonPanels.Count)
                     {
-                        int row = i / maxButtonsPerRow;
-                        int col = i % maxButtonsPerRow;
-                        int newX = col * (buttonWidth + fileButtonGap);
-                        int newY = row * (buttonHeight + removeButtonGap);
-                        buttonPanels[i].Location = new Point(newX, newY);
+                        buttonPanels.RemoveAt(indexToRemove);
+                        attachments.RemoveAt(indexToRemove);
+                        panel4.Controls.Remove(buttonPanel);
+                        for (int i = indexToRemove; i < buttonPanels.Count; i++)
+                        {
+                            int row = i / maxButtonsPerRow;
+                            int col = i % maxButtonsPerRow;
+                            int newX = col * (buttonWidth + fileButtonGap);
+                            int newY = row * (buttonHeight + removeButtonGap);
+                            buttonPanels[i].Location = new Point(newX, newY);
+                        }
                     }
-                }
-            };
-            buttonPanel.Controls.Add(removeButton);
+                };
+                buttonPanel.Controls.Add(removeButton);
 
-            buttonPanel.Click += (panelSender, panelE) =>
+                buttonPanel.Click += (panelSender, panelE) =>
+                {
+                    try
+                    {
+                        Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error opening file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                };
+            }
+            catch(Exception ex)
             {
-                try
-                {
-                    Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show($"Error opening file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            };
+                Console.WriteLine(ex.Message);
+            }
             return buttonPanel;
         }
         private void button16_Click(object sender, EventArgs e)
@@ -1609,9 +1626,7 @@ namespace MOMC_PROJECT
             {
                 Console.WriteLine(ex.Message);
             }
-
         }
-
         private void btn_undo_Click(object sender, EventArgs e)
         {
             try
@@ -1687,6 +1702,8 @@ namespace MOMC_PROJECT
         {
             try
             {
+                btn_mail_insert.Enabled = false;
+                linkLabel2.Enabled = false;
                 //  panel13.Visible = false;
                 button3.Enabled = false;
                 btn_sendmail.Enabled = false;
@@ -1917,9 +1934,129 @@ namespace MOMC_PROJECT
         {
             return dataGridView1.Visible;
         }
+
+        //private void richTextBox3_SelectionChanged(object sender, EventArgs e)
+        //{
+
+        //    if (richTextBox3.SelectionFont != null)
+        //    {
+        //        // string selectedText = richTextBox3.SelectedText;
+        //        string selectedText = richTextBox3.Text;
+        //        bool isBulletPointSelected = selectedText.Contains("●") || selectedText.Contains("◆") ||
+        //                                     selectedText.Contains("☐") || selectedText.Contains("★") ||
+        //                                     selectedText.Contains("✔") || selectedText.Contains("➤");
+        //        if (!isBulletPointSelected)
+        //        {
+        //            // Set comboBox1.Text to the font size of the selected text
+        //            comboBox1.Text = richTextBox3.SelectionFont.Size.ToString();
+
+        //            // Check if the font family of the selected text is Calibri
+        //            if (richTextBox3.SelectionFont.FontFamily.Name == "Calibri")
+        //            {
+        //                comboBox3.Text = "Calibri";
+        //            }
+        //            else
+        //            {
+        //                // Set comboBox3.Text to another value if the font family is not Calibri
+        //                comboBox3.Text = richTextBox3.SelectionFont.FontFamily.Name;
+        //            }
+        //        }
+        //    }
+        //}
+
+        //private void richTextBox3_KeyPress(object sender, KeyPressEventArgs e)
+        //{
+
+        //    try
+        //    {
+        //        /*if (e.KeyChar == (char)Keys.Enter)
+        //        {
+        //            // Get the current line index
+        //            int selectionStart = richTextBox3.SelectionStart;
+        //            int lineIndex = richTextBox3.GetLineFromCharIndex(selectionStart);
+        //            int lineStart = richTextBox3.GetFirstCharIndexFromLine(lineIndex);
+        //            int lineLength = richTextBox3.Lines[lineIndex].Length;
+        //            // Check if the line index is valid
+        //            if (lineIndex >= 0 && lineIndex < richTextBox3.Lines.Length)
+        //            {
+        //                string previousLineText = "";
+        //                if (lineIndex > 0)
+        //                {
+        //                    previousLineText = richTextBox3.Lines[lineIndex - 1];
+        //                }
+        //                // Check if the previous line already has a bullet point
+        //                if (previousLineText.TrimStart().StartsWith(previousBullet))
+        //                {
+        //                    // Insert the bullet point at the beginning of the new line
+        //                    richTextBox3.Select(lineStart, 0);
+        //                    richTextBox3.SelectionFont = new Font(richTextBox3.Font.FontFamily, richTextBox3.Font.Size); // Set font size for bullet point
+        //                    richTextBox3.SelectedText = previousBullet + " ";
+        //                    richTextBox3.SelectionStart = lineStart + previousBullet.Length + 1; // +1 for the space after the bullet point
+        //                    richTextBox3.SelectionLength = 0;
+        //                }
+        //            }
+        //            // Additional validation to remove bullet point if only bullet point exists in the line
+        //            if (lineIndex >= 0 && lineIndex < richTextBox3.Lines.Length)
+        //            {
+        //                string currentLineText = richTextBox3.Lines[lineIndex];
+
+        //                // Check if the line contains only the bullet point and no other text
+        //                if (currentLineText.Trim() == previousBullet)
+        //                {
+        //                    // Remove the bullet point from the current line
+        //                    richTextBox3.Select(lineStart, lineLength);
+        //                    richTextBox3.SelectedText = "";
+
+        //                    // Set previousBullet to null
+        //                    //  previousBullet = null;
+        //                }
+        //            }
+        //        }*/
+        //        if (e.KeyChar == (char)Keys.Enter)
+        //        {
+        //            // Get the current line index
+        //            int selectionStart = richTextBox3.SelectionStart;
+        //            int lineIndex = richTextBox3.GetLineFromCharIndex(selectionStart);
+        //            // Check if the line index is valid
+        //            if (lineIndex >= 0 && lineIndex < richTextBox3.Lines.Length)
+        //            {
+        //                int lineStart = richTextBox3.GetFirstCharIndexFromLine(lineIndex);
+        //                int lineLength = richTextBox3.Lines[lineIndex].Length;
+        //                // Get the previous line text
+        //                string previousLineText = "";
+        //                if (lineIndex > 0)
+        //                {
+        //                    previousLineText = richTextBox3.Lines[lineIndex - 1];
+        //                }
+        //                // Check if the previous line already has a bullet point
+        //                if (previousLineText.TrimStart().StartsWith(previousBullet))
+        //                {
+        //                    // Insert the bullet point at the beginning of the new line
+        //                    richTextBox3.Select(lineStart, 0);
+        //                    richTextBox3.SelectionFont = new Font(richTextBox3.Font.FontFamily, richTextBox3.Font.Size); // Set font size for bullet point
+        //                    richTextBox3.SelectedText = previousBullet + " ";
+        //                }
+        //                if (lineIndex >= 0 && lineIndex < richTextBox3.Lines.Length)
+        //                {
+        //                    string currentLineText = richTextBox3.Lines[lineIndex];
+        //                    if (currentLineText.Trim() == previousBullet)
+        //                    {
+        //                        // Remove the bullet point from the current line
+        //                        richTextBox3.Select(lineStart, lineLength);
+        //                        richTextBox3.SelectedText = "";
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine(ex.Message);
+        //    }
+
+        //}
         private void richTextBox3_KeyPress(object sender, KeyPressEventArgs e)
         {
-
             try
             {
                 if (e.KeyChar == (char)Keys.Enter)
@@ -1927,11 +2064,12 @@ namespace MOMC_PROJECT
                     // Get the current line index
                     int selectionStart = richTextBox3.SelectionStart;
                     int lineIndex = richTextBox3.GetLineFromCharIndex(selectionStart);
-                    int lineStart = richTextBox3.GetFirstCharIndexFromLine(lineIndex);
-                    int lineLength = richTextBox3.Lines[lineIndex].Length;
                     // Check if the line index is valid
                     if (lineIndex >= 0 && lineIndex < richTextBox3.Lines.Length)
                     {
+                        int lineStart = richTextBox3.GetFirstCharIndexFromLine(lineIndex);
+                        int lineLength = richTextBox3.Lines[lineIndex].Length;
+                        // Get the previous line text
                         string previousLineText = "";
                         if (lineIndex > 0)
                         {
@@ -1942,26 +2080,22 @@ namespace MOMC_PROJECT
                         {
                             // Insert the bullet point at the beginning of the new line
                             richTextBox3.Select(lineStart, 0);
-                            richTextBox3.SelectionFont = new Font(richTextBox3.Font.FontFamily, richTextBox3.Font.Size); // Set font size for bullet point
                             richTextBox3.SelectedText = previousBullet + " ";
-                            richTextBox3.SelectionStart = lineStart + previousBullet.Length + 1; // +1 for the space after the bullet point
+                            // Set the selection start to after the bullet point
+                            richTextBox3.SelectionStart = lineStart + previousBullet.Length + 1;
                             richTextBox3.SelectionLength = 0;
+                            // Set the selection font to apply formatting to the text after the bullet point
+                            richTextBox3.SelectionFont = new Font(richTextBox3.Font.FontFamily, richTextBox3.Font.Size);
                         }
-                    }
-                    // Additional validation to remove bullet point if only bullet point exists in the line
-                    if (lineIndex >= 0 && lineIndex < richTextBox3.Lines.Length)
-                    {
-                        string currentLineText = richTextBox3.Lines[lineIndex];
-
-                        // Check if the line contains only the bullet point and no other text
-                        if (currentLineText.Trim() == previousBullet)
+                        if (lineIndex >= 0 && lineIndex < richTextBox3.Lines.Length)
                         {
-                            // Remove the bullet point from the current line
-                            richTextBox3.Select(lineStart, lineLength);
-                            richTextBox3.SelectedText = "";
-
-                            // Set previousBullet to null
-                            //  previousBullet = null;
+                            string currentLineText = richTextBox3.Lines[lineIndex];
+                            if (currentLineText.Trim() == previousBullet)
+                            {
+                                // Remove the bullet point from the current line
+                                richTextBox3.Select(lineStart, lineLength);
+                                richTextBox3.SelectedText = "";
+                            }
                         }
                     }
                 }
@@ -1971,6 +2105,94 @@ namespace MOMC_PROJECT
                 Console.WriteLine(ex.Message);
             }
         }
+
+        private void richTextBox3_SelectionChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                int selectionStart = richTextBox3.SelectionStart;
+                int selectionEnd = selectionStart + richTextBox3.SelectionLength;
+                int adjustedStart = selectionStart;
+                int adjustedLength = 0;
+                int totalAdjustedLength = 0;
+
+                // Store the original selection length
+                int originalSelectionLength = richTextBox3.SelectionLength;
+
+                // Iterate through the selected lines
+                for (int i = selectionStart; i < selectionEnd;)
+                {
+                    int lineIndex = richTextBox3.GetLineFromCharIndex(i);
+                    int lineStart = richTextBox3.GetFirstCharIndexFromLine(lineIndex);
+                    string lineText = richTextBox3.Lines[lineIndex];
+
+                    // Assume the bullet takes the first few characters (adjust based on your bullet)
+                    int bulletLength = previousBullet.Length;
+
+                    // Check if the current line contains a bullet
+                    if (lineText.TrimStart().StartsWith(previousBullet))
+                    {
+                        // Adjust the selection start and length to exclude the bullet
+                        int actualBulletStart = lineStart + lineText.IndexOf(previousBullet);
+                        int actualBulletEnd = actualBulletStart + bulletLength;
+
+                        // Adjust the length to exclude the bullet
+                        if (i <= actualBulletEnd)
+                        {
+                            adjustedStart = actualBulletEnd;
+                            totalAdjustedLength += bulletLength;
+                        }
+                    }
+
+                    // Move to the next line or the end of the current selection
+                    int nextLineStart = richTextBox3.GetFirstCharIndexFromLine(lineIndex + 1);
+                    if (nextLineStart > i)
+                    {
+                        i = nextLineStart;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                // Apply the adjusted selection
+                richTextBox3.SelectionStart = adjustedStart;
+                richTextBox3.SelectionLength = originalSelectionLength - totalAdjustedLength;
+
+                // Ensure selection font is not null and update combo boxes if no bullet is selected
+                if (richTextBox3.SelectionFont != null)
+                {
+                    string selectedText = richTextBox3.SelectedText;
+                    bool isBulletPointSelected = selectedText.Contains("●") || selectedText.Contains("◆") ||
+                                                 selectedText.Contains("☐") || selectedText.Contains("★") ||
+                                                 selectedText.Contains("✔") || selectedText.Contains("➤");
+                    if (!isBulletPointSelected)
+                    {
+                        // Set comboBox1.Text to the font size of the selected text
+                        comboBox1.Text = richTextBox3.SelectionFont.Size.ToString();
+
+                        // Check if the font family of the selected text is Calibri
+                        if (richTextBox3.SelectionFont.FontFamily.Name == "Calibri")
+                        {
+                            comboBox3.Text = "Calibri";
+                        }
+                        else
+                        {
+                            // Set comboBox3.Text to another value if the font family is not Calibri
+                            comboBox3.Text = richTextBox3.SelectionFont.FontFamily.Name;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
+
+  
+
         private void richTextBox3_KeyDown(object sender, KeyEventArgs e)
         {
             try
@@ -2040,53 +2262,24 @@ namespace MOMC_PROJECT
                 {
                     return;
                 }
-                /*  if (e.Control && e.KeyCode == Keys.A)
-                  {
-                      e.SuppressKeyPress = true; // Suppress the default Ctrl+A behavior
-
-                      // Save the current selection
-                      int selectionStart = richTextBox3.SelectionStart;
-                      int selectionLength = richTextBox3.SelectionLength;
-
-                      // Select all text in the RichTextBox
-                      richTextBox3.SelectAll();
-
-                      // Get the selected text
-                      string selectedText = richTextBox3.SelectedText;
-
-                      // Filter out bullet points
-                      string filteredText = FilterText(selectedText);
-
-                      // Restore the original selection
-                      richTextBox3.Select(selectionStart, selectionLength);
-
-                      // Copy the filtered text to the clipboard
-                      Clipboard.SetText(filteredText);
-                  }*/
-
-
+                // Check if Ctrl + A is pressed
+                if (e.Control && e.KeyCode == Keys.A)
+                {
+                    e.SuppressKeyPress = true; // Prevent the default behavior
+                }
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
         }
-        private string FilterText(string text)
-        {
-            // Define bullet points to exclude
-            char[] bulletPoints = { '●', '◆', '☐', '★', '✔', '➤' };
 
-            // Remove bullet points from the selected text
-            string filteredText = new string(text.Where(c => !bulletPoints.Contains(c)).ToArray());
 
-            return filteredText;
-        }
-
-        private DataTable meetingTable = new DataTable();
         private void button3_Click(object sender, EventArgs e)
         {
             try
             {
+             //   SaveDataToStructure();
                 this.Enabled = false;
                 PreviewMailScreen p = new PreviewMailScreen();
                 p.Text = "Preview Mail Screen";
@@ -2095,32 +2288,180 @@ namespace MOMC_PROJECT
                 p.Subject = richTextBox2.Text;
                 p.Body = richTextBox3.Rtf;
                 StringBuilder body = new StringBuilder();
+                string projectname =  cb_emailmeetings.Text;
+                ProjectData existingProject = projectDataList.FirstOrDefault(p => p.projectName == projectname);
+                //  List<string[]> dataGridView = new List<string[]>(existingProject.DataGridViewData);
                 if (dataGridView1 != null)
                 {
                     p.TransferDataFromForm1(dataGridView1);
                 }
-                if (attachments != null)
+                // Initialize p.Attachments if it's not already initialized
+                if (p.Attachments == null)
                 {
-                    p.Attachments = new List<string>(attachments);
+                    //PreviewMailScreen.Attachments = new List<string>();
+                   p.Attachments  = new List<string>();
                 }
-                if (AttachmentStore.Attachments != null)
+
+                if (attachments != null && attachments.Count > 0)
+                {
+                    foreach (var attachment in attachments)
+                    {
+                        p.Attachments.Add(attachment);
+                    }
+                }
+               if(AttachmentStore.Attachments!=null && AttachmentStore.Attachments.Count > 0)
                 {
                     p.Attachments.AddRange(AttachmentStore.Attachments);
                 }
-                // p.Attachments = new List<string>(attachmentStore.Attachments);
-                // Set attachments to the PreviewMailScreen
-
-                // Show the dynamic form
                 p.ShowDialog();
                 // Re-enable the main form when the dynamic form is closed
                 this.Enabled = true;
+
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
         }
+        private void AddFileButton1(string filePath, int fileCount, int buttonWidth, int buttonHeight, int fileButtonGap, int removeButtonGap, int maxButtonsPerRow)
+        {
+            try
+            {
+                int rowIndex = fileCount / maxButtonsPerRow;
+                int colIndex = fileCount % maxButtonsPerRow;
+                int x = colIndex * (buttonWidth + fileButtonGap);
+                int y = rowIndex * (buttonHeight + removeButtonGap);
+                Panel buttonPanel = CreateFileButtonPanel1(filePath, fileCount, buttonWidth, buttonHeight, fileButtonGap, removeButtonGap, maxButtonsPerRow);
 
+                int newRow = buttonPanels.Count / maxButtonsPerRow;
+                int newCol = buttonPanels.Count % maxButtonsPerRow;
+
+                int newX = newCol * (buttonWidth + fileButtonGap);
+                int newY = newRow * (buttonHeight + removeButtonGap);
+
+              /*  if ((newCol + 1) * (buttonWidth + fileButtonGap) > panel5DW.Width)
+                {
+                    panel5DW.HorizontalScroll.Value += buttonWidth + fileButtonGap;
+                }*/
+
+                if (newCol > 0)
+                {
+                    int previousButtonIndex = buttonPanels.Count - 1;
+                    int previousButtonX = buttonPanels[previousButtonIndex].Location.X;
+                    int previousButtonWidth = buttonPanels[previousButtonIndex].Width;
+                    newX = previousButtonX + previousButtonWidth + fileButtonGap;
+                }
+
+                buttonPanel.Location = new Point(newX, newY);
+                panel5DW.Controls.Add(buttonPanel);
+                buttonPanels.Add(buttonPanel);
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message + " \n " + ex.StackTrace);
+            }
+        }
+        private void RemoveFileButtonPanel(Panel buttonPanel, string filePath)
+        {
+            int indexToRemove = buttonPanels.IndexOf(buttonPanel);
+            if (indexToRemove >= 0 && indexToRemove < buttonPanels.Count)
+            {
+                buttonPanels.RemoveAt(indexToRemove);
+                AttachmentStore.Attachments.RemoveAt(indexToRemove);
+                // attachments.Remove(filePath);
+                drawboardAttachments.Remove(filePath);
+                panel5DW.Controls.Remove(buttonPanel);
+                if (AttachmentStore.Attachments.Count > 0)
+                {
+                    // Clear and repopulate the panel
+                    panel5DW.Controls.Clear();
+                    buttonPanels.Clear();
+                    int index = 0;
+
+                    foreach (var filePath1 in AttachmentStore.Attachments)
+                    {
+                        var newButtonPanel = CreateFileButtonPanel1(filePath1, index, buttonWidth: 100, buttonHeight: 50, fileButtonGap: 10, removeButtonGap: 5, maxButtonsPerRow: 3);
+                        buttonPanels.Add(newButtonPanel);
+                        panel5DW.Controls.Add(newButtonPanel);
+                        index++;
+                    }
+                }
+            }
+            else
+            {
+                MessageBox.Show("Error: Index out of range.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+        public Panel CreateFileButtonPanel1(string filePath, int index, int buttonWidth, int buttonHeight, int fileButtonGap, int removeButtonGap, int maxButtonsPerRow)
+        {
+         
+                Panel buttonPanel = new Panel
+                {
+                    Size = new Size(buttonWidth, buttonHeight),
+                    Location = new Point(index % maxButtonsPerRow * (buttonWidth + fileButtonGap), index / maxButtonsPerRow * (buttonHeight + removeButtonGap)),
+                    BorderStyle = BorderStyle.FixedSingle
+                };
+            try
+            {
+                PictureBox iconPictureBox = new PictureBox();
+                iconPictureBox.Size = new Size(32, 32);
+                iconPictureBox.Location = new Point(10, (buttonHeight - iconPictureBox.Height) / 2);
+                iconPictureBox.Image = System.Drawing.Icon.ExtractAssociatedIcon(filePath).ToBitmap();
+                iconPictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
+                buttonPanel.Controls.Add(iconPictureBox);
+                Label fileInfoLabel = new Label();
+                fileInfoLabel.AutoSize = true;
+                fileInfoLabel.Location = new Point(iconPictureBox.Right + 10, (buttonHeight - fileInfoLabel.Height) / 2);
+                fileInfoLabel.Text = $"{Path.GetFileName(filePath)} ({new FileInfo(filePath).Length / 1024} KB)";
+                int maxLabelWidth = buttonWidth - (iconPictureBox.Right + 40);
+                fileInfoLabel.MaximumSize = new Size(maxLabelWidth, buttonHeight);
+                buttonPanel.Controls.Add(fileInfoLabel);
+
+                System.Windows.Forms.Button removeButton = new System.Windows.Forms.Button();
+                removeButton.Text = "X";
+                removeButton.Size = new Size(20, 20);
+                removeButton.Location = new Point(buttonWidth - 30, (buttonHeight - removeButton.Height) / 2);
+
+                removeButton.Click += (btnSender, btnE) =>
+                {
+                    int indexToRemove = buttonPanels.IndexOf(buttonPanel);
+                    if (indexToRemove >= 0 && indexToRemove < buttonPanels.Count)
+                    {
+                        buttonPanels.RemoveAt(indexToRemove);
+                        AttachmentStore.Attachments.RemoveAt(indexToRemove);
+                        drawboardAttachments.Remove(filePath);
+                        panel5DW.Controls.Remove(buttonPanel);
+                        for (int i = indexToRemove; i < buttonPanels.Count; i++)
+                        {
+                            int row = i / maxButtonsPerRow;
+                            int col = i % maxButtonsPerRow;
+                            int newX = col * (buttonWidth + fileButtonGap);
+                            int newY = row * (buttonHeight + removeButtonGap);
+                            buttonPanels[i].Location = new Point(newX, newY);
+                        }
+                    }
+                };
+                buttonPanel.Controls.Add(removeButton);
+                buttonPanel.Click += (panelSender, panelE) =>
+                {
+                    try
+                    {
+                        Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"Error opening file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                };
+                 }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message + "\n" + ex.StackTrace);
+            }
+
+                return buttonPanel;
+           
+        }
         private void button4_Click(object sender, EventArgs e)
         {
             try
@@ -2259,40 +2600,13 @@ namespace MOMC_PROJECT
         }
         private void richTextBox3_MouseLeave(object sender, EventArgs e)
         {
-            if (Control.ModifierKeys == Keys.Control)
-            {
-                ((HandledMouseEventArgs)e).Handled = false;
-            }
+            /* if (Control.ModifierKeys == Keys.Control)
+             {
+                 ((HandledMouseEventArgs)e).Handled = false;
+             }*/
         }
 
-        private void richTextBox3_SelectionChanged(object sender, EventArgs e)
-        {
-            if (richTextBox3.SelectionFont != null)
-            {
-                // string selectedText = richTextBox3.SelectedText;
-                string selectedText = richTextBox3.Text;
-                bool isBulletPointSelected = selectedText.Contains("●") || selectedText.Contains("◆") ||
-                                             selectedText.Contains("☐") || selectedText.Contains("★") ||
-                                             selectedText.Contains("✔") || selectedText.Contains("➤");
-                if (!isBulletPointSelected)
-                {
-                    // Set comboBox1.Text to the font size of the selected text
-                    comboBox1.Text = richTextBox3.SelectionFont.Size.ToString();
-
-                    // Check if the font family of the selected text is Calibri
-                    if (richTextBox3.SelectionFont.FontFamily.Name == "Calibri")
-                    {
-                        comboBox3.Text = "Calibri";
-                    }
-                    else
-                    {
-                        // Set comboBox3.Text to another value if the font family is not Calibri
-                        comboBox3.Text = richTextBox3.SelectionFont.FontFamily.Name;
-                    }
-                }
-            }
-
-        }
+     
         private Dictionary<string, string> emailData = new Dictionary<string, string>(); // Dictionary to store subject and description
         List<ProjectData> projectDataList = new List<ProjectData>();
         List<string[]> dataGridViewData = new List<string[]>();
@@ -2338,6 +2652,70 @@ namespace MOMC_PROJECT
                        Console.WriteLine(ex.Message);
                    }
                }*/
+        /*  private void SaveDataToStructure()
+          {
+              try
+              {
+                  string projectName = cb_emailmeetings.Text;
+                  string subject = richTextBox2.Text;
+                  string description = richTextBox3.Rtf;
+                  // Check if a project with the same name already exists
+                  ProjectData existingProject = projectDataList.FirstOrDefault(p => p.projectName == projectName);
+                  Console.WriteLine(attachments);
+                  if (existingProject != null)
+                  {
+                      existingProject.Subject = subject;
+                      existingProject.Description = description;
+                      existingProject.DataGridViewData = dataGridViewData; // Update DataGridViewData if necessary
+                      ProjectData projectData = new ProjectData(projectName, subject, description, dataGridViewData);
+                      projectDataList.Add(projectData);
+                  }
+                  else
+                  {
+                      if (dataGridView1 != null)
+                      {
+                          // Iterate through the DataGridView rows and store data
+                          foreach (DataGridViewRow row in dataGridView1.Rows)
+                          {
+                              bool hasEmptyCell = false; // Flag to track if any cell is empty in the current row
+                              List<string> rowData = new List<string>();
+                              foreach (DataGridViewCell cell in row.Cells)
+                              {
+                                  string cellValue = cell.Value?.ToString() ?? "";
+                                  rowData.Add(cellValue);
+                                  if (string.IsNullOrEmpty(cellValue))
+                                  {
+                                      hasEmptyCell = true;
+                                  }
+                              }
+                              if (hasEmptyCell)
+                              {
+                                  label13.Text = "Please fill in all cells in table before sending the email.";
+                                  label13.ForeColor = Color.Red;
+                                  return;
+                              }
+
+                              dataGridViewData.Add(rowData.ToArray());
+                          }
+                      }
+                      if (attachments != null)
+                      {
+                          ProjectData projectData = new ProjectData(projectName, subject, description, dataGridViewData);
+                          projectDataList.Add(projectData);
+                      }
+                      else
+                      {
+                          ProjectData projectData = new ProjectData(projectName, subject, description, dataGridViewData);
+                          projectDataList.Add(projectData);
+                      }
+                  }
+              }
+              catch (Exception ex)
+              {
+                  Console.WriteLine(ex.Message);
+              }
+          }
+  */
         private void SaveDataToStructure()
         {
             try
@@ -2345,7 +2723,6 @@ namespace MOMC_PROJECT
                 string projectName = cb_emailmeetings.Text;
                 string subject = richTextBox2.Text;
                 string description = richTextBox3.Rtf;
-
                 // Check if a project with the same name already exists
                 ProjectData existingProject = projectDataList.FirstOrDefault(p => p.projectName == projectName);
 
@@ -2354,52 +2731,127 @@ namespace MOMC_PROJECT
                     // Update existing project data
                     existingProject.Subject = subject;
                     existingProject.Description = description;
-                    existingProject.DataGridViewData = dataGridViewData; // Update DataGridViewData if necessary
+                    
                 }
                 else
                 {
-                    if (dataGridView1 != null)
-                    {
-                        // Iterate through the DataGridView rows and store data
-                        foreach (DataGridViewRow row in dataGridView1.Rows)
-                        {
-                            bool hasEmptyCell = false; // Flag to track if any cell is empty in the current row
-                            List<string> rowData = new List<string>();
-                            foreach (DataGridViewCell cell in row.Cells)
-                            {
-                                string cellValue = cell.Value?.ToString() ?? "";
-                                rowData.Add(cellValue);
-                                if (string.IsNullOrEmpty(cellValue))
-                                {
-                                    hasEmptyCell = true;
-                                }
-                            }
-                            if (hasEmptyCell)
-                            {
-                                label13.Text = "Please fill in all cells in table before sending the email.";
-                                label13.ForeColor = Color.Red;
-                                return;
-                            }
-
-                            dataGridViewData.Add(rowData.ToArray());
-                        }
-                    }
-
-                    // Create a new ProjectData object and add it to the list
-                    ProjectData projectData = new ProjectData(projectName, subject, description, dataGridViewData);
+                  
+                    ProjectData projectData = new ProjectData(projectName, subject, description);
                     projectDataList.Add(projectData);
                 }
+             
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
         }
+        /*   public void LoadDataFromStructure(string projectName)
+           {
+               try
+               {
+                   // Find the ProjectData object where the projectName matches the specified project name
+                   ProjectData projectData = projectDataList.FirstOrDefault(p => p.projectName == projectName);
+                   if (projectData != null)
+                   {
+                       if (dataGridView1 != null)
+                       {
+                           dataGridView1.Dispose();
+                       }
+                       if (projectData != null)
+                       {
+                           richTextBox2.Text = projectData.Subject;
+                           if (projectData.DataGridViewData != null)
+                           {
+                               richTextBox3.Rtf = projectData.Description;
+                           }
+                           else
+                           {
+                               string[] lines = richTextBox3.Lines;
+                               if (lines.Length > 10)
+                               {
+                                   richTextBox3.Rtf = string.Join(Environment.NewLine, lines.Skip(10));
+                               }
+                           }
+                           if (projectData.DataGridViewData != null)
+                           {
+                               InitializeDataGridView();
+                               if (dataGridView1 != null)
+                               {
+                                   dataGridView1.Rows.Clear();
+                                   if (dataGridView1.Rows.Count == 0) // Check if dataGridView1 is empty
+                                   {
+                                       foreach (string[] rowData in projectData.DataGridViewData)
+                                       {
+                                           dataGridView1.Rows.Add(rowData);
+                                       }
+                                   }
+                                   if (dataGridView1.Rows.Count > 0)
+                                   {
+                                       panel10.Visible = true;
+                                       button16.Enabled = false;
+                                       panel11.Visible = true;
+                                       button7.Visible = true;
+                                   }
+                               }
+                           }
+   *//*                        List<string> s = new List<string>();
 
+                           if (projectData != null && projectData.attachments != null)
+                           {
+                               s = new List<string>(projectData.attachments);
+                           }
+                           int buttonWidth = 200;
+                           int buttonHeight = 50;
+                           int fileButtonGap = 20;
+                           int removeButtonGap = 0;
+                           int maxButtonsPerRow = panel5DW.Width / (buttonWidth + fileButtonGap);
+                           int fileCount = attachments.Count; // Start file count from current list size
+                           panel4.Controls.Clear();
+                           buttonPanels.Clear();
+                           panel4.AutoScroll = true;
+                           foreach (var filepath in s)
+                           {
+                               attachments.Add(filepath);
+                               AddFileButton(filepath, fileCount, buttonWidth, buttonHeight, fileButtonGap, removeButtonGap, maxButtonsPerRow);
+                               fileCount++;
+                           }*//*
+                       }
+                       if (projectData.DataGridViewData == null)
+                       {
+                           panel10.Visible = false;
+                           button16.Enabled = true;
+                           panel11.Visible = false;
+                           button7.Visible = false;
+                           *//* string[] lines = richTextBox3.Lines;
+                            if (lines.Length > 10)
+                            {
+                                richTextBox3.Text = string.Join(Environment.NewLine, lines.Skip(10));
+                            }*//*
+                       }
+                   }
+                   else
+                   {
+                       panel10.Visible = false;
+                       panel11.Visible = false;
+                       button7.Visible = false;
+                       button16.Enabled = true;
+                   }
+
+               }
+
+               catch (Exception ex)
+               {
+                   Console.WriteLine(ex.Message);
+               }
+
+
+           }*/
         public void LoadDataFromStructure(string projectName)
         {
             try
             {
+                panel10.Visible = false;
                 // Find the ProjectData object where the projectName matches the specified project name
                 ProjectData projectData = projectDataList.FirstOrDefault(p => p.projectName == projectName);
                 if (projectData != null)
@@ -2411,7 +2863,8 @@ namespace MOMC_PROJECT
                     if (projectData != null)
                     {
                         richTextBox2.Text = projectData.Subject;
-                        if (projectData.DataGridViewData != null)
+                        richTextBox3.Rtf = projectData.Description;
+                        if (dataGridView1 != null)
                         {
                             richTextBox3.Rtf = projectData.Description;
                         }
@@ -2423,48 +2876,14 @@ namespace MOMC_PROJECT
                                 richTextBox3.Rtf = string.Join(Environment.NewLine, lines.Skip(10));
                             }
                         }
-                        if (projectData.DataGridViewData != null)
-                        {
-                            InitializeDataGridView();
-                            if (dataGridView1 != null)
-                            {
-                                dataGridView1.Rows.Clear();
-                                if (dataGridView1.Rows.Count == 0) // Check if dataGridView1 is empty
-                                {
-                                    foreach (string[] rowData in projectData.DataGridViewData)
-                                    {
-                                        dataGridView1.Rows.Add(rowData);
-                                    }
-                                }
-                                if (dataGridView1.Rows.Count > 0)
-                                {
-                                    panel10.Visible = true;
-                                    button16.Enabled = false;
-                                    panel11.Visible = true;
-                                    button7.Visible = true;
-                                }
-                            }
-                        }
-                    }
-                    if (projectData.DataGridViewData == null)
-                    {
-                        panel10.Visible = false;
-                        button16.Enabled = true;
-                        panel11.Visible = false;
-                        button7.Visible = false;
-                        /* string[] lines = richTextBox3.Lines;
-                         if (lines.Length > 10)
-                         {
-                             richTextBox3.Text = string.Join(Environment.NewLine, lines.Skip(10));
-                         }*/
                     }
                 }
                 else
                 {
-                    panel10.Visible = false;
+                  /*  panel10.Visible = false;
                     panel11.Visible = false;
                     button7.Visible = false;
-                    button16.Enabled = true;
+                    button16.Enabled = true;*/
                 }
             }
             catch (Exception ex)
@@ -2472,11 +2891,11 @@ namespace MOMC_PROJECT
                 Console.WriteLine(ex.Message);
             }
         }
+
         private void button6_Click(object sender, EventArgs e)
         {
             SaveDataToStructure();
         }
-
         // view / hide table
         private void button7_Click(object sender, EventArgs e)
         {
@@ -2561,7 +2980,14 @@ namespace MOMC_PROJECT
                 Console.WriteLine(ex.Message);
             }
         }
+        private void richTextBox3_MouseUp(object sender, MouseEventArgs e)
+        {
 
+
+
+
+
+        }
     }
 
 }

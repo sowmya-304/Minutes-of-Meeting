@@ -228,7 +228,6 @@ namespace MOMC_PROJECT
                 Credentials = new NetworkCredential(fromEmail, password),
                 EnableSsl = true,
             };
-
             var mailMessage = new MailMessage
             {
                 From = new MailAddress("19n81a05c9.sowmya@gmail.com"),

@@ -341,6 +341,7 @@
             richTextBox3.KeyDown += richTextBox3_KeyDown;
             richTextBox3.KeyPress += richTextBox3_KeyPress;
             richTextBox3.MouseLeave += richTextBox3_MouseLeave;
+            richTextBox3.MouseUp += richTextBox3_MouseUp;
             // 
             // panel7
             // 

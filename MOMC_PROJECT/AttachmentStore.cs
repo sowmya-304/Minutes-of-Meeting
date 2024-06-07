@@ -9,8 +9,10 @@ namespace MOMC_PROJECT
     public class AttachmentStore
     {
         public static List<string> Attachments { get; set; }
+       // public static HashSet<string> Attachments { get; set; }
 
-        public  AttachmentStore()
+
+        public AttachmentStore()
         {
 
            Attachments = new List<string>();

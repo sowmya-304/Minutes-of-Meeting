@@ -46,7 +46,6 @@
             ellipse = new Button();
             rectangle = new Button();
             label4 = new Label();
-            Closebutton = new Button();
             panel5 = new Panel();
             label2 = new Label();
             btn_select = new Button();
@@ -203,7 +202,6 @@
             // 
             panel2.BackColor = Color.FromArgb(64, 64, 64);
             panel2.Controls.Add(panel6);
-            panel2.Controls.Add(Closebutton);
             panel2.Controls.Add(panel5);
             panel2.Controls.Add(btn_clear);
             panel2.Controls.Add(btnRemoveSlide);
@@ -297,19 +295,6 @@
             label4.TabIndex = 19;
             label4.Text = "Shapes";
             // 
-            // Closebutton
-            // 
-            Closebutton.BackColor = Color.White;
-            Closebutton.Image = (Image)resources.GetObject("Closebutton.Image");
-            Closebutton.Location = new Point(1302, 6);
-            Closebutton.Name = "Closebutton";
-            Closebutton.Size = new Size(64, 79);
-            Closebutton.TabIndex = 26;
-            Closebutton.Text = "Close";
-            Closebutton.TextAlign = ContentAlignment.BottomCenter;
-            Closebutton.UseVisualStyleBackColor = false;
-            Closebutton.Click += Closebutton_Click;
-            // 
             // panel5
             // 
             panel5.BackColor = Color.Black;
@@ -318,7 +303,7 @@
             panel5.Controls.Add(btn_delete);
             panel5.Font = new Font("Arial", 9F, FontStyle.Regular, GraphicsUnit.Point, 0);
             panel5.ForeColor = Color.White;
-            panel5.Location = new Point(814, 6);
+            panel5.Location = new Point(876, 6);
             panel5.Name = "panel5";
             panel5.Size = new Size(169, 80);
             panel5.TabIndex = 22;
@@ -365,7 +350,7 @@
             btn_clear.BackColor = Color.White;
             btn_clear.Image = (Image)resources.GetObject("btn_clear.Image");
             btn_clear.ImageAlign = ContentAlignment.TopCenter;
-            btn_clear.Location = new Point(1113, 3);
+            btn_clear.Location = new Point(1175, 3);
             btn_clear.Name = "btn_clear";
             btn_clear.Size = new Size(58, 80);
             btn_clear.TabIndex = 14;
@@ -426,7 +411,7 @@
             btn_SaveAll.BackColor = Color.White;
             btn_SaveAll.Image = (Image)resources.GetObject("btn_SaveAll.Image");
             btn_SaveAll.ImageAlign = ContentAlignment.TopCenter;
-            btn_SaveAll.Location = new Point(1174, 4);
+            btn_SaveAll.Location = new Point(1302, 6);
             btn_SaveAll.Name = "btn_SaveAll";
             btn_SaveAll.Size = new Size(58, 80);
             btn_SaveAll.TabIndex = 16;
@@ -441,7 +426,7 @@
             btn_redo.Cursor = Cursors.Hand;
             btn_redo.Image = (Image)resources.GetObject("btn_redo.Image");
             btn_redo.ImageAlign = ContentAlignment.TopCenter;
-            btn_redo.Location = new Point(1049, 3);
+            btn_redo.Location = new Point(1111, 3);
             btn_redo.Name = "btn_redo";
             btn_redo.Size = new Size(58, 80);
             btn_redo.TabIndex = 13;
@@ -470,7 +455,7 @@
             btn_undo.Cursor = Cursors.Hand;
             btn_undo.Image = (Image)resources.GetObject("btn_undo.Image");
             btn_undo.ImageAlign = ContentAlignment.TopCenter;
-            btn_undo.Location = new Point(985, 4);
+            btn_undo.Location = new Point(1047, 4);
             btn_undo.Name = "btn_undo";
             btn_undo.Size = new Size(58, 80);
             btn_undo.TabIndex = 12;
@@ -485,7 +470,7 @@
             btn_image.Cursor = Cursors.Hand;
             btn_image.Image = (Image)resources.GetObject("btn_image.Image");
             btn_image.ImageAlign = ContentAlignment.TopCenter;
-            btn_image.Location = new Point(631, 3);
+            btn_image.Location = new Point(693, 3);
             btn_image.Name = "btn_image";
             btn_image.Size = new Size(58, 80);
             btn_image.TabIndex = 7;
@@ -497,9 +482,9 @@
             // pic_color
             // 
             pic_color.BackColor = Color.White;
-            pic_color.Location = new Point(489, 4);
+            pic_color.Location = new Point(489, 12);
             pic_color.Name = "pic_color";
-            pic_color.Size = new Size(136, 28);
+            pic_color.Size = new Size(56, 69);
             pic_color.TabIndex = 6;
             pic_color.UseVisualStyleBackColor = false;
             pic_color.Click += pic_color_Click;
@@ -508,9 +493,9 @@
             // 
             picbox_color_picker.Cursor = Cursors.Hand;
             picbox_color_picker.Image = Properties.Resources.color_palette;
-            picbox_color_picker.Location = new Point(489, 38);
+            picbox_color_picker.Location = new Point(551, 12);
             picbox_color_picker.Name = "picbox_color_picker";
-            picbox_color_picker.Size = new Size(136, 45);
+            picbox_color_picker.Size = new Size(136, 71);
             picbox_color_picker.SizeMode = PictureBoxSizeMode.StretchImage;
             picbox_color_picker.TabIndex = 5;
             picbox_color_picker.TabStop = false;
@@ -538,7 +523,7 @@
             btn_pencil.Cursor = Cursors.Hand;
             btn_pencil.Image = (Image)resources.GetObject("btn_pencil.Image");
             btn_pencil.ImageAlign = ContentAlignment.TopCenter;
-            btn_pencil.Location = new Point(757, 5);
+            btn_pencil.Location = new Point(819, 5);
             btn_pencil.Name = "btn_pencil";
             btn_pencil.Size = new Size(58, 80);
             btn_pencil.TabIndex = 9;
@@ -553,7 +538,7 @@
             btn_eraser.Cursor = Cursors.Hand;
             btn_eraser.Image = (Image)resources.GetObject("btn_eraser.Image");
             btn_eraser.ImageAlign = ContentAlignment.TopCenter;
-            btn_eraser.Location = new Point(694, 5);
+            btn_eraser.Location = new Point(756, 5);
             btn_eraser.Name = "btn_eraser";
             btn_eraser.Size = new Size(58, 80);
             btn_eraser.TabIndex = 8;
@@ -646,7 +631,6 @@
         private Panel panel5;
         private Label label2;
         private Label label3;
-        private Button Closebutton;
         private Panel panel6;
         private Button Line;
         private Button Diamond;

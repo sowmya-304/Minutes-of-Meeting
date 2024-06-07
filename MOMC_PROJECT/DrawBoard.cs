@@ -11,11 +11,11 @@ using System.Windows.Forms;
 using System.Collections.Generic;
 using System.Drawing.Drawing2D;
 using Microsoft.VisualBasic.ApplicationServices;
+
 namespace MOMC_PROJECT
 {
     public partial class DrawBoard : UserControl
     {
-        private AttachmentStore attachmentStore = new AttachmentStore();
         Bitmap bm;
         Graphics g;
         private Point px, py;
@@ -79,9 +79,10 @@ namespace MOMC_PROJECT
                 Name = name;
             }
         }
-        private List<string> persistentAttachments = new List<string>();
-        public List<string> Attachments { get; set; }
 
+      /*  private List<string> persistentAttachments = new List<string>();
+        public List<string> Attachments { get; set; }
+*/
 
         private enum DrawingMode
         {
@@ -660,7 +661,7 @@ namespace MOMC_PROJECT
         private System.Drawing.Image GetClickedIconImage(object sender)
         {
             // Assuming sender is the control representing the clicked icon
-            Control clickedControl = sender as Control;
+            System.Windows.Forms.Control clickedControl = sender as System.Windows.Forms.Control;
 
             // Example: If your icon controls have their Image stored in the Tag property
             if (clickedControl != null && clickedControl.Tag != null)
@@ -975,6 +976,8 @@ namespace MOMC_PROJECT
         //public static List<String> attachments = new List<String>();
         //private List<Panel> buttonPanels = new List<Panel>();===
         public static List<string> attachments = new List<string>();
+        public static List<string> drawboardAttachments = new List<string>();
+        
         private List<Panel> buttonPanels = new List<Panel>();
         private int buttonHeight;
 
@@ -1009,7 +1012,8 @@ namespace MOMC_PROJECT
 
                     foreach (string filePath in filePaths)
                     {
-                        attachments.Add(filePath);
+                        drawboardAttachments.Add(filePath);
+                       // attachments.Add(filePath);
                         int rowIndex = fileCount / maxButtonsPerRow;
                         int colIndex = fileCount % maxButtonsPerRow;
                         int x = colIndex * (buttonWidth + fileButtonGap);
@@ -1051,7 +1055,8 @@ namespace MOMC_PROJECT
                             int indexToRemove = buttonPanels.IndexOf(buttonPanel);
                             buttonPanels.RemoveAt(indexToRemove);
                             panel5DW.Controls.Remove(buttonPanel);
-                            attachments.RemoveAt(indexToRemove);
+                            drawboardAttachments.RemoveAt(indexToRemove);
+                           // attachments.RemoveAt(indexToRemove);
                             UpdateButtonPanelLocations(panel5DW, maxButtonsPerRow, buttonWidth, fileButtonGap, removeButtonGap);
                             fileCount--;
                         };
@@ -1079,104 +1084,138 @@ namespace MOMC_PROJECT
                 panel1.Controls.Add(mc);
             }
         }
+      
         public void AttachFilesToPanel2(string filePaths)
         {
             MeetingsInfo_ComposeEmail mc = new MeetingsInfo_ComposeEmail();
-            if (mc != null)
+            // attachments.Add(filePaths);
+            // Get all files in the directory specified by folderPath
+            // Add each file path to the static AttachmentStore
+            if (AttachmentStore.Attachments == null)
             {
-                Panel panel5DW = mc.Panel5DW;
+                //AttachmentStore.Attachments = new List<string>();
+                AttachmentStore.Attachments = new List<string>();
 
-                if (panel5DW != null)
-                {
-                    panel5DW.AutoScroll = true;
-
-                    int buttonWidth = 200;
-                    int buttonHeight = 50;
-                    int fileButtonGap = 20;
-                    int removeButtonGap = 0;
-                    int maxButtonsPerRow = (panel5DW.Width) / (buttonWidth + fileButtonGap);
-                    int fileCount = 0;
-
-                    // Get all files in the directory specified by folderPath
-                    string[] filesInDirectory = System.IO.Directory.GetFiles("C:\\Users\\sowmyay\\Pictures\\Screenshots\\SelectedMeetingName");
-
-                    // Add each file path to the static AttachmentStore
-                    foreach (string filePath in filesInDirectory)
-                    {
-                       AttachmentStore.Attachments.Add(filePath);
-                    }
-
-                    // Iterate over each file path in the list
-                    foreach (string filePath in attachments)
-                    {
-                        // Calculate position for the button panel
-                        int rowIndex = fileCount / maxButtonsPerRow;
-                        int colIndex = fileCount % maxButtonsPerRow;
-                        int x = colIndex * (buttonWidth + fileButtonGap);
-                        int y = rowIndex * (buttonHeight + removeButtonGap);
-
-                        // Create and configure button panel
-                        Panel buttonPanel = new Panel
-                        {
-                            Size = new Size(buttonWidth, buttonHeight),
-                            Location = new Point(x, y),
-                            BorderStyle = BorderStyle.FixedSingle
-                        };
-
-                        // Add PictureBox, label, remove button, and event handlers to button panel
-                        PictureBox iconPictureBox = new PictureBox
-                        {
-                            Size = new Size(32, 32),
-                            Location = new Point(10, (buttonHeight - 32) / 2),
-                            Image = System.Drawing.Icon.ExtractAssociatedIcon(filePath).ToBitmap(),
-                            SizeMode = PictureBoxSizeMode.StretchImage
-                        };
-                        buttonPanel.Controls.Add(iconPictureBox);
-
-                        Label fileInfoLabel = new Label
-                        {
-                            AutoSize = true,
-                            Location = new Point(iconPictureBox.Right + 10, (buttonHeight - 32) / 2),
-                            Text = $"{System.IO.Path.GetFileName(filePath)} ({new FileInfo(filePath).Length / 1024} KB)",
-                            MaximumSize = new Size(buttonWidth - (iconPictureBox.Right + 40), buttonHeight)
-                        };
-                        buttonPanel.Controls.Add(fileInfoLabel);
-
-                        System.Windows.Forms.Button removeButton = new System.Windows.Forms.Button
-                        {
-                            Text = "X",
-                            Size = new Size(20, 20),
-                            Location = new Point(buttonWidth - 30, (buttonHeight - 20) / 2)
-                        };
-                        removeButton.Click += (btnSender, btnE) =>
-                        {
-                            int indexToRemove = buttonPanels.IndexOf(buttonPanel);
-                            buttonPanels.RemoveAt(indexToRemove);
-                            panel5DW.Controls.Remove(buttonPanel);
-                            AttachmentStore.Attachments.RemoveAt(indexToRemove);
-                            UpdateButtonPanelLocations(panel5DW, maxButtonsPerRow, buttonWidth, fileButtonGap, removeButtonGap);
-                            fileCount--;
-                        };
-                        buttonPanel.Controls.Add(removeButton);
-
-                        buttonPanel.Click += (panelSender, panelE) =>
-                        {
-                            try
-                            {
-                                Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
-                            }
-                            catch (Exception ex)
-                            {
-                                MessageBox.Show($"Error opening file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            }
-                        };
-                        panel5DW.Controls.Add(buttonPanel);
-                        buttonPanels.Add(buttonPanel);
-                        fileCount++;
-                    }
-                }
             }
 
+            if (!AttachmentStore.Attachments.Contains(filePaths))
+            {
+                AttachmentStore.Attachments.Add(filePaths);
+                // attachments.Add(filePaths); // Add to the attachments list as well
+                drawboardAttachments.Add(filePaths);
+            }
+            //foreach (string filePath in attachments)
+            //{
+            //    if (!AttachmentStore.Attachments.Contains(filePath))
+            //    {
+            //        // If it's not in the HashSet, add it
+            //        AttachmentStore.Attachments.Add(filePath);
+            //    }
+            //    AttachmentStore.Attachments = new List<string>(AttachmentStore.Attachments);
+
+            //    // AttachmentStore.Attachments.Add(filePath);
+            //}
+            Panel panel5DW = mc.Panel5DW;
+            panel5DW.Controls.Clear();
+            buttonPanels.Clear();
+            if (AttachmentStore.Attachments.Count > 0) // Run the loop only if there are attachments
+            {
+                int index = 0;
+                foreach (var filePath in AttachmentStore.Attachments)
+                {
+                    var buttonPanel = mc.CreateFileButtonPanel1(filePath, index, buttonWidth: 100, buttonHeight: 50, fileButtonGap: 10, removeButtonGap: 5, maxButtonsPerRow: 3);
+                    buttonPanels.Add(buttonPanel);
+                    panel5DW.Controls.Add(buttonPanel);
+                    index++;
+                }
+            }
+            /*  MeetingsInfo_ComposeEmail mc = new MeetingsInfo_ComposeEmail();
+              if (mc != null)
+              {
+                  Panel panel5DW = mc.Panel5DW;
+
+                  if (panel5DW != null)
+                  {
+                      panel5DW.AutoScroll = true;
+
+                      int buttonWidth = 200;
+                      int buttonHeight = 50;
+                      int fileButtonGap = 20;
+                      int removeButtonGap = 0;
+                      int maxButtonsPerRow = (panel5DW.Width) / (buttonWidth + fileButtonGap);
+                      int fileCount = 0;
+
+                      // Iterate over each file path in the list
+                         foreach (string filePath in attachments)
+                         {
+                             // Calculate position for the button panel
+                             int rowIndex = fileCount / maxButtonsPerRow;
+                             int colIndex = fileCount % maxButtonsPerRow;
+                             int x = colIndex * (buttonWidth + fileButtonGap);
+                             int y = rowIndex * (buttonHeight + removeButtonGap);
+
+                             // Create and configure button panel
+                             Panel buttonPanel = new Panel
+                             {
+                                 Size = new Size(buttonWidth, buttonHeight),
+                                 Location = new Point(x, y),
+                                 BorderStyle = BorderStyle.FixedSingle
+                             };
+
+                             // Add PictureBox, label, remove button, and event handlers to button panel
+                             PictureBox iconPictureBox = new PictureBox
+                             {
+                                 Size = new Size(32, 32),
+                                 Location = new Point(10, (buttonHeight - 32) / 2),
+                                 Image = System.Drawing.Icon.ExtractAssociatedIcon(filePath).ToBitmap(),
+                                 SizeMode = PictureBoxSizeMode.StretchImage
+                             };
+                             buttonPanel.Controls.Add(iconPictureBox);
+
+                             Label fileInfoLabel = new Label
+                             {
+                                 AutoSize = true,
+                                 Location = new Point(iconPictureBox.Right + 10, (buttonHeight - 32) / 2),
+                                 Text = $"{System.IO.Path.GetFileName(filePath)} ({new FileInfo(filePath).Length / 1024} KB)",
+                                 MaximumSize = new Size(buttonWidth - (iconPictureBox.Right + 40), buttonHeight)
+                             };
+                             buttonPanel.Controls.Add(fileInfoLabel);
+
+                             System.Windows.Forms.Button removeButton = new System.Windows.Forms.Button
+                             {
+                                 Text = "X",
+                                 Size = new Size(20, 20),
+                                 Location = new Point(buttonWidth - 30, (buttonHeight - 20) / 2)
+                             };
+                             removeButton.Click += (btnSender, btnE) =>
+                             {
+                                 int indexToRemove = buttonPanels.IndexOf(buttonPanel);
+                                 buttonPanels.RemoveAt(indexToRemove);
+                                 panel5DW.Controls.Remove(buttonPanel);
+                                 AttachmentStore.Attachments.RemoveAt(indexToRemove);
+                                 UpdateButtonPanelLocations(panel5DW, maxButtonsPerRow, buttonWidth, fileButtonGap, removeButtonGap);
+                                 fileCount--;
+                             };
+                             buttonPanel.Controls.Add(removeButton);
+
+                             buttonPanel.Click += (panelSender, panelE) =>
+                             {
+                                 try
+                                 {
+                                     Process.Start(new ProcessStartInfo(filePath) { UseShellExecute = true });
+                                 }
+                                 catch (Exception ex)
+                                 {
+                                     MessageBox.Show($"Error opening file: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                 }
+                             };
+                             panel5DW.Controls.Add(buttonPanel);
+                             buttonPanels.Add(buttonPanel);
+                             fileCount++;
+                         }
+                  }
+              }
+  */
             //MeetingsInfo_ComposeEmail mc = new MeetingsInfo_ComposeEmail();
             //if (mc != null)
             //{
@@ -1293,18 +1332,27 @@ namespace MOMC_PROJECT
         //}
         private void UpdateButtonPanelLocations(Panel panel5DW, int maxButtonsPerRow, int buttonWidth, int fileButtonGap, int removeButtonGap)
         {
-            for (int i = 0; i < buttonPanels.Count; i++)
+            try
             {
-                int row = i / maxButtonsPerRow;
-                int col = i % maxButtonsPerRow;
-                int newX = col * (buttonWidth + fileButtonGap);
-                int newY = row * (buttonHeight + removeButtonGap);
-                buttonPanels[i].Location = new Point(newX, newY);
+                for (int i = 0; i < buttonPanels.Count; i++)
+                {
+                    int row = i / maxButtonsPerRow;
+                    int col = i % maxButtonsPerRow;
+                    int newX = col * (buttonWidth + fileButtonGap);
+                    int newY = row * (buttonHeight + removeButtonGap);
+                    buttonPanels[i].Location = new Point(newX, newY);
+                }
             }
+            catch(Exception ex) { }
         }
         private void btn_SaveClose_Click(object sender, EventArgs e)
         {
-            MeetingsInfo_ComposeEmail mc = new MeetingsInfo_ComposeEmail();
+            if (slides == null || slides.Count == 0)
+            {
+                MessageBox.Show("No slides to save.");
+                return;
+            }
+          //  MeetingsInfo_ComposeEmail mc = new MeetingsInfo_ComposeEmail();
             using (SaveFileDialog saveFileDialog = new SaveFileDialog())
             {
                 // Set the file filter to allow saving as JPEG, JPG, or PNG
@@ -1323,7 +1371,7 @@ namespace MOMC_PROJECT
                     string fileName = saveFileDialog.FileName;
 
                     // Use the selected meeting name as the new folder name
-                    string meetingName = "SelectedMeetingName"; // Replace with the actual selected meeting name
+                    string meetingName = "Drawboard Images"; // Replace with the actual selected meeting name
                     string newFolderPath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(fileName), meetingName);
                     if (!System.IO.Directory.Exists(newFolderPath))
                     {
@@ -1356,55 +1404,12 @@ namespace MOMC_PROJECT
                     combinedImage.Save(newFilePath);
                     AttachFilesToPanel2(newFilePath);
                     MessageBox.Show("Saved and Uploaded successfully");
+                    currentSlide.Name = System.IO.Path.GetFileNameWithoutExtension(fileName);
+
                 }
             }
-            //MeetingsInfo_ComposeEmail mc = new MeetingsInfo_ComposeEmail();
-            //using (SaveFileDialog saveFileDialog = new SaveFileDialog())
-            //{
-            //    // Set the file filter to allow saving as JPEG, JPG, or PNG
-            //    saveFileDialog.Filter = "JPEG Image|*.jpg|JPEG Image|*.jpeg|PNG Image|*.png";
-            //    Slide currentSlide = slides[currentSlideIndex];
-            //    string displayName = string.IsNullOrEmpty(currentSlide.Name) ? "Unnamed Slide" : currentSlide.Name;
-            //    // Set the initial file name in the save file dialog
-            //    saveFileDialog.FileName = displayName;
-            //    // Display the dialog and wait for the user's response
-            //    DialogResult result = saveFileDialog.ShowDialog();
-
-            //    // If the user clicks "Save"
-            //    if (result == DialogResult.OK)
-            //    {
-            //        // Get the selected filename
-            //        string fileName = saveFileDialog.FileName;
-
-            //        // Create a new bitmap with the same size as the PictureBox
-            //        Bitmap combinedImage = new Bitmap(pic.Width, pic.Height);
-
-            //        // Get the graphics object of the combined image
-            //        using (Graphics g = Graphics.FromImage(combinedImage))
-            //        {
-            //            // Draw the background image from the PictureBox
-            //            g.DrawImage(pic.Image, Point.Empty);
-
-            //            // Draw the images stored in the list
-            //            foreach (var imageRect in images)
-            //            {
-            //                g.DrawImage(imageRect.Item1, imageRect.Item2);
-            //            }
-
-            //            // Draw the shapes/icons on top of the background image
-            //            foreach (var shape in shapes)
-            //            {
-            //                g.DrawImage(shape.Item1, shape.Item2);
-            //            }
-            //        }
-            //        // Save the combined image to the selected location
-            //        combinedImage.Save(fileName);
-            //        AttachFilesToPanel2(fileName );
-            //        MessageBox.Show("Saved and Uploaded successfully");
-            //    }
-            //}
         }
-
+        
         private void btnAddSlide_Click(object sender, EventArgs e)
         {
             pic.Visible = true;
@@ -1417,6 +1422,7 @@ namespace MOMC_PROJECT
             currentSlideIndex = slides.Count - 1;
             DisplayCurrentSlide();
             UpdateSlideList();
+            lstSlides.SelectedIndex = currentSlideIndex;
             int c = 0;
             foreach (Slide slide in slides)
             {
@@ -1432,18 +1438,21 @@ namespace MOMC_PROJECT
         {
             if (currentSlideIndex >= 0 && slides.Count > 0)
             {
+                
                 slides.RemoveAt(currentSlideIndex);
                 if (currentSlideIndex >= slides.Count)
                 {
                     currentSlideIndex = slides.Count - 1;
                 }
                 DisplayCurrentSlide();
-                UpdateSlideList();
+                UpdateSlideList(); 
             }
             if (slides.Count == 0)
             {
                 pic.Visible = false;
             }
+            lstSlides.SelectedIndex = currentSlideIndex;
+
             int c = 0;
             foreach (Slide slide in slides)
             {
@@ -1584,6 +1593,7 @@ namespace MOMC_PROJECT
                 MessageBox.Show("No slides to save.");
                 return;
             }
+
 
             using (SaveFileDialog saveDialog = new SaveFileDialog())
             {
@@ -1740,9 +1750,9 @@ namespace MOMC_PROJECT
             txtRename.KeyDown -= txtRename_KeyDown;
             txtRename.LostFocus -= txtRename_LostFocus;
         }
-        private void AttachMouseDownEventHandler(Control parent)
+        private void AttachMouseDownEventHandler(System.Windows.Forms.Control parent)
         {
-            foreach (Control control in parent.Controls)
+            foreach (System.Windows.Forms.Control control in parent.Controls)
             {
                 control.MouseDown += new MouseEventHandler(AnyControl_MouseDown);
                 if (control.HasChildren)

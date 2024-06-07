@@ -48,8 +48,6 @@ namespace MOMC_PROJECT
         {
             try
             {
-              
-
                 label6.Text = FromEmailAddress;
                 label7.Text = Subject;
                 richTextBox1.Text = string.Join(", ", ToEmailAddresses);
@@ -59,9 +57,19 @@ namespace MOMC_PROJECT
                 // Ensure that Attachments and listBox1 are not null
                 if (Attachments != null)
                 {
+                   // PreviewMailScreen.Attachments = new List<string>(PreviewMailScreen.Attachments);
+
+                    // Now bind PreviewMailScreen.Attachments to the ListView for display
+                    // Assuming listViewAttachments is your ListView control
+                    listView1.Items.Clear();
+                    //foreach (var attachment in PreviewMailScreen.Attachments)
+                    //{
+                    //    listView1.Items.Add(attachment);
+                    //}
                     foreach (string attachment in Attachments)
                     {
                         string fileName = Path.GetFileName(attachment);
+
                         // Add the file name to the listView1
                         listView1.Items.Add(fileName);
                         // Extract associated icon
@@ -93,7 +101,7 @@ namespace MOMC_PROJECT
         }
         public void TransferDataFromForm1(DataGridView sourceGridView)
         {
-          
+
             /* try
              {
                  if (dataGridView1.Columns.Count == 0)
@@ -228,12 +236,12 @@ namespace MOMC_PROJECT
         {
             try
             {
-                if (dataGridView1.Rows.Count==0)
+                if (dataGridView1.Rows.Count == 0)
                 {
                     panel3.Visible = false;
                     return;
                 }
-               
+
                 if (panel3.Visible)
                 {
                     panel3.Visible = false;
@@ -282,10 +290,15 @@ namespace MOMC_PROJECT
                     richTextBox3.Focus();
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
             }
+        }
+
+        private void listView1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

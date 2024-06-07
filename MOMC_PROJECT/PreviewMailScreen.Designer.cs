@@ -193,6 +193,7 @@
             listView1.Size = new Size(627, 84);
             listView1.TabIndex = 11;
             listView1.UseCompatibleStateImageBehavior = false;
+            listView1.SelectedIndexChanged += listView1_SelectedIndexChanged;
             listView1.MouseClick += listView1_MouseClick;
             // 
             // dataGridView1
